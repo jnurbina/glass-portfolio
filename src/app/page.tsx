@@ -18,7 +18,7 @@ export default function Home() {
     name: "Jason [Dosc] Urbina",
     title: "Audio Engineer | Software Engineer | Creative Coder ",
     avatarUrl: "/profile.png",
-    description: "Greetings. I write code, I make music, and I combine the two make magic."
+    description: "Greetings. I write code, I make music, and I combine the two and result in magic."
   };
 
   const links = [
