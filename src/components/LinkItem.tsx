@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { GlassPane } from './GlassPane';
-import { displayText, useTypewriter } from '@/hooks/useTypewriter';
+import { useTypewriter } from '@/hooks/useTypewriter';
 
 interface LinkItemProps {
   title: string;
@@ -21,7 +21,7 @@ export const LinkItem: React.FC<LinkItemProps> = ({
   glowColor,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const { displayText, isTyping } = useTypewriter(title, isHovered);
+  const typewriting = useTypewriter(title, isHovered);
   
   return (
     <motion.div
@@ -38,13 +38,15 @@ export const LinkItem: React.FC<LinkItemProps> = ({
       onFocus={() => setIsHovered(true)}
       onBlur={() => setIsHovered(false)}
     >
-      <a 
+      <motion.a
         href={url}
         target="_blank"
         rel="noopener noreferrer"
         className="block w-full no-underline group"
+        whileHover={{ scale: 1.03 }}
+        transition={{ type: "spring", stiffness: 400, damping: 17 }}
       >
-        <GlassPane 
+        <GlassPane
           className="w-full transition-shadow duration-300 group-hover:shadow-xl"
           glowColor={glowColor}
         >
@@ -52,10 +54,10 @@ export const LinkItem: React.FC<LinkItemProps> = ({
             <div className="flex items-center gap-3">
               {icon && <div className="text-white/90 text-xl">{icon}</div>}
               <h3 className="text-white/90 font-medium m-0 flex items-center min-h-[1.5rem]">
-                {displayText}
+                {typewriting.displayText}
                  {/* Blinking cursor only when typing */}
-                {isTyping && (
-                  <span 
+                {typewriting.isTyping && (
+                  <span
                   className="inline-block w-0.5 h-4 bg-white/90 ml-1"
                   style={{ animation: 'blink 1s step-end infinite' }}
                   ></span>
@@ -79,7 +81,7 @@ export const LinkItem: React.FC<LinkItemProps> = ({
             </div>
           </div>
         </GlassPane>
-      </a>
+      </motion.a>
     </motion.div>
   );
 };

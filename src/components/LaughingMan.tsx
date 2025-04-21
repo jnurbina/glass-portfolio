@@ -9,17 +9,17 @@ interface LaughingManProps {
 const LaughingMan: React.FC<LaughingManProps> = ({ onLoadComplete }) => {
   const [loading, setLoading] = useState(true);
   const [quote, setQuote] = useState('');
-  const [smileProgress, setSmileProgress] = useState(0); // Added state for smile progress
+  // Removed smileProgress state
 
   const quotes = useMemo(() => [ // Use useMemo to prevent redefining array on each render
-    // "Your effort to remain what you are is what limits you.",
-    "Anonymity as armor. Identity as a weapon.",
-    "I am not what you see.",
     "I remember the future.",
+    "I am not what you see.",
     "Time is the substance I am made of.",
-    // "No one is free. Even the birds are chained to the sky.",
-    // "To deny our own impulses is to deny the very thing that makes us human.",
-    // "I am a forest, and a night of dark trees.",
+    "Anonymity as armor. Identity as a weapon.",
+    "Your effort to remain what you are is what limits you.",
+    "No one is free. Even the birds are chained to the sky.",
+    "To deny our own impulses is to deny the very thing that makes us human.",
+    "I am a forest, and a night of dark trees.",
   ], []);
 
   useEffect(() => {
@@ -27,34 +27,26 @@ const LaughingMan: React.FC<LaughingManProps> = ({ onLoadComplete }) => {
     const randomIndex = Math.floor(Math.random() * quotes.length);
     setQuote(quotes[randomIndex]);
 
-    const loadingDuration = 4000; // ms
-    const intervalTime = 50; // ms
-    const totalIntervals = loadingDuration / intervalTime;
-    const increment = 1 / totalIntervals;
-    let currentProgress = 0;
-
-    // Interval for gradual smile
-    const smileInterval = setInterval(() => {
-      currentProgress += increment;
-      setSmileProgress(Math.min(currentProgress, 1)); // Cap at 1
-      if (currentProgress >= 1) {
-        clearInterval(smileInterval);
-      }
-    }, intervalTime);
+    const loadingDuration = 30000; // ms
+    // Removed unused intervalTime variable
+    // Removed unused totalIntervals variable
+    // Removed unused increment variable
+    // Removed smile interval logic
 
     // Timer to end loading state
     const loadingTimer = setTimeout(() => {
       setLoading(false);
       onLoadComplete();
-      setSmileProgress(1); // Ensure smile is full at the end
-      clearInterval(smileInterval); // Clear interval if timer finishes first
+      // Removed setSmileProgress(1)
     }, loadingDuration);
 
     return () => {
       clearTimeout(loadingTimer);
-      clearInterval(smileInterval); // Cleanup interval on unmount
+      // Removed clearInterval(smileInterval)
     };
   }, [onLoadComplete, quotes]);
+
+  // Removed smile interpolation logic and currentMouthPath calculation
 
   // Fixed positioning for the Laughing Man logo
   const containerStyle = {
@@ -82,7 +74,7 @@ const LaughingMan: React.FC<LaughingManProps> = ({ onLoadComplete }) => {
           <defs>
             <path
               id="textCirclePath"
-              d="M 512, 512 m -196, 0 a 196,196 0 1,1 392,0 a 196,196 0 1,1 -392,0" // Reduced radius to 196
+              d="M 512, 512 m -208, 0 a 208,208 0 1,1 416,0 a 208,208 0 1,1 -416,0" // Reduced radius to 208
               fill="none"
             />
             {/* Removed mask definition */}
@@ -90,7 +82,7 @@ const LaughingMan: React.FC<LaughingManProps> = ({ onLoadComplete }) => {
 
           {/* Outer ring border - Removed mask */}
           <circle
-            cx="512" cy="512" r="240" // Reduced radius to 240
+            cx="512" cy="512" r="252" // Reduced radius to 252
             stroke="#00defe"
             strokeWidth="8" // Increased stroke width for larger size
             fill="none"
@@ -103,22 +95,43 @@ const LaughingMan: React.FC<LaughingManProps> = ({ onLoadComplete }) => {
           <g style={{ transformOrigin: '512px 512px', animation: 'spin-clockwise 20s linear infinite' }}> {/* Removed mask attribute */}
             {/* Curved Text */}
             {/* Using dominant-baseline and text-anchor for better alignment */}
-            <text
-              fill="#00defe"
-              fontSize="48" // Slightly larger font size
-              letterSpacing="5" // Increased letter spacing
-              style={{ textTransform: 'uppercase' }}
-              dy="-2" // Fine-tune vertical offset if needed
-            >
-              <textPath
-                 xlinkHref="#textCirclePath"
-                 startOffset="50%" // Start text at the top-middle
-                 textAnchor="middle"
-                 dominantBaseline="middle" // Align text vertically centered on the path
-               >
-                 {quote} {/* Display random quote */}
-               </textPath>
-             </text>
+            {/* Calculate dynamic letter spacing */}
+            {(() => {
+              const baseLength = 41; // Length of "I am a forest, and a night of dark trees."
+              const baseSpacing = 5;
+              const maxLengthFactor = 1.5; // Allow shrinking more than expanding
+              const minSpacing = 2; // Minimum spacing
+              const maxSpacing = 7; // Maximum spacing
+
+              let dynamicSpacing = baseSpacing * (baseLength / Math.max(quote.length, 1));
+              // Apply limits and clamping
+              dynamicSpacing = Math.max(minSpacing, Math.min(maxSpacing, dynamicSpacing));
+              
+              // For very short quotes, prevent excessive spacing
+              if (quote.length < baseLength / maxLengthFactor) {
+                 dynamicSpacing = maxSpacing;
+              }
+
+              return (
+                <text
+                  fill="#00defe"
+                  fontSize="48" // Keep font size consistent
+                  letterSpacing={dynamicSpacing} // Use dynamic spacing
+                  style={{ textTransform: 'uppercase' }}
+                  dy="-2" // Fine-tune vertical offset if needed
+                >
+                  <textPath
+                     xlinkHref="#textCirclePath"
+                     startOffset="50%" // Start text at the top-middle
+                     textAnchor="middle"
+                     dominantBaseline="middle" // Align text vertically centered on the path
+                   >
+                     {quote} {/* Display random quote */}
+                   </textPath>
+                 </text>
+              );
+            })()}
+            {/* </text> */} {/* Removed the original closing tag */}
             </g>
   
              {/* Center face container */}
@@ -135,9 +148,34 @@ const LaughingMan: React.FC<LaughingManProps> = ({ onLoadComplete }) => {
                 transform="translate(301.5 326.8) scale(0.8)" // Recalculated transform for scale 0.8
                 fill="#00defe"
                 fillRule="evenodd"
-                d="M129.24188 212.237h328.785c4.73947 17.09447 1.68332 35.66474.42514 53.20777-4.23938 35.37921-18.87696 69.47809-42.70314 96.07923-9.32381 10.14506-19.92311 19.24211-30.79325 27.69558-31.1972 21.90747-69.46918 33.01043-107.55608 31.22811-16.92917 1.13842-33.63406-1.52451-49.96767-5.74369-13.6697-5.14206-29.46051-9.68717-42.94533-17.81151-13.65954-7.55005-25.15433-17.61793-35.9699-28.89034-28.31383-28.40201-44.5785-67.56895-46.80053-107.42537-.8584-15.43795-.26755-30.907-.28824-46.35878 1.40645-3.22521 27.814-1.981 27.814-1.981zm153.963 102.991c-33.3296-1.30136-69.18901 10.06062-89.96355 37.36016-6.57976 7.87325-3.27495 23.51727 5.04818 24.03784 5.59166.85279 7.68797-1.86147 10.25558-3.961 3.51782-2.80602 3.54715-2.93294 6.79121-5.941 2.58485-2.63814 2.976-2.7367 6.28358-5.943 2.28957-2.16912 11.58356-9.46986 14.899-11.883 5.41399-2.7937 5.71911-2.80747 10.76521-3.961 6.6723-2.04848 7.36322-1.9027 11.98959-2.62645 6.01345-.68116 9.12665-.96363 13.72914-1.33455h27.08806c5.84106 1.81101 5.83339 2.08398 10.60442 3.961 5.67135 1.95396 5.32145 2.11207 10.09379 3.961 5.01804 2.0067 5.07982 2.22834 10.08505 4.24786 4.82158 2.93649 4.86549 3.12045 7.79395 5.65514 3.85854 2.87814 3.98107 3.03785 6.954 5.941 4.1747 4.94066 4.21062 5.14028 10.09379 9.904 4.69339 4.48688 8.48576 2.24253 11.17815.57373 3.79657-3.19828 7.26784-15.7492 2.10691-22.54848-15.08596-23.13135-43.74611-32.11331-69.69843-36.2459-9.17372-1.68208-9.75483-1.34325-16.09763-1.19735zm-82.446-74.272c-13.94976-2.10442-31.24567 7.88604-26.7985 23.94548 2.9178 5.39913 5.75583 9.65761 9.9125 11.54673 2.87688 1.98735 5.82845 3.90001 11.46389 3.12879 5.13995.4085 7.13602-2.32686 11.38211-2.81221 3.16766-2.41632 7.26307-4.45086 9.57532-9.22353 6.5296-13.81312-6.78559-24.3187-15.53532-26.58526zm175.817 0c-14.95224-3.609-32.25732 8.34241-27.813 24.758 2.55783 7.97822 7.57814 11.10578 14.54142 13.4327 7.09548.23067 7.04524.20037 13.27158-1.5497 5.94735-1.81196 7.12019-2.12327 10.60342-3.961 6.99375-6.85156 8.3947-24.40647-4.24722-29.87049-2.00949-1.16303-4.1555-2.07731-6.3562-2.80951z"
+                // Face Outline Path (Extracted)
+                d="M129.24188 212.237h328.785c4.73947 17.09447 1.68332 35.66474.42514 53.20777-4.23938 35.37921-18.87696 69.47809-42.70314 96.07923-9.32381 10.14506-19.92311 19.24211-30.79325 27.69558-31.1972 21.90747-69.46918 33.01043-107.55608 31.22811-16.92917 1.13842-33.63406-1.52451-49.96767-5.74369-13.6697-5.14206-29.46051-9.68717-42.94533-17.81151-13.65954-7.55005-25.15433-17.61793-35.9699-28.89034-28.31383-28.40201-44.5785-67.56895-46.80053-107.42537-.8584-15.43795-.26755-30.907-.28824-46.35878 1.40645-3.22521 27.814-1.981 27.814-1.981z"
                 clipRule="evenodd"
               />
+              {/* Eyes Paths (Extracted) */}
+              <path
+                 transform="translate(301.5 326.8) scale(0.8)"
+                 fill="rgb(5, 10, 25)"  /* Match background for transparency effect */
+                 fillRule="evenodd"
+                 d="M205.75888 240.956c-13.94976-2.10442-31.24567 7.88604-26.7985 23.94548 2.9178 5.39913 5.75583 9.65761 9.9125 11.54673 2.87688 1.98735 5.82845 3.90001 11.46389 3.12879 5.13995.4085 7.13602-2.32686 11.38211-2.81221 3.16766-2.41632 7.26307-4.45086 9.57532-9.22353 6.5296-13.81312-6.78559-24.3187-15.53532-26.58526z"
+                 clipRule="evenodd"
+               />
+               <path
+                 transform="translate(301.5 326.8) scale(0.8)"
+                 fill="rgb(5, 10, 25)"  /* Match background for transparency effect */
+                 fillRule="evenodd"
+                 d="M381.57588 240.956c-14.95224-3.609-32.25732 8.34241-27.813 24.758 2.55783 7.97822 7.57814 11.10578 14.54142 13.4327 7.09548.23067 7.04524.20037 13.27158-1.5497 5.94735-1.81196 7.12019-2.12327 10.60342-3.961 6.99375-6.85156 8.3947-24.40647-4.24722-29.87049-2.00949-1.16303-4.1555-2.07731-6.3562-2.80951z"
+                 clipRule="evenodd"
+               />
+               {/* Static Mouth Path */}
+               <path
+                 transform="translate(301.5 326.8) scale(0.8)"
+                 fill="rgb(5, 10, 25)"  /* Match background for transparency effect */
+                 fillRule="evenodd"
+                 d="m 153.963,102.991 c -33.3296,-1.30136 -69.18901,10.06062 -89.96355,37.36016 c -6.57976,7.87325 -3.27495,23.51727 5.04818,24.03784 c 5.59166,0.85279 7.68797,-1.86147 10.25558,-3.961 c 3.51782,-2.80602 3.54715,-2.93294 6.79121,-5.941 c 2.58485,-2.63814 2.976,-2.7367 6.28358,-5.943 c 2.28957,-2.16912 11.58356,-9.46986 14.899,-11.883 c 5.41399,-2.7937 5.71911,-2.80747 10.76521,-3.961 c 6.6723,-2.04848 7.36322,-1.9027 11.98959,-2.62645 c 6.01345,-0.68116 9.12665,-0.96363 13.72914,-1.33455 h 27.08806 c 5.84106,1.81101 5.83339,2.08398 10.60442,3.961 c 5.67135,1.95396 5.32145,2.11207 10.09379,3.961 c 5.01804,2.0067 5.07982,2.22834 10.08505,4.24786 c 4.82158,2.93649 4.86549,3.12045 7.79395,5.65514 c 3.85854,2.87814 3.98107,3.03785 6.954,5.941 c 4.1747,4.94066 4.21062,5.14028 10.09379,9.904 c 4.69339,4.48688 8.48576,2.24253 11.17815,0.57373 c 3.79657,-3.19828 7.26784,-15.7492 2.10691,-22.54848 c -15.08596,-23.13135 -43.74611,-32.11331 -69.69843,-36.2459 c -9.17372,-1.68208 -9.75483,-1.34325 -16.09763,-1.19735" // Static frown path
+                 clipRule="evenodd"
+               />
+             {/* Other face details */}
              <path
                transform="translate(301.5 326.8) scale(0.8)" // Recalculated transform for scale 0.8
                fill="#00defe"
@@ -153,17 +191,8 @@ const LaughingMan: React.FC<LaughingManProps> = ({ onLoadComplete }) => {
                fill="#00defe"
                d="m61.53248 223.2616 3.6428-2.07167c1.7309-.98437 3.22922-.17011 3.2514 1.82078.0746 6.69461-.38954 16.20311-.21297 21.99331-.12424 11.28706.4704 22.63256-.7576 33.87217-.17728 1.62251-1.67957 3.16587-3.30978 3.12929-3.67405-.0824-7.13453-1.40344-10.81626-3.67189-5.9387-3.77712-8.56799-8.14381-11.07574-12.60786-.65678-1.91728-.61043-4.11997-.91649-6.16987-.66135-8.26776 1.29438-16.58842 5.01272-23.96096 1.50552-2.43564 4.44932-4.51768 6.15828-5.6089 2.85262-2.48303 6.01886-4.38459 9.02364-6.7244z"
              />
-             {/* Simple Smile Path Overlay - Fades in */}
-             {/* <path
-               d="M 442 600 Q 512 630 582 600" // Adjusted smile curve coordinates
-               stroke="#00defe" // Match face color or use white
-               strokeWidth="8" // Adjusted stroke width
-               fill="none"
-               strokeLinecap="round"
-               style={{ opacity: smileProgress, transition: 'opacity 0.1s linear' }} // Control opacity
-             /> */}
            </g>
-         </svg>
+        </svg>
        </div>
     </div>
   );

@@ -93,13 +93,13 @@ export default function Home() {
       icon: <FaFilePdf />,
       glowColor: "rgba(255, 255, 255, 0.4)"
     },
-    {
-      title: "Urbiniac Table (3D Exp)",
-      url: "#", // Placeholder URL for external Babylon.js project
-      // TODO: Replace '#' with actual URL when deployed: e.g., https://urbiniac-table.jurb.dev
-      icon: <FaCubes />,
-      glowColor: "rgba(255, 255, 255, 0.4)"
-    },
+    // {
+    //   title: "Urbiniac Table (3D Exp)",
+    //   url: "#", // Placeholder URL for external Babylon.js project
+    //   // TODO: Replace '#' with actual URL when deployed: e.g., https://urbiniac-table.jurb.dev
+    //   icon: <FaCubes />,
+    //   glowColor: "rgba(255, 255, 255, 0.4)"
+    // },
     {
       title: "Contact",
       url: "mailto:doscmusic@gmail.com",
@@ -145,7 +145,7 @@ export default function Home() {
                   ))}
                 </div>
                 
-                <LlmWidget placeholder="Ask me about my development services..." />
+                {/* <LlmWidget placeholder="Ask me about my development services..." /> */}
                 
                 <footer className="mt-12 text-center text-white/50 text-sm">
                   <p>© {new Date().getFullYear()} {profile.name}. All rights reserved.</p>
