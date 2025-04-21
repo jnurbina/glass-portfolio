@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { Background } from '@/components/Background';
 import { ProfileHeader } from '@/components/ProfileHeader';
 import { LinkItem } from '@/components/LinkItem';
-import { LlmWidget } from '@/components/LlmWidget';
+// import { LlmWidget } from '@/components/LlmWidget';
 import LaughingMan from '@/components/LaughingMan';
 import { FaGithub, FaLinkedin, FaTwitter, FaEnvelope, FaCode, FaSoundcloud, FaSpotify, FaInstagram, FaTiktok, FaFilePdf, FaCubes } from 'react-icons/fa';
 

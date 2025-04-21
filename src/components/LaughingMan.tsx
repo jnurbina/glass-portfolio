@@ -27,11 +27,7 @@ const LaughingMan: React.FC<LaughingManProps> = ({ onLoadComplete }) => {
     const randomIndex = Math.floor(Math.random() * quotes.length);
     setQuote(quotes[randomIndex]);
 
-    const loadingDuration = 30000; // ms
-    // Removed unused intervalTime variable
-    // Removed unused totalIntervals variable
-    // Removed unused increment variable
-    // Removed smile interval logic
+    const loadingDuration = 3000; // ms
 
     // Timer to end loading state
     const loadingTimer = setTimeout(() => {
