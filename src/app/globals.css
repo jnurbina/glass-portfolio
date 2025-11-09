@@ -58,7 +58,26 @@ body {
     box-shadow: 0 0 10px -5px rgba(255, 255, 255, 0.5);
   }
   to {
-    box-shadow: 0 0 20px 5px rgba(255, 255, 255, 0.7);
+    box-shadow: 0 0 20px 5px rgba(.ff7-menu {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 1.2rem;
+  color: white;
+}
+
+.ff7-menu a {
+  display: block;
+  margin-bottom: 0.5rem;
+  text-decoration: none;
+  color: white;
+  transition: all 0.2s ease-in-out;
+}
+
+.ff7-menu a:hover {
+  color: #a0e9ff;
+  text-shadow: 0 0 5px #a0e9ff;
+  transform: translateX(5px);
+}
+255, 255, 255, 0.7);
   }
 }
 
@@ -92,7 +111,7 @@ body {
 }
 
 /* Responsive adjustments */
-@media (max-width: 640px) {
+@media (max-width: 800px) {
   .container {
     padding-left: 1rem;
     padding-right: 1rem;

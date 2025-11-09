@@ -1,87 +1,47 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { forwardRef } from 'react';
 import { motion } from 'framer-motion';
-import { GlassPane } from './GlassPane';
-import { useTypewriter } from '@/hooks/useTypewriter';
 
 interface LinkItemProps {
   title: string;
-  url: string;
-  icon?: React.ReactNode;
-  index: number;
-  glowColor?: string;
+  isSelected: boolean;
+  onMouseEnter: () => void;
+  onClick: () => void;
 }
 
-export const LinkItem: React.FC<LinkItemProps> = ({
-  title,
-  url,
-  icon,
-  index,
-  glowColor,
-}) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const typewriting = useTypewriter(title, isHovered);
-  
+const LinkItem = forwardRef<HTMLDivElement, LinkItemProps>(({ title, isSelected, onMouseEnter, onClick }, ref) => {
+  const glowColor = isSelected ? 'rgba(0, 255, 255, 0.8)' : 'rgba(0, 150, 255, 0.7)';
+
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 20 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ 
-        duration: 0.4, 
-        delay: 0.1 * index,
-        ease: [0.22, 1, 0.36, 1]
+      ref={ref}
+      tabIndex={0} // Make it focusable
+      className="text-2xl font-display text-white no-underline py-2 cursor-pointer"
+      style={{
+        textShadow: `0 0 8px ${glowColor}, 0 0 12px ${glowColor}`,
+        transition: 'text-shadow 0.3s ease',
+        outline: 'none',
       }}
-      className="w-full"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onFocus={() => setIsHovered(true)}
-      onBlur={() => setIsHovered(false)}
+      whileHover={{ scale: 1.1, transition: { duration: 0.2 } }}
+      whileFocus={{
+        scale: 1.1,
+        textShadow: `0 0 10px rgba(0, 255, 255, 0.9), 0 0 15px rgba(0, 255, 255, 0.9)`,
+        transition: { duration: 0.2 }
+      }}
+      animate={{ 
+        scale: isSelected ? 1.1 : 1,
+        textShadow: `0 0 8px ${glowColor}, 0 0 12px ${glowColor}`
+      }}
+      onMouseEnter={onMouseEnter}
+      onClick={onClick}
+      onKeyPress={(e) => e.key === 'Enter' && onClick()}
     >
-      <motion.a
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="block w-full no-underline group"
-        whileHover={{ scale: 1.03 }}
-        transition={{ type: "spring", stiffness: 400, damping: 17 }}
-      >
-        <GlassPane
-          className="w-full transition-shadow duration-300 group-hover:shadow-xl"
-          glowColor={glowColor}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {icon && <div className="text-white/90 text-xl">{icon}</div>}
-              <h3 className="text-white/90 font-medium m-0 flex items-center min-h-[1.5rem]">
-                {typewriting.displayText}
-                 {/* Blinking cursor only when typing */}
-                {typewriting.isTyping && (
-                  <span
-                  className="inline-block w-0.5 h-4 bg-white/90 ml-1"
-                  style={{ animation: 'blink 1s step-end infinite' }}
-                  ></span>
-                )}
-              </h3>
-            </div>
-            <div className="text-white/70 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                width="16" 
-                height="16" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="2" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-              >
-                <path d="M7 7l10 10M7 17V7h10" />
-              </svg>
-            </div>
-          </div>
-        </GlassPane>
-      </motion.a>
+      {title}
     </motion.div>
   );
-};
+});
+
+LinkItem.displayName = 'LinkItem';
+
+export { LinkItem };
