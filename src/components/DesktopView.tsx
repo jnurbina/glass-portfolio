@@ -5,8 +5,15 @@ import dynamic from 'next/dynamic';
 import FF7Menu from './FF7Menu';
 import InteractionOverlay from './ui/InteractionOverlay';
 import { audioEngine } from '@/lib/audio/audio';
+import AudioPlayer from './AudioPlayer';
+import { ThreeCanvasProvider } from '@/hooks/use-three-canvas-state';
 
 const ThreeCanvas = dynamic(() => import('./ThreeCanvas.client'), { ssr: false });
+
+const menuItems = [
+  { title: '[ Explore 1J1 ]' },
+  { title: '[ Interact ]' },
+];
 
 export default function DesktopView() {
   const [isInteracted, setIsInteracted] = useState(false);
@@ -47,13 +54,16 @@ export default function DesktopView() {
     <div style={{ width: '100vw', height: '100vh' }} onMouseMove={handleMouseMove}>
       {!isInteracted && <InteractionOverlay onInteract={handleInteraction} />}
       
-      <ThreeCanvas 
-        onLoaded={() => setIsLoaded(true)} 
-        showLogo={showLogo} 
-        mousePosition={mousePosition} 
-      />
+      <ThreeCanvasProvider>
+        <ThreeCanvas 
+          onLoaded={() => setIsLoaded(true)} 
+          showLogo={showLogo} 
+          mousePosition={mousePosition} 
+        />
+      </ThreeCanvasProvider>
 
-      {isLoaded && showMenu && <FF7Menu />}
+      {isLoaded && showMenu && <FF7Menu menuItems={menuItems} />}
+      <AudioPlayer />
     </div>
   );
 }

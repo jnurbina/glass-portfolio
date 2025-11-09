@@ -12,6 +12,7 @@ import TiledWall from './three/TiledWall';
 import Particles from './three/Particles';
 import { Skybox, Rig, RoomEdges, Logo } from './three/Scene';
 import PauseModal from './three/PauseModal';
+import { useThreeCanvasState } from '@/hooks/use-three-canvas-state';
 
 export default function ThreeCanvas({ onLoaded, showLogo, mousePosition }: { onLoaded: () => void, showLogo: boolean, mousePosition: { x: number, y: number } }) {
     const hitListeners = useRef(new Set<(position: THREE.Vector3) => void>()).current;
@@ -26,27 +27,26 @@ export default function ThreeCanvas({ onLoaded, showLogo, mousePosition }: { onL
         return () => hitListeners.delete(callback);
     }, [hitListeners]);
 
-    const [isPaused, setIsPaused] = useState(false);
-    // Volume and other settings might be managed by a different system now
-    // For now, we leave the pause modal logic as is, but it could be refactored
-    const [volume, setVolume] = useState(0.5);
-    const [particleCount, setParticleCount] = useState(24);
-    const [reflectionQuality, setReflectionQuality] = useState(1);
+    const {
+        isPaused,
+        volume,
+        particleCount,
+        reflectionQuality,
+        setIsPaused,
+        setVolume,
+        setParticleCount,
+        setReflectionQuality,
+    } = useThreeCanvasState();
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
-                setIsPaused(p => !p);
+                setIsPaused(!isPaused);
             }
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, []);
-
-    // These handlers would need to be updated if the new audio engine is to be controlled here
-    const handleVolumeChange = (newVolume: number) => setVolume(newVolume);
-    const handleParticleCountChange = (newCount: number) => setParticleCount(newCount);
-    const handleReflectionQualityChange = (newQuality: number) => setReflectionQuality(newQuality);
+    }, [isPaused, setIsPaused]);
 
     return (
         <>
@@ -79,15 +79,7 @@ export default function ThreeCanvas({ onLoaded, showLogo, mousePosition }: { onL
                     </Suspense>
                 </Canvas>
             </div>
-            <PauseModal
-                isPaused={isPaused}
-                onVolumeChange={handleVolumeChange}
-                volume={volume}
-                onParticleCountChange={handleParticleCountChange}
-                particleCount={particleCount}
-                onReflectionQualityChange={handleReflectionQualityChange}
-                reflectionQuality={reflectionQuality}
-            />
+            <PauseModal />
         </>
     );
 }

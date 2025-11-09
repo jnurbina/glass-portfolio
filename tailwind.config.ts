@@ -87,7 +87,10 @@ export default {
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out'
-  		}
+  		},
+      textShadow: {
+        'glow': '0 0 8px var(--glow-color), 0 0 12px var(--glow-color)',
+      },
   	}
   },
   plugins: [require("tailwindcss-animate")],

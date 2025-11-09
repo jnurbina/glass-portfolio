@@ -5,10 +5,13 @@ import { motion } from 'framer-motion';
 import { LinkItem } from './LinkItem';
 import { audioEngine } from '@/lib/audio/audio';
 
-const menuItems = [
-  { title: '[ Explore 1J1 ]' },
-  { title: '[ Interact ]' },
-];
+interface MenuItem {
+  title: string;
+}
+
+interface FF7MenuProps {
+  menuItems: MenuItem[];
+}
 
 const containerVariants = {
   hidden: { opacity: 0, y: 50 },
@@ -36,7 +39,7 @@ const itemVariants = {
   },
 };
 
-const FF7Menu = () => {
+const FF7Menu = ({ menuItems }: FF7MenuProps) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -49,7 +52,6 @@ const FF7Menu = () => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      e.preventDefault();
       if (e.key === 'ArrowDown') {
         setSelectedIndex((prevIndex) => (prevIndex + 1) % menuItems.length);
         playHoverSound();
@@ -67,21 +69,16 @@ const FF7Menu = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [selectedIndex]);
+  }, [selectedIndex, menuItems.length]);
 
   return (
     <motion.div
-      style={{
-        position: 'absolute',
-        bottom: '40vh', // Centered in the bottom-right quadrant
-        right: '15vw',
-        pointerEvents: 'none',
-      }}
+      className="absolute bottom-[40vh] right-[15vw] pointer-events-none"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', pointerEvents: 'auto' }}>
+      <div className="flex flex-col items-start pointer-events-auto">
         {menuItems.map((item, index) => (
           <motion.div key={item.title} variants={itemVariants}>
             <LinkItem

@@ -1,26 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import MobileView from '@/components/MobileView';
 import DesktopView from '@/components/DesktopView';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function Home() {
-  const [isDesktop, setIsDesktop] = useState(false);
-  const [isClient, setIsClient] = useState(false);
+  const isMobile = useIsMobile();
 
-  useEffect(() => {
-    setIsClient(true);
-    const handleResize = () => {
-      setIsDesktop(window.innerWidth > 800);
-    };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  if (!isClient) {
-    return null;
-  }
-
-  return isDesktop ? <DesktopView /> : <MobileView />;
+  return isMobile ? <MobileView /> : <DesktopView />;
 }
