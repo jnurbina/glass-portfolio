@@ -7,7 +7,6 @@ import { CubeCamera } from '@react-three/drei';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import { audioEngine } from '@/lib/audio/audio';
 import { wallConfig } from '@/lib/three/constants';
-import Loader from './three/Loader';
 import TiledWall from './three/TiledWall';
 import Particles from './three/Particles';
 import { Skybox, Rig, RoomEdges, Logo } from './three/Scene';
@@ -16,6 +15,10 @@ import { useThreeCanvasState } from '@/hooks/use-three-canvas-state';
 
 export default function ThreeCanvas({ onLoaded, showLogo, mousePosition }: { onLoaded: () => void, showLogo: boolean, mousePosition: { x: number, y: number } }) {
     const hitListeners = useRef(new Set<(position: THREE.Vector3) => void>()).current;
+    
+    useEffect(() => {
+        onLoaded();
+    }, [onLoaded]);
     
     const onParticleHit = useCallback((position: THREE.Vector3) => {
         hitListeners.forEach(listener => listener(position));
@@ -52,7 +55,7 @@ export default function ThreeCanvas({ onLoaded, showLogo, mousePosition }: { onL
         <>
             <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: -1 }}>
                 <Canvas camera={{ position: [0, 0, 25], fov: 75 }}>
-                    <Suspense fallback={<Loader onLoaded={onLoaded} />}>
+                    <Suspense fallback={null}>
                         <ambientLight intensity={0.1} />
                         <hemisphereLight intensity={0.2} groundColor="black" />
                         <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} castShadow />

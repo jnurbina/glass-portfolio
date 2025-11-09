@@ -5,22 +5,28 @@ import dynamic from 'next/dynamic';
 import FF7Menu from './FF7Menu';
 import InteractionOverlay from './ui/InteractionOverlay';
 import { audioEngine } from '@/lib/audio/audio';
-import AudioPlayer from './AudioPlayer';
 import { ThreeCanvasProvider } from '@/hooks/use-three-canvas-state';
+import InteractView from './InteractView';
+import { AnimatePresence } from 'framer-motion';
+import { useAchievementState } from '@/hooks/use-achievement-state';
+import LaughingMan from './LaughingMan';
 
 const ThreeCanvas = dynamic(() => import('./ThreeCanvas.client'), { ssr: false });
 
 const menuItems = [
-  { title: '[ Explore 1J1 ]' },
-  { title: '[ Interact ]' },
+  { title: '[ Explore 1J1 ]', action: 'explore' },
+  { title: '[ Interact ]', action: 'interact' },
 ];
 
 export default function DesktopView() {
+  const [preloaderComplete, setPreloaderComplete] = useState(false);
   const [isInteracted, setIsInteracted] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [showLogo, setShowLogo] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [isInteractView, setIsInteractView] = useState(false);
+  const { unlockAchievement } = useAchievementState();
 
   const handleInteraction = useCallback(() => {
     audioEngine.init(() => {
@@ -28,6 +34,18 @@ export default function DesktopView() {
       audioEngine.play('background', true);
     });
   }, []);
+
+  const handleMenuSelect = (action: string) => {
+    if (action === 'interact') {
+      setIsInteractView(true);
+      unlockAchievement('intrigued-adventurist');
+    }
+  };
+
+  const handleBack = () => {
+    setIsInteractView(false);
+    unlockAchievement('drawer-puller');
+  };
 
   useEffect(() => {
     // New animation sequence controlled by isLoaded and isInteracted
@@ -50,6 +68,10 @@ export default function DesktopView() {
     setMousePosition({ x, y });
   };
 
+  if (!preloaderComplete) {
+    return <LaughingMan onLoadComplete={() => setPreloaderComplete(true)} />;
+  }
+
   return (
     <div style={{ width: '100vw', height: '100vh' }} onMouseMove={handleMouseMove}>
       {!isInteracted && <InteractionOverlay onInteract={handleInteraction} />}
@@ -57,13 +79,27 @@ export default function DesktopView() {
       <ThreeCanvasProvider>
         <ThreeCanvas 
           onLoaded={() => setIsLoaded(true)} 
-          showLogo={showLogo} 
+          showLogo={showLogo && !isInteractView} 
           mousePosition={mousePosition} 
         />
       </ThreeCanvasProvider>
 
-      {isLoaded && showMenu && <FF7Menu menuItems={menuItems} />}
-      <AudioPlayer />
+      <AnimatePresence>
+        {isLoaded && showMenu && !isInteractView && <FF7Menu menuItems={menuItems} onSelect={handleMenuSelect} />}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isInteractView && <InteractView />}
+      </AnimatePresence>
+
+      {isInteractView && (
+        <button
+          className="absolute top-8 right-8 text-white text-2xl"
+          onClick={handleBack}
+        >
+          [ Back ]
+        </button>
+      )}
     </div>
   );
 }

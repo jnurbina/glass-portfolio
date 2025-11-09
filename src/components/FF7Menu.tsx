@@ -7,10 +7,12 @@ import { audioEngine } from '@/lib/audio/audio';
 
 interface MenuItem {
   title: string;
+  action: string;
 }
 
 interface FF7MenuProps {
   menuItems: MenuItem[];
+  onSelect: (action: string) => void;
 }
 
 const containerVariants = {
@@ -39,12 +41,17 @@ const itemVariants = {
   },
 };
 
-const FF7Menu = ({ menuItems }: FF7MenuProps) => {
+const FF7Menu = ({ menuItems, onSelect }: FF7MenuProps) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const playHoverSound = () => audioEngine.play('hover');
   const playSelectSound = () => audioEngine.play('select');
+
+  const handleSelect = () => {
+    playSelectSound();
+    onSelect(menuItems[selectedIndex].action);
+  };
 
   useEffect(() => {
     itemRefs.current[selectedIndex]?.focus();
@@ -59,9 +66,7 @@ const FF7Menu = ({ menuItems }: FF7MenuProps) => {
         setSelectedIndex((prevIndex) => (prevIndex - 1 + menuItems.length) % menuItems.length);
         playHoverSound();
       } else if (e.key === 'Enter') {
-        playSelectSound();
-        // The navigation is disabled as per the user's request.
-        // If it were enabled, it would be handled here.
+        handleSelect();
       }
     };
 
@@ -89,7 +94,7 @@ const FF7Menu = ({ menuItems }: FF7MenuProps) => {
                 setSelectedIndex(index);
                 playHoverSound();
               }}
-              onClick={playSelectSound}
+              onClick={handleSelect}
             />
           </motion.div>
         ))}

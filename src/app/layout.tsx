@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import AudioPlayer from '@/components/AudioPlayer';
+import { AchievementProvider } from '@/hooks/use-achievement-state';
+import { Toaster } from '@/components/ui/sonner';
 
 export const metadata: Metadata = {
   title: 'Glass Portfolio',
@@ -19,7 +20,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        {children}
+        <AchievementProvider>
+          {children}
+          <Toaster />
+        </AchievementProvider>
       </body>
     </html>
   );
