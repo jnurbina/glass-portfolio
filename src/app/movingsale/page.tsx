@@ -151,7 +151,7 @@ export default function MovingSalePage() {
     <div className="min-h-screen bg-[#F5F5F0] p-4 md:p-8 lg:p-12">
       <div className="flex justify-between items-start mb-8">
         <Link
-          href="https://onejas.one"
+          href="/"
           className="text-sm md:text-base font-medium hover:underline underline-offset-4 transition-all"
         >
           Return to 1J1

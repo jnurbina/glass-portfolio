@@ -15,6 +15,16 @@ import { useThreeCanvasState } from '@/hooks/use-three-canvas-state';
 
 export default function ThreeCanvas({ onLoaded, showLogo, mousePosition }: { onLoaded: () => void, showLogo: boolean, mousePosition: { x: number, y: number } }) {
     const hitListeners = useRef(new Set<(position: THREE.Vector3) => void>()).current;
+
+    useEffect(() => {
+        audioEngine.init(() => {
+          audioEngine.play('background', true);
+        });
+    
+        return () => {
+          audioEngine.fadeOut('background');
+        };
+      }, []);
     
     useEffect(() => {
         onLoaded();

@@ -31,6 +31,13 @@ export default function DesktopView() {
   const { unlockAchievement } = useAchievementState();
   const router = useRouter();
 
+  useEffect(() => {
+    // Cleanup audio on component unmount
+    return () => {
+      audioEngine.stop('background');
+    };
+  }, []);
+
   const handleInteraction = useCallback(() => {
     audioEngine.init(() => {
       setIsInteracted(true);

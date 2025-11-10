@@ -69,9 +69,26 @@ class AudioEngine {
       if (!s.playing()) {
         s.play();
         if (fadein) {
-            s.fade(0, 0.75, 2000); // Fade to 75% (user requested +50% from 0.5)
+            s.fade(0, 0.1875, 2000); // Fade to 18.75%
         }
       }
+    }
+  }
+
+  public stop(sound: string) {
+    const s = this.sounds[sound];
+    if (s) {
+      s.stop();
+    }
+  }
+
+  public fadeOut(sound: string, duration: number = 1000) {
+    const s = this.sounds[sound];
+    if (s && s.playing()) {
+      s.fade(s.volume(), 0, duration);
+      s.once('fade', () => {
+        s.stop();
+      });
     }
   }
 
