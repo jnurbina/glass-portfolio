@@ -15,13 +15,14 @@ function Skybox() {
 }
 Skybox.displayName = 'Skybox';
 
-function Rig({ mousePosition }: { mousePosition: { x: number, y: number } }) {
+function Rig({ mouse }: { mouse: React.MutableRefObject<[number, number]> }) {
     const { camera } = useThree();
     const vec = new THREE.Vector3();
     
     useFrame(() => {
-        // Use the mouse position from props for the parallax effect
-        camera.position.lerp(vec.set(mousePosition.x * 2, mousePosition.y * 2, camera.position.z), 0.02);
+        const [x, y] = mouse.current;
+        // Use the custom mouse ref for smooth, performant parallax
+        camera.position.lerp(vec.set(x * 0.5, y * 0.5, camera.position.z), 0.02);
         camera.lookAt(0, 0, 0);
     });
 

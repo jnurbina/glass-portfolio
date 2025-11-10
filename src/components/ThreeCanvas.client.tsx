@@ -13,8 +13,20 @@ import { Skybox, Rig, RoomEdges, Logo } from './three/Scene';
 import PauseModal from './three/PauseModal';
 import { useThreeCanvasState } from '@/hooks/use-three-canvas-state';
 
-export default function ThreeCanvas({ onLoaded, showLogo, mousePosition }: { onLoaded: () => void, showLogo: boolean, mousePosition: { x: number, y: number } }) {
+export default function ThreeCanvas({ onLoaded, showLogo }: { onLoaded: () => void, showLogo: boolean }) {
     const hitListeners = useRef(new Set<(position: THREE.Vector3) => void>()).current;
+    const mouseRef = useRef([0, 0]);
+
+    useEffect(() => {
+        const handleMouseMove = (event: MouseEvent) => {
+            mouseRef.current = [
+                (event.clientX / window.innerWidth) * 2 - 1,
+                -(event.clientY / window.innerHeight) * 2 + 1,
+            ];
+        };
+        window.addEventListener('mousemove', handleMouseMove);
+        return () => window.removeEventListener('mousemove', handleMouseMove);
+    }, []);
 
     useEffect(() => {
         audioEngine.init(() => {
@@ -80,9 +92,9 @@ export default function ThreeCanvas({ onLoaded, showLogo, mousePosition }: { onL
                             )}
                         </CubeCamera>
                         
-                        <Particles onHit={onParticleHit} count={particleCount} />
+                        <Particles onHit={onParticleHit} count={particleCount} mouse={mouseRef} />
                         <Skybox />
-                        <Rig mousePosition={mousePosition} />
+                        <Rig mouse={mouseRef} />
                         <RoomEdges />
                         {showLogo && <Logo />}
 

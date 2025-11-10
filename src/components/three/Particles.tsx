@@ -13,10 +13,11 @@ interface Particle {
 interface ParticlesProps {
     onHit: (position: THREE.Vector3) => void;
     count: number;
+    mouse: React.MutableRefObject<[number, number]>;
 }
 
-function Particles({ onHit, count }: ParticlesProps) {
-    const { size, mouse } = useThree();
+function Particles({ onHit, count, mouse }: ParticlesProps) {
+    const { size } = useThree();
     const pointsRef = useRef<THREE.Points>(null);
     const glowTexture = useMemo(() => createGlowTexture(), []);
     const particles = useMemo<Particle[]>(() => {
@@ -24,7 +25,7 @@ function Particles({ onHit, count }: ParticlesProps) {
         for (let i = 0; i < count; i++) {
             temp.push({
                 position: new THREE.Vector3((Math.random() - 0.5) * 80, (Math.random() - 0.5) * 40, (Math.random() - 0.5) * 30),
-                velocity: new THREE.Vector3((Math.random() - 0.5) * 0.1, (Math.random() - 0.5) * 0.1, (Math.random() - 0.5) * 0.1),
+                velocity: new THREE.Vector3((Math.random() - 0.5) * 0.05, (Math.random() - 0.5) * 0.05, (Math.random() - 0.5) * 0.05),
             });
         }
         return temp;
@@ -33,12 +34,13 @@ function Particles({ onHit, count }: ParticlesProps) {
     useFrame((_, delta) => {
         if (!pointsRef.current) return;
         const positions = (pointsRef.current.geometry.attributes.position as THREE.BufferAttribute).array as Float32Array;
-        const mousePosition = new THREE.Vector3(mouse.x * size.width / 2, mouse.y * size.height / 2, 0);
+        const [mouseX, mouseY] = mouse.current;
+        const mousePosition = new THREE.Vector3(mouseX * size.width / 2, mouseY * size.height / 2, 0);
 
         particles.forEach((p, i) => {
             const direction = new THREE.Vector3().subVectors(mousePosition, p.position).normalize();
             const distance = p.position.distanceTo(mousePosition);
-            p.velocity.add(direction.multiplyScalar(1 / (distance * distance) * 0.1 * delta));
+            p.velocity.add(direction.multiplyScalar(1 / (distance * distance) * 0.05 * delta));
             p.position.add(p.velocity);
 
             const checkCollision = (axis: 'x' | 'y' | 'z', limit: number) => {

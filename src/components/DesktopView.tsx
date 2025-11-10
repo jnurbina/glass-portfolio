@@ -26,7 +26,6 @@ export default function DesktopView() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [showLogo, setShowLogo] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isInteractView, setIsInteractView] = useState(false);
   const { unlockAchievement } = useAchievementState();
   const router = useRouter();
@@ -71,28 +70,20 @@ export default function DesktopView() {
     }
   }, [isLoaded, isInteracted]);
 
-  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
-    const { clientX, clientY, currentTarget } = event;
-    const { width, height } = currentTarget.getBoundingClientRect();
-    // Normalize mouse position from -1 to 1
-    const x = (clientX / width) * 2 - 1;
-    const y = -(clientY / height) * 2 + 1;
-    setMousePosition({ x, y });
-  };
+
 
   if (!preloaderComplete) {
     return <LaughingMan onLoadComplete={() => setPreloaderComplete(true)} />;
   }
 
   return (
-    <div style={{ width: '100vw', height: '100vh' }} onMouseMove={handleMouseMove}>
+    <div style={{ width: '100vw', height: '100vh' }}>
       {!isInteracted && <InteractionOverlay onInteract={handleInteraction} />}
       
       <ThreeCanvasProvider>
         <ThreeCanvas 
           onLoaded={() => setIsLoaded(true)} 
           showLogo={showLogo && !isInteractView} 
-          mousePosition={mousePosition} 
         />
       </ThreeCanvasProvider>
 

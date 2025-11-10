@@ -18,7 +18,7 @@ const ThreeCanvasContext = createContext<ThreeCanvasState | undefined>(undefined
 export const ThreeCanvasProvider = ({ children }: { children: React.ReactNode }) => {
   const [isPaused, setIsPaused] = useState(false);
   const [volume, setVolume] = useState(0.5);
-  const [particleCount, setParticleCount] = useState(24);
+  const [particleCount, setParticleCount] = useState(12);
   const [reflectionQuality, setReflectionQuality] = useState(1);
 
   const value = {
