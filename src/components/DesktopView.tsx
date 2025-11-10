@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
 import FF7Menu from './FF7Menu';
 import InteractionOverlay from './ui/InteractionOverlay';
 import { audioEngine } from '@/lib/audio/audio';
@@ -16,6 +17,7 @@ const ThreeCanvas = dynamic(() => import('./ThreeCanvas.client'), { ssr: false }
 const menuItems = [
   { title: '[ Explore 1J1 ]', action: 'explore' },
   { title: '[ Interact ]', action: 'interact' },
+  { title: '[ MOVING SALE ]', action: 'movingsale' },
 ];
 
 export default function DesktopView() {
@@ -27,6 +29,7 @@ export default function DesktopView() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isInteractView, setIsInteractView] = useState(false);
   const { unlockAchievement } = useAchievementState();
+  const router = useRouter();
 
   const handleInteraction = useCallback(() => {
     audioEngine.init(() => {
@@ -39,6 +42,8 @@ export default function DesktopView() {
     if (action === 'interact') {
       setIsInteractView(true);
       unlockAchievement('intrigued-adventurist');
+    } else if (action === 'movingsale') {
+      router.push('/movingsale');
     }
   };
 
