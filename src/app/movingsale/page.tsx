@@ -3,8 +3,9 @@
 import { useState } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Mail, Instagram } from "lucide-react"
+import { Mail, Instagram, ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { cn } from "@/lib/utils"
 
 interface Item {
   id: number
@@ -13,7 +14,7 @@ interface Item {
   description: string
   imageUrl: string
   bgColor: string
-  textColor: string
+  layout?: "row-span-2" | "col-span-2"
 }
 
 const items: Item[] = [
@@ -21,111 +22,109 @@ const items: Item[] = [
     id: 1,
     name: "Modern Sofa",
     price: 450,
-    description: "Comfortable 3-seater sofa, gray fabric, excellent condition",
-    imageUrl: "/placeholder.svg?height=400&width=400",
+    description: "Comfortable 3-seater sofa, gray fabric, excellent condition. A centerpiece for any living room.",
+    imageUrl: "/placeholder.svg?height=800&width=800",
     bgColor: "bg-[#E8DED1]",
-    textColor: "text-black",
+    layout: "row-span-2",
   },
   {
     id: 2,
     name: "Dining Table",
     price: 300,
-    description: "Wooden dining table, seats 6, minor scratches",
+    description: "Solid wooden dining table, seats 6 comfortably. Perfect for family dinners. Minor wear.",
     imageUrl: "/placeholder.svg?height=400&width=400",
     bgColor: "bg-[#1A1A2E]",
-    textColor: "text-white",
   },
   {
     id: 3,
     name: "Bookshelf",
     price: 120,
-    description: "5-tier bookshelf, dark wood, sturdy construction",
-    imageUrl: "/placeholder.svg?height=400&width=400",
+    description: "5-tier bookshelf, dark wood finish. Sturdy construction, great for books or display items.",
+    imageUrl: "/placeholder.svg?height=400&width=800",
     bgColor: "bg-[#6B2C2C]",
-    textColor: "text-white",
+    layout: "col-span-2",
   },
   {
     id: 4,
     name: "Office Chair",
     price: 180,
-    description: "Ergonomic office chair, black leather, adjustable",
+    description: "Ergonomic office chair, black leather with adjustable height and tilt. Like new.",
     imageUrl: "/placeholder.svg?height=400&width=400",
     bgColor: "bg-black",
-    textColor: "text-white",
   },
   {
     id: 5,
     name: "Coffee Table",
     price: 90,
-    description: "Glass top coffee table with metal frame",
+    description: "Sleek glass top coffee table with a minimalist metal frame. Adds a modern touch.",
     imageUrl: "/placeholder.svg?height=400&width=400",
     bgColor: "bg-[#FFB5C5]",
-    textColor: "text-black",
   },
   {
     id: 6,
     name: "Floor Lamp",
     price: 60,
-    description: "Modern floor lamp, adjustable arm, works perfectly",
-    imageUrl: "/placeholder.svg?height=400&width=400",
+    description: "Modern floor lamp with an adjustable arm and warm light. Works perfectly.",
+    imageUrl: "/placeholder.svg?height=800&width=800",
     bgColor: "bg-white",
-    textColor: "text-black",
+    layout: "row-span-2",
   },
   {
     id: 7,
     name: "Bed Frame",
     price: 250,
-    description: "Queen size bed frame, metal construction, no mattress",
-    imageUrl: "/placeholder.svg?height=400&width=400",
+    description: "Queen size bed frame, sturdy metal construction, easy to assemble. No mattress.",
+    imageUrl: "/placeholder.svg?height=400&width=800",
     bgColor: "bg-[#2C3E50]",
-    textColor: "text-white",
+    layout: "col-span-2",
   },
   {
     id: 8,
     name: "TV Stand",
     price: 140,
-    description: 'TV stand with storage, fits up to 55" TV',
+    description: 'TV stand with ample storage, fits up to a 55" TV. Clean and functional design.',
     imageUrl: "/placeholder.svg?height=400&width=400",
     bgColor: "bg-[#E8DED1]",
-    textColor: "text-black",
   },
   {
     id: 9,
     name: "Nightstand",
     price: 75,
-    description: "Two-drawer nightstand, matches bed frame",
+    description: "Two-drawer nightstand, matches the bed frame. Perfect for bedside essentials.",
     imageUrl: "/placeholder.svg?height=400&width=400",
     bgColor: "bg-[#6B2C2C]",
-    textColor: "text-white",
   },
   {
     id: 10,
     name: "Desk",
     price: 200,
-    description: "Large work desk with cable management",
+    description: "Large work desk with built-in cable management. Ideal for a home office setup.",
     imageUrl: "/placeholder.svg?height=400&width=400",
     bgColor: "bg-black",
-    textColor: "text-white",
-  },
-  {
-    id: 11,
-    name: "Dresser",
-    price: 220,
-    description: "6-drawer dresser, white finish, spacious",
-    imageUrl: "/placeholder.svg?height=400&width=400",
-    bgColor: "bg-white",
-    textColor: "text-black",
-  },
-  {
-    id: 12,
-    name: "Area Rug",
-    price: 110,
-    description: "8x10 area rug, geometric pattern, clean",
-    imageUrl: "/placeholder.svg?height=400&width=400",
-    bgColor: "bg-[#FFB5C5]",
-    textColor: "text-black",
   },
 ]
+
+// Simple utility to determine if a background color is dark
+const isColorDark = (hexColor: string): boolean => {
+  if (!hexColor) return false
+  const color = hexColor.substring(1) // strip #
+  const rgb = parseInt(color, 16)
+  const r = (rgb >> 16) & 0xff
+  const g = (rgb >> 8) & 0xff
+  const b = (rgb >> 0) & 0xff
+  const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b
+  return luma < 128
+}
+
+const colorMap: { [key: string]: string } = {
+  "bg-[#E8DED1]": "#E8DED1",
+  "bg-[#1A1A2E]": "#1A1A2E",
+  "bg-[#6B2C2C]": "#6B2C2C",
+  "bg-black": "#000000",
+  "bg-[#FFB5C5]": "#FFB5C5",
+  "bg-white": "#FFFFFF",
+  "bg-[#2C3E50]": "#2C3E50",
+}
 
 export default function MovingSalePage() {
   const [selectedItem, setSelectedItem] = useState<Item | null>(null)
@@ -148,93 +147,83 @@ export default function MovingSalePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F5F0] p-4 md:p-8 lg:p-12">
-      <div className="flex justify-between items-start mb-8">
-        <Link
-          href="/"
-          className="text-sm md:text-base font-medium hover:underline underline-offset-4 transition-all"
-        >
-          Return to 1J1
-        </Link>
-        <button
-          onClick={() => setShowContactModal(true)}
-          className="text-sm md:text-base font-medium hover:underline underline-offset-4 transition-all"
-        >
-          inquiries
-        </button>
-      </div>
+    <div className="min-h-screen bg-[#F5F5F0] p-4 font-sans text-stone-900 md:p-8 lg:p-12">
+      <div className="mx-auto max-w-7xl">
+        <nav className="flex justify-between items-center mb-12">
+          <Link
+            href="/"
+            className="group flex items-center gap-2 text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+            Return to Portfolio
+          </Link>
+          <button
+            onClick={() => setShowContactModal(true)}
+            className="text-sm font-medium hover:underline underline-offset-4 text-stone-600 hover:text-stone-900 transition-colors"
+          >
+            Inquiries
+          </button>
+        </nav>
 
-      <header className="mb-8 md:mb-12 text-center">
-        <h1 className="text-7xl md:text-9xl lg:text-[12rem] font-bold uppercase tracking-tighter leading-none text-balance">
-          Moving
-          <br />
-          Sale
-        </h1>
-      </header>
+        <header className="mb-12 md:mb-16 text-center">
+          <h1 className="text-6xl md:text-8xl lg:text-[10rem] font-bold uppercase tracking-tighter leading-none">
+            Moving Sale
+          </h1>
+          <p className="mt-2 text-base md:text-lg text-stone-500">All items must go by December. Pick-up in North Hollywood.</p>
+        </header>
 
-      <div className="mb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div className="bg-white p-8 md:p-12 rounded-lg flex items-center justify-center min-h-[200px] md:min-h-[250px]">
-          <div className="text-center space-y-2">
-            <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-tight">Furniture</h2>
-            <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-tight">Electronics</h2>
-            <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-tight">Clothing</h2>
+        <div className="mb-12 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+          <div className="bg-white p-8 rounded-lg flex flex-col justify-center items-center text-center aspect-square md:aspect-auto">
+            <h2 className="text-xl font-bold uppercase tracking-tight text-stone-800">Furniture</h2>
+            <h2 className="text-xl font-bold uppercase tracking-tight text-stone-800">Electronics</h2>
+            <h2 className="text-xl font-bold uppercase tracking-tight text-stone-800">& Clothing</h2>
           </div>
-        </div>
-
-        <div className="bg-black text-white p-8 md:p-12 rounded-lg flex items-center justify-center min-h-[200px] md:min-h-[250px]">
-          <div className="text-center space-y-2">
-            <h2 className="text-3xl md:text-4xl font-bold uppercase tracking-tight">By Dec</h2>
-            <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-tight">Everything Must</h2>
-            <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-tight">Go</h2>
+          <div className="bg-black text-white p-8 rounded-lg flex flex-col justify-center items-center text-center aspect-square md:aspect-auto">
+            <h2 className="text-3xl font-bold uppercase tracking-tight">By Dec</h2>
+            <p className="text-lg font-medium text-neutral-300">Everything Must Go</p>
           </div>
-        </div>
-
-        <div className="bg-[#2C3E50] text-white p-8 md:p-12 rounded-lg flex items-center justify-center min-h-[200px] md:min-h-[250px] md:col-span-2 lg:col-span-1">
-          <div className="text-center space-y-3">
-            <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-tight">Pick-Ups</h2>
-            <p className="text-lg md:text-xl font-semibold">North Hollywood,</p>
-            <p className="text-lg md:text-xl font-semibold">NoHo Arts Dist</p>
-            <div className="pt-4 space-y-1 text-sm md:text-base opacity-90">
+          <div className="bg-[#2C3E50] text-white p-8 rounded-lg flex flex-col justify-center items-center text-center aspect-square md:aspect-auto">
+            <h2 className="text-2xl font-bold uppercase tracking-tight">Pick-Ups</h2>
+            <p className="font-semibold">NoHo Arts District</p>
+            <div className="mt-2 text-sm text-slate-300">
               <p>@doscmusic</p>
               <p>doscmusic@gmail.com</p>
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-[280px]">
-        {items.map((item, index) => {
-          let spanClass = ""
-          if (index === 0 || index === 5) spanClass = "md:row-span-2"
-          if (index === 2 || index === 7) spanClass = "md:col-span-2"
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 auto-rows-[minmax(300px,_auto)]">
+          {items.map((item) => {
+            const isDark = isColorDark(colorMap[item.bgColor])
+            const theme = isDark ? "dark" : "light"
 
-          return (
-            <div
-              key={item.id}
-              onClick={() => setSelectedItem(item)}
-              className={`${item.bgColor} ${item.textColor} ${spanClass} rounded-lg overflow-hidden cursor-pointer transition-all hover:scale-[0.98] hover:shadow-xl group relative`}
-            >
-              <div className="w-full h-full flex flex-col">
+            return (
+              <div
+                key={item.id}
+                onClick={() => setSelectedItem(item)}
+                className={cn(
+                  "rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl group relative flex flex-col",
+                  item.bgColor,
+                  item.layout,
+                )}
+                data-theme={theme}
+              >
                 <div className="flex-1 relative overflow-hidden">
                   <img
                     src={item.imageUrl || "/placeholder.svg"}
                     alt={item.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-in-out"
                   />
                 </div>
-                <div className="p-4 space-y-1">
-                  <h3 className="font-bold text-lg uppercase tracking-wide">{item.name}</h3>
-                  <p
-                    className={`text-sm ${item.textColor === "text-white" ? "opacity-80" : "opacity-60"} line-clamp-2`}
-                  >
-                    {item.description}
-                  </p>
-                  <p className="font-bold text-xl">${item.price} OBO</p>
+                <div className="p-4 space-y-1 bg-gradient-to-t from-black/30 via-black/10 to-transparent text-white">
+                  <h3 className="font-bold text-lg uppercase tracking-wide text-shadow">{item.name}</h3>
+                  <p className="text-sm opacity-80 text-shadow-sm line-clamp-2">{item.description}</p>
+                  <p className="font-bold text-xl text-shadow-sm">${item.price} OBO</p>
                 </div>
               </div>
-            </div>
-          )
-        })}
+            )
+          })}
+        </div>
       </div>
 
       <Dialog
@@ -248,10 +237,10 @@ export default function MovingSalePage() {
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-2xl">
+            <DialogTitle className="text-2xl font-bold">
               {selectedItem ? `Interested in ${selectedItem.name}?` : "Get in Touch"}
             </DialogTitle>
-            <DialogDescription className="text-base">
+            <DialogDescription className="text-base text-stone-500">
               {selectedItem
                 ? `Choose how you'd like to reach out about this item ($${selectedItem.price} OBO)`
                 : "Choose how you'd like to reach out about the moving sale"}
@@ -261,7 +250,7 @@ export default function MovingSalePage() {
             <Button
               size="lg"
               onClick={() => (selectedItem ? handleEmailInquiry(selectedItem) : handleGeneralEmailInquiry())}
-              className="w-full gap-2"
+              className="w-full gap-2 bg-stone-900 hover:bg-stone-800"
             >
               <Mail className="h-5 w-5" />
               Email Inquiry
@@ -270,7 +259,7 @@ export default function MovingSalePage() {
               size="lg"
               variant="outline"
               onClick={handleInstagramInquiry}
-              className="w-full gap-2 bg-transparent"
+              className="w-full gap-2"
             >
               <Instagram className="h-5 w-5" />
               Message on Instagram
