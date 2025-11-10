@@ -22,7 +22,7 @@ function Rig({ mouse }: { mouse: React.MutableRefObject<[number, number]> }) {
     useFrame(() => {
         const [x, y] = mouse.current;
         // Use the custom mouse ref for smooth, performant parallax
-        camera.position.lerp(vec.set(x * 0.5, y * 0.5, camera.position.z), 0.02);
+        camera.position.lerp(vec.set(x * 2, y * 2, camera.position.z), 0.02);
         camera.lookAt(0, 0, 0);
     });
 
