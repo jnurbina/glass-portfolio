@@ -2,6 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .text-shadow {
+    text-shadow: 1px 1px 2px rgb(0 0 0 / 50%);
+  }
+  .text-shadow-sm {
+    text-shadow: 1px 1px 3px rgb(0 0 0 / 60%);
+  }
+  .text-shadow-md {
+    text-shadow: 2px 2px 4px rgb(0 0 0 / 70%);
+  }
+  .text-shadow-lg {
+    text-shadow: 3px 3px 6px rgb(0 0 0 / 80%);
+  }
+  .text-shadow-none {
+    text-shadow: none;
+  }
+}
+
 :root {
   --foreground-rgb: 255, 255, 255;
   --background-start-rgb: 5, 10, 25;

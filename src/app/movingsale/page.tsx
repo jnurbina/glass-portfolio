@@ -104,28 +104,6 @@ const items: Item[] = [
   },
 ]
 
-// Simple utility to determine if a background color is dark
-const isColorDark = (hexColor: string): boolean => {
-  if (!hexColor) return false
-  const color = hexColor.substring(1) // strip #
-  const rgb = parseInt(color, 16)
-  const r = (rgb >> 16) & 0xff
-  const g = (rgb >> 8) & 0xff
-  const b = (rgb >> 0) & 0xff
-  const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b
-  return luma < 128
-}
-
-const colorMap: { [key: string]: string } = {
-  "bg-[#E8DED1]": "#E8DED1",
-  "bg-[#1A1A2E]": "#1A1A2E",
-  "bg-[#6B2C2C]": "#6B2C2C",
-  "bg-black": "#000000",
-  "bg-[#FFB5C5]": "#FFB5C5",
-  "bg-white": "#FFFFFF",
-  "bg-[#2C3E50]": "#2C3E50",
-}
-
 export default function MovingSalePage() {
   const [selectedItem, setSelectedItem] = useState<Item | null>(null)
   const [showContactModal, setShowContactModal] = useState(false)
@@ -166,7 +144,7 @@ export default function MovingSalePage() {
         </nav>
 
         <header className="mb-12 md:mb-16 text-center">
-          <h1 className="text-6xl md:text-8xl lg:text-[10rem] font-bold uppercase tracking-tighter leading-none">
+          <h1 className="text-6xl md:text-8xl lg:text-[10rem] font-bold uppercase tracking-tight leading-none">
             Moving Sale
           </h1>
           <p className="mt-2 text-base md:text-lg text-stone-500">All items must go by December. Pick-up in North Hollywood.</p>
@@ -193,36 +171,30 @@ export default function MovingSalePage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 auto-rows-[minmax(300px,_auto)]">
-          {items.map((item) => {
-            const isDark = isColorDark(colorMap[item.bgColor])
-            const theme = isDark ? "dark" : "light"
-
-            return (
-              <div
-                key={item.id}
-                onClick={() => setSelectedItem(item)}
-                className={cn(
-                  "rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl group relative flex flex-col",
-                  item.bgColor,
-                  item.layout,
-                )}
-                data-theme={theme}
-              >
-                <div className="flex-1 relative overflow-hidden">
-                  <img
-                    src={item.imageUrl || "/placeholder.svg"}
-                    alt={item.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-in-out"
-                  />
-                </div>
-                <div className="p-4 space-y-1 bg-gradient-to-t from-black/30 via-black/10 to-transparent text-white">
-                  <h3 className="font-bold text-lg uppercase tracking-wide text-shadow">{item.name}</h3>
-                  <p className="text-sm opacity-80 text-shadow-sm line-clamp-2">{item.description}</p>
-                  <p className="font-bold text-xl text-shadow-sm">${item.price} OBO</p>
-                </div>
+          {items.map((item) => (
+            <div
+              key={item.id}
+              onClick={() => setSelectedItem(item)}
+              className={cn(
+                "rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl group relative flex flex-col justify-end",
+                item.bgColor,
+                item.layout,
+              )}
+            >
+              <div className="absolute inset-0">
+                <img
+                  src={item.imageUrl || "/placeholder.svg"}
+                  alt={item.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-in-out"
+                />
               </div>
-            )
-          })}
+              <div className="relative p-4 space-y-1 bg-gradient-to-t from-black/60 via-black/30 to-transparent text-white">
+                <h3 className="font-bold text-lg uppercase tracking-wide text-shadow-md">{item.name}</h3>
+                <p className="text-sm opacity-90 text-shadow-sm line-clamp-2">{item.description}</p>
+                <p className="font-bold text-xl text-shadow-sm">${item.price} OBO</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -235,12 +207,12 @@ export default function MovingSalePage() {
           }
         }}
       >
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md bg-white text-black border-2 border-gray-300">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">
+            <DialogTitle className="text-2xl font-bold text-gray-900">
               {selectedItem ? `Interested in ${selectedItem.name}?` : "Get in Touch"}
             </DialogTitle>
-            <DialogDescription className="text-base text-stone-500">
+            <DialogDescription className="text-base text-gray-600">
               {selectedItem
                 ? `Choose how you'd like to reach out about this item ($${selectedItem.price} OBO)`
                 : "Choose how you'd like to reach out about the moving sale"}
@@ -250,7 +222,7 @@ export default function MovingSalePage() {
             <Button
               size="lg"
               onClick={() => (selectedItem ? handleEmailInquiry(selectedItem) : handleGeneralEmailInquiry())}
-              className="w-full gap-2 bg-stone-900 hover:bg-stone-800"
+              className="w-full gap-2 bg-stone-900 hover:bg-stone-800 text-white"
             >
               <Mail className="h-5 w-5" />
               Email Inquiry
@@ -259,7 +231,7 @@ export default function MovingSalePage() {
               size="lg"
               variant="outline"
               onClick={handleInstagramInquiry}
-              className="w-full gap-2"
+              className="w-full gap-2 border-stone-300 text-stone-800 hover:bg-stone-100"
             >
               <Instagram className="h-5 w-5" />
               Message on Instagram
