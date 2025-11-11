@@ -104,6 +104,8 @@ const items: Item[] = [
   },
 ]
 
+const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL || "doscmusic@gmail.com";
+
 export default function MovingSalePage() {
   const [selectedItem, setSelectedItem] = useState<Item | null>(null)
   const [showContactModal, setShowContactModal] = useState(false)
@@ -111,13 +113,13 @@ export default function MovingSalePage() {
   const handleEmailInquiry = (item: Item) => {
     const subject = encodeURIComponent(`Inquiry about ${item.name}`)
     const body = encodeURIComponent(`Hi! I'm interested in your ${item.name} listed at $${item.price} OBO.\n\n`)
-    window.location.href = `mailto:doscmusic@gmail.com?subject=${subject}&body=${body}`
+    window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`
   }
 
   const handleGeneralEmailInquiry = () => {
     const subject = encodeURIComponent(`Moving Sale Inquiry`)
     const body = encodeURIComponent(`Hi! I'm interested in learning more about your moving sale.\n\n`)
-    window.location.href = `mailto:doscmusic@gmail.com?subject=${subject}&body=${body}`
+    window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`
   }
 
   const handleInstagramInquiry = () => {
@@ -165,7 +167,7 @@ export default function MovingSalePage() {
             <p className="font-semibold">NoHo Arts District</p>
             <div className="mt-2 text-sm text-slate-300">
               <p>@doscmusic</p>
-              <p>doscmusic@gmail.com</p>
+              <p>{CONTACT_EMAIL}</p>
             </div>
           </div>
         </div>
