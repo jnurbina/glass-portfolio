@@ -25,6 +25,26 @@ const achievements: Achievement[] = [
     title: 'Drawer Puller',
     description: 'Found the back button',
   },
+  {
+    id: 'window-shopper',
+    title: 'Window Shopper',
+    description: 'Opened the interact drawer, but did not click on anything.',
+  },
+  {
+    id: 'noisy-neighbor',
+    title: 'Noisy Neighbor',
+    description: 'You are hitting the glass walls too hard!',
+  },
+  {
+    id: 'afk',
+    title: 'AFK',
+    description: 'Are you still there?',
+  },
+  {
+    id: 'konami-code',
+    title: 'Konami Code',
+    description: 'You know the code!',
+  },
 ];
 
 const AchievementContext = createContext<AchievementContextState | undefined>(undefined);

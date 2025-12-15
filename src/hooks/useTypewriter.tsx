@@ -7,7 +7,6 @@ interface UseTypewriterResult {
   isTyping: boolean;
 }
 
-const TYPE_SPEED = 120; // Milliseconds per character
 const PAUSE_DURATION = 1200; // Milliseconds to pause after typing
 const CLEAR_PAUSE = 600; // Short pause before clearing/restarting
 
@@ -46,6 +45,8 @@ export const useTypewriter = (text: string, isActive: boolean): UseTypewriterRes
         loopStateRef.current = 'idle';
         return;
     }
+
+    const TYPE_SPEED = Math.max(10, 1000 / text.length);
 
     if (isActive) {
       // --- Start the loop ---

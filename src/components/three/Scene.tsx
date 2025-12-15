@@ -15,14 +15,19 @@ function Skybox() {
 }
 Skybox.displayName = 'Skybox';
 
-function Rig({ mouse }: { mouse: React.MutableRefObject<[number, number]> }) {
+function Rig({ mouse, motion }: { mouse: React.MutableRefObject<[number, number]>, motion: React.MutableRefObject<[number, number, number]> }) {
     const { camera } = useThree();
     const vec = new THREE.Vector3();
     
     useFrame(() => {
         const [x, y] = mouse.current;
-        // Use the custom mouse ref for smooth, performant parallax
-        camera.position.lerp(vec.set(x * 2, y * 2, camera.position.z), 0.02);
+        const [ax, ay, az] = motion.current;
+
+        if (ax !== 0 || ay !== 0 || az !== 0) {
+            camera.position.lerp(vec.set(ax * 4, ay * 4, camera.position.z), 0.02);
+        } else {
+            camera.position.lerp(vec.set(x * 2, y * 2, camera.position.z), 0.02);
+        }
         camera.lookAt(0, 0, 0);
     });
 
@@ -30,9 +35,9 @@ function Rig({ mouse }: { mouse: React.MutableRefObject<[number, number]> }) {
 }
 Rig.displayName = 'Rig';
 
-import { wallConfig } from '@/lib/three/constants';
+import { getWallConfig, WallConfigType } from '@/lib/three/constants';
 
-function RoomEdges() {
+function RoomEdges({ wallConfig }: { wallConfig: WallConfigType }) {
     return (
         <group>
             {Object.values(wallConfig).map((config, i) => (
@@ -64,6 +69,7 @@ RoomEdges.displayName = 'RoomEdges';
 function Logo() {
     const ref = useRef<THREE.Mesh>(null!);
     const materialRef = useRef<THREE.MeshStandardMaterial>(null!);
+    const { viewport } = useThree();
 
     useEffect(() => {
         // This component now fades in based on the parent's `showLogo` prop.
@@ -81,8 +87,8 @@ function Logo() {
         <Text3D
             ref={ref}
             font={'/helvetiker_regular.typeface.json'}
-            position={[-35, 15, -14]}
-            size={8}
+            position={[-viewport.width / 2.5, viewport.height / 3, -14]}
+            size={viewport.width / 10}
         >
             1J1
             <meshStandardMaterial

@@ -10,6 +10,7 @@ class AudioEngine {
   private masterGain: GainNode | null = null;
   private sounds: SoundMap = {};
   private isInitialized = false;
+  private isMuted = false;
 
   private constructor() {}
 
@@ -63,7 +64,7 @@ class AudioEngine {
   }
 
   public play(sound: string, fadein: boolean = false) {
-    if (!this.isInitialized) return;
+    if (!this.isInitialized || this.isMuted) return;
     const s = this.sounds[sound];
     if (s) {
       if (!s.playing()) {
@@ -92,8 +93,21 @@ class AudioEngine {
     }
   }
 
+  public toggleMute() {
+    this.isMuted = !this.isMuted;
+    if (this.masterGain && this.audioContext) {
+      this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 1, this.audioContext.currentTime);
+    }
+    // Also toggle Howler's mute
+    Howler.mute(this.isMuted);
+  }
+
+  public getIsMuted() {
+    return this.isMuted;
+  }
+
   public playProceduralHit() {
-      if (!this.audioContext || !this.masterGain) return;
+      if (!this.audioContext || !this.masterGain || this.isMuted) return;
       if (this.audioContext.state === 'suspended') {
           this.audioContext.resume();
       }

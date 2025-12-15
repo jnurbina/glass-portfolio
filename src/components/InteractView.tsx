@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { categories, Category } from '@/lib/interact-data';
 import { useTypewriter } from '@/hooks/useTypewriter';
@@ -14,10 +14,7 @@ const InteractView = () => {
     setSelectedIndex(index);
   };
 
-  const { displayText: typedContent } = useTypewriter(
-    selectedCategory.links.map((link) => `${link.title}: ${link.url}`).join('\n'),
-    true
-  );
+  const { displayText: typedTitle } = useTypewriter(selectedCategory.title, true);
 
   return (
     <motion.div
@@ -25,11 +22,10 @@ const InteractView = () => {
       initial={{ x: '100%' }}
       animate={{ x: 0 }}
       exit={{ x: '100%' }}
-      transition={{ duration: 0.5, ease: 'easeInOut' }}
+      transition={{ duration: 0.5, ease: 'easeInOut' as any }}
     >
       <div className="flex h-full">
         <div className="w-1/3 border-r border-white/20 pr-8">
-          <h2 className="text-2xl font-bold text-white mb-8">Categories</h2>
           <ul>
             {categories.map((category, index) => (
               <li
@@ -52,8 +48,25 @@ const InteractView = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <h2 className="text-2xl font-bold text-white mb-8">{selectedCategory.title}</h2>
-              <pre className="text-white whitespace-pre-wrap">{typedContent}</pre>
+              <h2 className="text-2xl font-bold text-white mb-8 h-8">{typedTitle || <span>&nbsp;</span>}</h2>
+              <div className="text-white whitespace-pre-wrap">
+                {selectedCategory.links.map((link) => {
+                  const Icon = link.icon;
+                  return (
+                    <a
+                      key={link.url}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 block hover:text-cyan-400"
+                      download={link.title === 'Resume (PDF)' ? 'Resume.pdf' : undefined}
+                    >
+                      {typeof Icon === 'string' ? <img src={Icon} alt={link.title} className="w-4 h-4" /> : <Icon />}
+                      {link.title}
+                    </a>
+                  );
+                })}
+              </div>
             </motion.div>
           </AnimatePresence>
         </div>

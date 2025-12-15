@@ -13,6 +13,8 @@ interface MenuItem {
 interface FF7MenuProps {
   menuItems: MenuItem[];
   onSelect: (action: string) => void;
+  muteButtonRef: React.RefObject<HTMLButtonElement>;
+  isMuteButtonFocused: boolean;
 }
 
 const containerVariants = {
@@ -41,7 +43,7 @@ const itemVariants = {
   },
 };
 
-const FF7Menu = ({ menuItems, onSelect }: FF7MenuProps) => {
+const FF7Menu = ({ menuItems, onSelect, muteButtonRef, isMuteButtonFocused }: FF7MenuProps) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -54,16 +56,22 @@ const FF7Menu = ({ menuItems, onSelect }: FF7MenuProps) => {
   };
 
   useEffect(() => {
-    itemRefs.current[selectedIndex]?.focus();
-  }, [selectedIndex]);
+    if (!isMuteButtonFocused) {
+      itemRefs.current[selectedIndex]?.focus();
+    }
+  }, [selectedIndex, isMuteButtonFocused]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowDown') {
-        setSelectedIndex((prevIndex) => (prevIndex + 1) % menuItems.length);
-        playHoverSound();
+        if (selectedIndex === menuItems.length - 1) {
+          muteButtonRef.current?.focus();
+        } else {
+          setSelectedIndex((prevIndex) => Math.min(prevIndex + 1, menuItems.length - 1));
+          playHoverSound();
+        }
       } else if (e.key === 'ArrowUp') {
-        setSelectedIndex((prevIndex) => (prevIndex - 1 + menuItems.length) % menuItems.length);
+        setSelectedIndex((prevIndex) => Math.max(prevIndex - 1, 0));
         playHoverSound();
       } else if (e.key === 'Enter') {
         handleSelect();
@@ -74,7 +82,7 @@ const FF7Menu = ({ menuItems, onSelect }: FF7MenuProps) => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [selectedIndex, menuItems.length, handleSelect, playHoverSound]);
+  }, [selectedIndex, menuItems.length, handleSelect, playHoverSound, muteButtonRef]);
 
   return (
     <motion.div
@@ -89,10 +97,12 @@ const FF7Menu = ({ menuItems, onSelect }: FF7MenuProps) => {
             <LinkItem
               ref={(el) => { itemRefs.current[index] = el; }}
               title={item.title}
-              isSelected={selectedIndex === index}
+              isSelected={!isMuteButtonFocused && selectedIndex === index}
               onMouseEnter={() => {
-                setSelectedIndex(index);
-                playHoverSound();
+                if (!isMuteButtonFocused) {
+                  setSelectedIndex(index);
+                  playHoverSound();
+                }
               }}
               onClick={handleSelect}
             />

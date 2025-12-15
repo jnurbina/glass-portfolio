@@ -79,7 +79,7 @@ export const links: Link[] = [
   // },
   {
     title: "Resume (PDF)",
-    url: "/urbinaResume2025.pdf", // Link to the PDF in public folder
+    url: "/Resume.pdf", // Link to the PDF in public folder
     icon: FaFilePdf,
     glowColor: "rgba(255, 255, 255, 0.4)"
   },

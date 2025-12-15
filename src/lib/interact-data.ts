@@ -77,7 +77,7 @@ export const categories: Category[] = [
     links: [
       {
         title: 'Resume (PDF)',
-        url: '/urbinaResume2025.pdf',
+        url: '/Resume.pdf',
         icon: FaFilePdf,
       },
     ],
