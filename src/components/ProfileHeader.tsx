@@ -2,6 +2,7 @@
 
 import React, { useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import { GlassPane } from './GlassPane';
 import { useLensFlare } from '@/hooks/useLensFlare';
 
@@ -42,9 +43,11 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           {/* Avatar with glow effect */}
           <div className="relative mb-4">
             <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-white/30 relative z-10">
-              <img 
+              <Image 
                 src={avatarUrl} 
                 alt={name} 
+                width={96}
+                height={96}
                 className="w-full h-full object-cover"
               />
             </div>

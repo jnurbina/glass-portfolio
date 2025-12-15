@@ -19,9 +19,8 @@ const LinkItem = forwardRef<HTMLDivElement, LinkItemProps>(({ title, isSelected,
       tabIndex={0} // Make it focusable
       className="text-2xl font-display text-white no-underline py-2 cursor-pointer transition-all duration-300 ease-out outline-none text-shadow-glow"
       style={{
-        // @ts-ignore
         '--glow-color': glowColor,
-      }}
+      } as React.CSSProperties & { '--glow-color': string }}
       whileHover={{ scale: 1.1, transition: { duration: 0.2 } }}
       whileFocus={{
         scale: 1.1,

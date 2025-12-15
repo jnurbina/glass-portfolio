@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import FF7Menu from './FF7Menu';
@@ -17,7 +17,7 @@ const ThreeCanvas = dynamic(() => import('./ThreeCanvas.client'), { ssr: false }
 const menuItems = [
   { title: '[ Explore 1J1 ]', action: 'explore' },
   { title: '[ Interact ]', action: 'interact' },
-  { title: '[ MOVING SALE ]', action: 'movingsale' },
+  // { title: '[ MOVING SALE ]', action: 'movingsale' },
 ];
 
 export default function DesktopView() {

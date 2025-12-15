@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { motion, AnimationProps } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 interface BackgroundProps {
   children: React.ReactNode;
@@ -14,8 +14,8 @@ export const Background: React.FC<BackgroundProps> = ({ children }) => {
       x: ['-10%', '10%', '-10%'],
       y: ['-10%', '10%', '-10%'],
       transition: {
-        x: { repeat: Infinity, duration: 20, ease: "easeInOut" },
-        y: { repeat: Infinity, duration: 25, ease: "easeInOut" }
+        x: { repeat: Infinity, duration: 20, ease: "easeIn" },
+        y: { repeat: Infinity, duration: 25, ease: "easeIn" }
       }
     }
   };
@@ -28,10 +28,10 @@ export const Background: React.FC<BackgroundProps> = ({ children }) => {
       x: ['-5%', '5%', '-5%'],
       y: ['-5%', '5%', '-5%'],
       transition: {
-        opacity: { repeat: Infinity, duration: 8, ease: "easeInOut" },
-        scale: { repeat: Infinity, duration: 10, ease: "easeInOut" },
-        x: { repeat: Infinity, duration: 15, ease: "easeInOut" },
-        y: { repeat: Infinity, duration: 12, ease: "easeInOut" }
+        opacity: { repeat: Infinity, duration: 8, ease: "easeIn" },
+        scale: { repeat: Infinity, duration: 10, ease: "easeIn" },
+        x: { repeat: Infinity, duration: 15, ease: "easeIn" },
+        y: { repeat: Infinity, duration: 12, ease: "easeIn" }
       }
     }
   };
@@ -43,7 +43,7 @@ export const Background: React.FC<BackgroundProps> = ({ children }) => {
         {/* Floating orbs/light sources with subtle animations */}
         <motion.div
           className="absolute w-64 h-64 rounded-full bg-blue-900/10 blur-3xl"
-          animate={floatingAnimation.animate}
+          animate={floatingAnimation.animate as any}
           style={{ top: '10%', left: '15%' }}
         />
         
@@ -53,10 +53,10 @@ export const Background: React.FC<BackgroundProps> = ({ children }) => {
             x: ['5%', '-5%', '5%'],
             y: ['5%', '-5%', '5%'],
             transition: {
-              x: { repeat: Infinity, duration: 18, ease: "easeInOut" },
-              y: { repeat: Infinity, duration: 22, ease: "easeInOut" }
+              x: { repeat: Infinity, duration: 18, ease: "easeIn" },
+              y: { repeat: Infinity, duration: 22, ease: "easeIn" }
             }
-          }}
+          } as any}
           style={{ bottom: '10%', right: '15%' }}
         />
         
@@ -66,17 +66,17 @@ export const Background: React.FC<BackgroundProps> = ({ children }) => {
             x: ['-5%', '5%', '-5%'],
             y: ['-8%', '8%', '-8%'],
             transition: {
-              x: { repeat: Infinity, duration: 25, ease: "easeInOut" },
-              y: { repeat: Infinity, duration: 19, ease: "easeInOut" }
+              x: { repeat: Infinity, duration: 25, ease: "easeIn" },
+              y: { repeat: Infinity, duration: 19, ease: "easeIn" }
             }
-          }}
+          } as any}
           style={{ top: '40%', right: '25%' }}
         />
         
         {/* Lens flare effects with subtle animations */}
         <motion.div
           className="absolute w-40 h-40 rounded-full bg-white/5 blur-xl"
-          animate={lensFlareAnimation.animate}
+          animate={lensFlareAnimation.animate as any}
           style={{ top: '20%', left: '30%' }}
         />
         
@@ -88,12 +88,12 @@ export const Background: React.FC<BackgroundProps> = ({ children }) => {
             x: ['5%', '-5%', '5%'],
             y: ['5%', '-5%', '5%'],
             transition: {
-              opacity: { repeat: Infinity, duration: 10, ease: "easeInOut" },
-              scale: { repeat: Infinity, duration: 12, ease: "easeInOut" },
-              x: { repeat: Infinity, duration: 18, ease: "easeInOut" },
-              y: { repeat: Infinity, duration: 14, ease: "easeInOut" }
+              opacity: { repeat: Infinity, duration: 10, ease: "easeIn" },
+              scale: { repeat: Infinity, duration: 12, ease: "easeIn" },
+              x: { repeat: Infinity, duration: 18, ease: "easeIn" },
+              y: { repeat: Infinity, duration: 14, ease: "easeIn" }
             }
-          }}
+          } as any}
           style={{ bottom: '30%', left: '20%' }}
         />
         
@@ -106,9 +106,9 @@ export const Background: React.FC<BackgroundProps> = ({ children }) => {
           animate={{
             backgroundPosition: ['0% 0%', '100% 100%', '0% 0%'],
             transition: {
-              backgroundPosition: { repeat: Infinity, duration: 30, ease: "linear" }
+              backgroundPosition: { repeat: Infinity, duration: 30, ease: "circIn" }
             }
-          }}
+          } as any}
         />
       </div>
       

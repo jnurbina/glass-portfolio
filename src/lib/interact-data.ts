@@ -1,6 +1,17 @@
 import { FaGithub, FaLinkedin, FaTwitter, FaEnvelope, FaCode, FaSoundcloud, FaSpotify, FaInstagram, FaTiktok, FaFilePdf } from 'react-icons/fa';
 
-export const categories = [
+export interface Link {
+  title: string;
+  url: string;
+  icon: React.ComponentType | string;
+}
+
+export interface Category {
+  title: string;
+  links: Link[];
+}
+
+export const categories: Category[] = [
   {
     title: '[ Code Socials ]',
     links: [

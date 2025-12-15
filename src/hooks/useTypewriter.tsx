@@ -61,12 +61,7 @@ export const useTypewriter = (text: string, isActive: boolean): UseTypewriterRes
           case 'typing':
             if (currentIndexRef.current < text.length) {
               const charToAdd = text[currentIndexRef.current];
-               // **Crucial Check:** Only add if the character is valid
-              if (typeof charToAdd === 'string') {
-                 setDisplayText(prev => prev + charToAdd);
-              } else {
-                 console.warn("useTypewriter: Encountered non-string character at index", currentIndexRef.current, "for text:", text);
-              }
+              setDisplayText(prev => prev + charToAdd);
               currentIndexRef.current++;
               animationFrameRef.current = requestAnimationFrame(() => {
                 timeoutRef.current = setTimeout(loop, TYPE_SPEED);

@@ -1,7 +1,6 @@
 import React, { useRef, useMemo } from 'react';
 import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
-import { Points } from '@react-three/drei';
 import { audioEngine } from '@/lib/audio/AudioEngine';
 import { createGlowTexture } from '@/lib/three/utils';
 
@@ -64,17 +63,16 @@ function Particles({ onHit, count, mouse }: ParticlesProps) {
     });
 
     return (
-        <Points ref={pointsRef} limit={count}>
+        <points ref={pointsRef}>
             <pointsMaterial map={glowTexture} size={0.2} transparent opacity={0.8} blending={THREE.AdditiveBlending} />
             <bufferGeometry>
                 <bufferAttribute
                     attach="attributes-position"
-                    array={new Float32Array(particles.flatMap(p => p.position.toArray()))}
-                    count={particles.length}
+                    args={[new Float32Array(particles.flatMap(p => p.position.toArray())), 3]}
                     itemSize={3}
                 />
             </bufferGeometry>
-        </Points>
+        </points>
     );
 }
 Particles.displayName = 'Particles';

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { LinkItem } from './LinkItem';
 import { audioEngine } from '@/lib/audio/audio';
@@ -23,7 +23,7 @@ const containerVariants = {
     transition: {
       staggerChildren: 0.2,
       delayChildren: 0.3,
-      ease: "easeOut",
+      ease: "easeOut" as any,
       duration: 0.8
     },
   },
@@ -36,7 +36,7 @@ const itemVariants = {
     opacity: 1,
     transition: {
       duration: 0.5,
-      ease: "easeOut",
+      ease: "easeOut" as any,
     },
   },
 };
@@ -74,7 +74,7 @@ const FF7Menu = ({ menuItems, onSelect }: FF7MenuProps) => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [selectedIndex, menuItems.length]);
+  }, [selectedIndex, menuItems.length, handleSelect, playHoverSound]);
 
   return (
     <motion.div
@@ -87,7 +87,7 @@ const FF7Menu = ({ menuItems, onSelect }: FF7MenuProps) => {
         {menuItems.map((item, index) => (
           <motion.div key={item.title} variants={itemVariants}>
             <LinkItem
-              ref={(el) => (itemRefs.current[index] = el)}
+              ref={(el) => { itemRefs.current[index] = el; }}
               title={item.title}
               isSelected={selectedIndex === index}
               onMouseEnter={() => {

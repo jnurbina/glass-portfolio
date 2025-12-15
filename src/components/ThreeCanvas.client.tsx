@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useMemo, useEffect, useState, useCallback, Suspense } from 'react';
+import { useRef, useMemo, useEffect, useCallback, Suspense } from 'react';
 import * as THREE from 'three';
 import { Canvas } from '@react-three/fiber';
 import { CubeCamera } from '@react-three/drei';
@@ -15,7 +15,7 @@ import { useThreeCanvasState } from '@/hooks/use-three-canvas-state';
 
 export default function ThreeCanvas({ onLoaded, showLogo }: { onLoaded: () => void, showLogo: boolean }) {
     const hitListeners = useRef(new Set<(position: THREE.Vector3) => void>()).current;
-    const mouseRef = useRef([0, 0]);
+    const mouseRef = useRef<[number, number]>([0, 0]);
 
     useEffect(() => {
         const handleMouseMove = (event: MouseEvent) => {
@@ -54,13 +54,9 @@ export default function ThreeCanvas({ onLoaded, showLogo }: { onLoaded: () => vo
 
     const {
         isPaused,
-        volume,
         particleCount,
         reflectionQuality,
         setIsPaused,
-        setVolume,
-        setParticleCount,
-        setReflectionQuality,
     } = useThreeCanvasState();
 
     useEffect(() => {

@@ -9,6 +9,10 @@ interface LlmWidgetProps {
   placeholder?: string;
 }
 
+interface LlmResponse {
+  response: string;
+}
+
 export const LlmWidget: React.FC<LlmWidgetProps> = ({
   placeholder = "Ask me anything about my services..."
 }) => {
@@ -38,7 +42,7 @@ export const LlmWidget: React.FC<LlmWidgetProps> = ({
         throw new Error('Failed to get response');
       }
       
-      const data = await response.json();
+      const data = await response.json() as LlmResponse;
       setChatHistory([...chatHistory, {query: query, response: data.response}]);
       setQuery('');
     } catch (error) {

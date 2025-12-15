@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { Background } from '@/components/Background';
 import { ProfileHeader } from '@/components/ProfileHeader';
 import MobileLinkItem from '@/components/MobileLinkItem';
-// import { LlmWidget } from '@/components/LlmWidget';
+import { LlmWidget } from '@/components/LlmWidget';
 import LaughingMan from '@/components/LaughingMan';
 import { profile, links } from '@/lib/data';
 

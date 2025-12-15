@@ -2,21 +2,21 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { categories } from '@/lib/interact-data';
+import { categories, Category } from '@/lib/interact-data';
 import { useTypewriter } from '@/hooks/useTypewriter';
 
 const InteractView = () => {
   const [selectedCategory, setSelectedCategory] = useState(categories[0]);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  const handleCategorySelect = (category: any, index: number) => {
+  const handleCategorySelect = (category: Category, index: number) => {
     setSelectedCategory(category);
     setSelectedIndex(index);
   };
 
   const { displayText: typedContent } = useTypewriter(
     selectedCategory.links.map((link) => `${link.title}: ${link.url}`).join('\n'),
-    50
+    true
   );
 
   return (
