@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
+// import OpenAI from 'openai';
 
 // This would be set up properly in production with environment variables
 // const openai = new OpenAI({
@@ -8,7 +8,8 @@ import OpenAI from 'openai';
 
 export async function POST(request: NextRequest) {
   try {
-    const { query } = await request.json();
+    // FIX: Cast the json() result so TS knows 'query' exists
+    const { query } = (await request.json()) as { query: string };
     
     if (!query || typeof query !== 'string') {
       return NextResponse.json(
