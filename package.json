@@ -98,6 +98,10 @@
     "wrangler": "^3.102.0"
   },
   "overrides": {
-    "three-mesh-bvh": "$three-mesh-bvh"
+    "three-mesh-bvh": "$three-mesh-bvh",
+    "cmdk": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    }
   }
 }
