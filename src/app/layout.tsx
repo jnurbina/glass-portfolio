@@ -5,8 +5,8 @@ import { AchievementProvider } from '@/hooks/use-achievement-state';
 import { Toaster } from '@/components/ui/sonner';
 
 export const metadata: Metadata = {
-  title: 'Glass Portfolio',
-  description: 'A portfolio of my work, built with Next.js and Three.js.',
+  title: '1 J 1',
+  description: 'Creative Code meets Audio Engineering',
 };
 
 // Instantiate the font
