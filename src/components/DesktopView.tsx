@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import FF7Menu from './FF7Menu';
@@ -11,6 +11,7 @@ import InteractView from './InteractView';
 import { AnimatePresence } from 'framer-motion';
 import { useAchievementState } from '@/hooks/use-achievement-state';
 import LaughingMan from './LaughingMan';
+import { MuteButton } from './ui/MuteButton';
 
 const ThreeCanvas = dynamic(() => import('./ThreeCanvas.client'), { ssr: false });
 
@@ -29,6 +30,10 @@ export default function DesktopView() {
   const [isInteractView, setIsInteractView] = useState(false);
   const { unlockAchievement } = useAchievementState();
   const router = useRouter();
+
+  // FIX: Added ref and state for MuteButton to satisfy FF7Menu props
+  const muteButtonRef = useRef<HTMLButtonElement>(null);
+  const [isMuteButtonFocused, setIsMuteButtonFocused] = useState(false);
 
   useEffect(() => {
     // Cleanup audio on component unmount
@@ -70,8 +75,6 @@ export default function DesktopView() {
     }
   }, [isLoaded, isInteracted]);
 
-
-
   if (!preloaderComplete) {
     return <LaughingMan onLoadComplete={() => setPreloaderComplete(true)} />;
   }
@@ -88,7 +91,15 @@ export default function DesktopView() {
       </ThreeCanvasProvider>
 
       <AnimatePresence>
-        {isLoaded && showMenu && !isInteractView && <FF7Menu menuItems={menuItems} onSelect={handleMenuSelect} />}
+        {isLoaded && showMenu && !isInteractView && (
+          <FF7Menu 
+            menuItems={menuItems} 
+            onSelect={handleMenuSelect} 
+            // FIX: Pass the required mute button props
+            muteButtonRef={muteButtonRef}
+            isMuteButtonFocused={isMuteButtonFocused}
+          />
+        )}
       </AnimatePresence>
 
       <AnimatePresence>
@@ -103,6 +114,13 @@ export default function DesktopView() {
           [ Back ]
         </button>
       )}
+
+      {/* FIX: Render the MuteButton to attach the ref */}
+      <MuteButton 
+        ref={muteButtonRef} 
+        onFocus={() => setIsMuteButtonFocused(true)} 
+        onBlur={() => setIsMuteButtonFocused(false)} 
+      />
     </div>
   );
 }
