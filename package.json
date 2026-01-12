@@ -99,9 +99,7 @@
   },
   "overrides": {
     "three-mesh-bvh": "$three-mesh-bvh",
-    "cmdk": {
-      "react": "$react",
-      "react-dom": "$react-dom"
-    }
+    "react": "$react",
+    "react-dom": "$react-dom"
   }
 }
