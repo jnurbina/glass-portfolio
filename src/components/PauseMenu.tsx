@@ -2,7 +2,8 @@
 
 import React from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { audioEngine } from '@/lib/audio/AudioEngine';
+// FIX: Updated import path to match the correct file
+import { audioEngine } from '@/lib/audio/audio';
 
 export default function PauseMenu() {
     const handleVolumeChange = (event: React.ChangeEvent<HTMLInputElement>) => {

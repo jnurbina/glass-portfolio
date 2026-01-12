@@ -1,4 +1,3 @@
-// FIX: Import 'Howler' alongside 'Howl' so you can use the global mute function
 import { Howl, Howler } from 'howler';
 
 type SoundMap = {
@@ -94,13 +93,16 @@ class AudioEngine {
     }
   }
 
+  // FIX: Added setVolume method to control global volume via Howler
+  public setVolume(volume: number) {
+    Howler.volume(volume);
+  }
+
   public toggleMute() {
     this.isMuted = !this.isMuted;
     if (this.masterGain && this.audioContext) {
       this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 1, this.audioContext.currentTime);
     }
-    // Also toggle Howler's mute
-    // FIX: This now works because we imported 'Howler' at the top
     Howler.mute(this.isMuted);
   }
 
