@@ -1,4 +1,5 @@
-import { Howl } from 'howler';
+// FIX: Import 'Howler' alongside 'Howl' so you can use the global mute function
+import { Howl, Howler } from 'howler';
 
 type SoundMap = {
   [key: string]: Howl;
@@ -99,6 +100,7 @@ class AudioEngine {
       this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 1, this.audioContext.currentTime);
     }
     // Also toggle Howler's mute
+    // FIX: This now works because we imported 'Howler' at the top
     Howler.mute(this.isMuted);
   }
 
@@ -114,7 +116,7 @@ class AudioEngine {
 
       const dMinorScale = [1174.66, 1318.51, 1396.91, 1567.98, 1760.00, 1864.66, 2093.00];
       const noteIndex = Math.floor(Math.random() * dMinorScale.length);
-      const volume = 0.1; // Reduced volume (user requested down 20% then another 20% -> 0.5 * 0.8 * 0.8 = 0.32, let's go lower for subtlety)
+      const volume = 0.1; 
 
       const oscillator = this.audioContext.createOscillator();
       oscillator.type = 'sine';
