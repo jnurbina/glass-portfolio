@@ -6,13 +6,12 @@ import { Canvas } from '@react-three/fiber';
 import { CubeCamera } from '@react-three/drei';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import { audioEngine } from '@/lib/audio/audio';
-import { wallConfig } from '@/lib/three/constants';
+// import { wallConfig } from '@/lib/three/constants'; // REMOVED: This does not exist and is unused
 import TiledWall from './three/TiledWall';
 import Particles from './three/Particles';
 import { Skybox, Rig, RoomEdges, Logo } from './three/Scene';
 import PauseModal from './three/PauseModal';
 import { useThreeCanvasState } from '@/hooks/use-three-canvas-state';
-
 import { useAchievementState } from '@/hooks/use-achievement-state';
 import { getWallConfig } from '@/lib/three/constants';
 import { useThree } from '@react-three/fiber';

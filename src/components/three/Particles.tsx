@@ -1,7 +1,8 @@
 import React, { useRef, useMemo } from 'react';
 import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
-import { audioEngine } from '@/lib/audio/AudioEngine';
+// FIX 1: Corrected import casing from 'AudioEngine' to 'audio'
+import { audioEngine } from '@/lib/audio/audio';
 import { createGlowTexture } from '@/lib/three/utils';
 
 interface Particle {
@@ -45,8 +46,9 @@ function Particles({ onHit, count, mouse }: ParticlesProps) {
             const checkCollision = (axis: 'x' | 'y' | 'z', limit: number) => {
                 if (Math.abs(p.position[axis]) > limit) {
                     p.velocity[axis] *= -1;
+                    // FIX 2: Removed broken 'audioEngine.playNote(...)'
+                    // The onHit() callback triggers the sound in the parent component (ThreeCanvas.client.tsx)
                     onHit(p.position);
-                    audioEngine.playNote(Math.floor(Math.random() * 7), 0.4);
                 }
             };
 
