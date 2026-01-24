@@ -112,7 +112,7 @@ const ExperiencePane = ({ onClose }: PaneProps) => {
                             </div>
 
                             {/* Text Section */}
-                            <div className={`${isMobile ? 'w-full' : 'w-1/2'} flex flex-col justify-center h-full`}>
+                            <div className={`${isMobile ? 'w-full' : 'w-1/2'} flex flex-col justify-center h-full overflow-y-auto custom-scrollbar pr-2`}>
                                 <h3 className="text-xl md:text-2xl font-bold mb-1 md:mb-2 text-cyan-400">{currentItem.title}</h3>
                                 <h4 className="text-sm md:text-lg text-white/80 mb-4 md:mb-6 font-mono">{currentItem.role}</h4>
                                 <ul className="space-y-2 md:space-y-4">

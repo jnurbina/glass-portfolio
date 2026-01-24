@@ -53,6 +53,10 @@ export default function MainView() {
       }
     }, [isLoaded]);
 
+    const handleLoaded = useCallback(() => {
+      setIsLoaded(true);
+    }, []);
+
     const handleMenuSelect = (action: string) => {
       setActiveView(action as ViewMode);
       if (action !== 'home') {
@@ -120,7 +124,7 @@ export default function MainView() {
         <ThreeCanvasProvider>
           {/* @ts-ignore - Updating ThreeCanvas props next */}
           <ThreeCanvas 
-            onLoaded={() => setIsLoaded(true)} 
+            onLoaded={handleLoaded} 
             showLogo={showLogo && activeView === 'home'}
             activeView={activeView}
             onCloseView={() => setActiveView('home')}

@@ -6,13 +6,17 @@ export function useResponsivePane(desktopWidth: number, desktopHeight: number) {
   const isMobile = size.width < 768;
 
   return useMemo(() => {
+    // For desktop, ensure we don't exceed the actual window pixels
+    const width = isMobile ? 340 : Math.min(desktopWidth, size.width * 0.9);
+    const height = isMobile ? 600 : Math.min(desktopHeight, size.height * 0.85);
+
     return {
       style: {
-        width: isMobile ? '340px' : `${desktopWidth}px`, // Fixed small width for mobile to force wrapping
-        height: isMobile ? '600px' : `${desktopHeight}px`,
+        width: `${width}px`,
+        height: `${height}px`,
       },
-      distanceFactor: isMobile ? 8 : 15, // Closer on mobile to appear larger
+      distanceFactor: isMobile ? 8 : 15,
       isMobile,
     };
-  }, [size.width, isMobile, desktopWidth, desktopHeight]);
+  }, [size.width, size.height, isMobile, desktopWidth, desktopHeight]);
 }

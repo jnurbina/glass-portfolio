@@ -33,8 +33,10 @@ interface SceneContentProps {
 }
 
 const SceneContent = ({ showLogo, activeView, onCloseView, subscribeToHit, onParticleHit, particleCount, mouseRef, motionRef, reflectionQuality }: SceneContentProps) => {
-    const { viewport } = useThree();
+    const { viewport, size } = useThree();
     const wallConfig = getWallConfig(viewport.width, viewport.height);
+    const isMobile = size.width < 768;
+    const cubeResolution = isMobile ? 64 : 128;
 
     return (
         <Suspense fallback={null}>
@@ -42,7 +44,7 @@ const SceneContent = ({ showLogo, activeView, onCloseView, subscribeToHit, onPar
             <hemisphereLight intensity={0.2} groundColor="black" />
             <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} castShadow />
             
-            <CubeCamera resolution={128} frames={reflectionQuality} near={0.1} far={1000}>
+            <CubeCamera resolution={cubeResolution} frames={reflectionQuality} near={0.1} far={1000}>
                 {(texture) => (
                     <>
                         {Object.entries(wallConfig).map(([key, config]) => (
@@ -154,7 +156,7 @@ export default function ThreeCanvas({ onLoaded, showLogo, activeView, onCloseVie
             zIndex: activeView !== 'home' ? 10 : -1, 
             pointerEvents: 'none' 
         }}>
-            <Canvas camera={{ position: [0, 0, 25], fov: 75 }} style={{ pointerEvents: 'auto' }}>
+            <Canvas dpr={[1, 2]} camera={{ position: [0, 0, 25], fov: 75 }} style={{ pointerEvents: 'auto' }}>
                 <SceneContent 
                     showLogo={showLogo}
                     activeView={activeView}
