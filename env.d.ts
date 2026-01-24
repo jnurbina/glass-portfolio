@@ -4,3 +4,6 @@ interface CloudflareEnv {
 	DB: D1Database;
 	ASSETS: Fetcher;
 }
+
+declare module 'uuid';
+declare module 'howler';

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { AchievementProvider } from '@/hooks/use-achievement-state';
@@ -7,6 +7,13 @@ import { Toaster } from '@/components/ui/sonner';
 export const metadata: Metadata = {
   title: 'Glass Portfolio',
   description: 'A portfolio of my work, built with Next.js and Three.js.',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 // Instantiate the font

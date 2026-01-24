@@ -70,6 +70,7 @@ function Logo() {
     const ref = useRef<THREE.Mesh>(null!);
     const materialRef = useRef<THREE.MeshStandardMaterial>(null!);
     const { viewport } = useThree();
+    const isMobile = viewport.width < viewport.height;
 
     useEffect(() => {
         // This component now fades in based on the parent's `showLogo` prop.
@@ -83,12 +84,20 @@ function Logo() {
         }
     });
 
+    const mobileSize = viewport.width / 5;
+    const desktopSize = viewport.width / 10;
+    const size = isMobile ? mobileSize : desktopSize;
+
+    const mobilePos: [number, number, number] = [-viewport.width / 2 + 1, viewport.height / 3, -10];
+    const desktopPos: [number, number, number] = [-viewport.width / 2.5, viewport.height / 3, -14];
+    const position = isMobile ? mobilePos : desktopPos;
+
     return (
         <Text3D
             ref={ref}
             font={'/helvetiker_regular.typeface.json'}
-            position={[-viewport.width / 2.5, viewport.height / 3, -14]}
-            size={viewport.width / 10}
+            position={position}
+            size={size}
         >
             1J1
             <meshStandardMaterial

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface ThreeCanvasState {
   isPaused: boolean;
@@ -18,8 +18,15 @@ const ThreeCanvasContext = createContext<ThreeCanvasState | undefined>(undefined
 export const ThreeCanvasProvider = ({ children }: { children: React.ReactNode }) => {
   const [isPaused, setIsPaused] = useState(false);
   const [volume, setVolume] = useState(0.5);
-  const [particleCount, setParticleCount] = useState(8);
+  const [particleCount, setParticleCount] = useState(128); // Default to desktop for SSR match, adjust in effect
   const [reflectionQuality, setReflectionQuality] = useState(1);
+
+  useEffect(() => {
+    // optimize for mobile
+    if (window.innerWidth < 768) {
+      setParticleCount(32);
+    }
+  }, []);
 
   const value = {
     isPaused,

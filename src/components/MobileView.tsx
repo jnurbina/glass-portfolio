@@ -14,13 +14,21 @@ import { profile, links } from '@/lib/data';
 export default function MobileView() {
   const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    // Simulate loading time
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
   const handleLoadComplete = () => {
-    setLoading(false);
+    // Optional cleanup
   };
 
   return (
     <>
-      <LaughingMan onLoadComplete={handleLoadComplete} />
+      <LaughingMan loading={loading} onLoadComplete={handleLoadComplete} />
       
       <Background>
         <div className="container mx-auto px-4 py-16 max-w-md">

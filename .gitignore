@@ -47,3 +47,6 @@ pnpm-debug.log*
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Gemini Context
+.gemini_context.md

@@ -8,7 +8,7 @@ import OpenAI from 'openai';
 
 export async function POST(request: NextRequest) {
   try {
-    const { query } = await request.json();
+    const { query } = await request.json() as any;
     
     if (!query || typeof query !== 'string') {
       return NextResponse.json(

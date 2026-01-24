@@ -1,24 +1,29 @@
-"use client";
-
-import { useRef, useMemo, useEffect, useCallback, Suspense } from 'react';
+import React, { useRef, useEffect, useCallback, Suspense } from 'react';
 import * as THREE from 'three';
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useThree } from '@react-three/fiber';
 import { CubeCamera } from '@react-three/drei';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import { audioEngine } from '@/lib/audio/audio';
-import { wallConfig } from '@/lib/three/constants';
 import TiledWall from './three/TiledWall';
 import Particles from './three/Particles';
 import { Skybox, Rig, RoomEdges, Logo } from './three/Scene';
-import PauseModal from './three/PauseModal';
+import SettingsPane from './three/SettingsPane';
+import BioPane from './three/BioPane';
+import ExperiencePane from './three/ExperiencePane';
+import ExperimentsPane from './three/ExperimentsPane';
+import AudioPane from './three/AudioPane';
+import ForYouPane from './three/ForYouPane';
+import AchievementWallPanel from './three/AchievementWallPanel';
 import { useThreeCanvasState } from '@/hooks/use-three-canvas-state';
 
 import { useAchievementState } from '@/hooks/use-achievement-state';
 import { getWallConfig } from '@/lib/three/constants';
-import { useThree } from '@react-three/fiber';
+import { ViewMode } from '@/lib/view-types';
 
 interface SceneContentProps {
     showLogo: boolean;
+    activeView: ViewMode;
+    onCloseView: () => void;
     subscribeToHit: (callback: (position: THREE.Vector3) => void) => () => void;
     onParticleHit: (position: THREE.Vector3) => void;
     particleCount: number;
@@ -27,7 +32,7 @@ interface SceneContentProps {
     reflectionQuality: number;
 }
 
-const SceneContent = ({ showLogo, subscribeToHit, onParticleHit, particleCount, mouseRef, motionRef, reflectionQuality }: SceneContentProps) => {
+const SceneContent = ({ showLogo, activeView, onCloseView, subscribeToHit, onParticleHit, particleCount, mouseRef, motionRef, reflectionQuality }: SceneContentProps) => {
     const { viewport } = useThree();
     const wallConfig = getWallConfig(viewport.width, viewport.height);
 
@@ -52,6 +57,14 @@ const SceneContent = ({ showLogo, subscribeToHit, onParticleHit, particleCount, 
             <Rig mouse={mouseRef} motion={motionRef} />
             <RoomEdges wallConfig={wallConfig} />
             {showLogo && <Logo />}
+            <AchievementWallPanel />
+            
+            {activeView === 'settings' && <SettingsPane onClose={onCloseView} />}
+            {activeView === 'bio' && <BioPane onClose={onCloseView} />}
+            {activeView === 'experience' && <ExperiencePane onClose={onCloseView} />}
+            {activeView === 'experiments' && <ExperimentsPane onClose={onCloseView} />}
+            {activeView === 'audio' && <AudioPane onClose={onCloseView} />}
+            {activeView === 'foryou' && <ForYouPane onClose={onCloseView} />}
 
             <EffectComposer>
                 <Bloom luminanceThreshold={0.3} luminanceSmoothing={0.9} height={150} intensity={0.8} />
@@ -60,7 +73,7 @@ const SceneContent = ({ showLogo, subscribeToHit, onParticleHit, particleCount, 
     );
 };
 
-export default function ThreeCanvas({ onLoaded, showLogo }: { onLoaded: () => void, showLogo: boolean }) {
+export default function ThreeCanvas({ onLoaded, showLogo, activeView, onCloseView }: { onLoaded: () => void, showLogo: boolean, activeView: ViewMode, onCloseView: () => void }) {
     const hitListeners = useRef(new Set<(position: THREE.Vector3) => void>()).current;
     const mouseRef = useRef<[number, number]>([0, 0]);
     const motionRef = useRef<[number, number, number]>([0, 0, 0]);
@@ -75,31 +88,31 @@ export default function ThreeCanvas({ onLoaded, showLogo }: { onLoaded: () => vo
             ];
         };
 
-        const handleDeviceMotion = (event: DeviceMotionEvent) => {
-            if (event.accelerationIncludingGravity) {
-                motionRef.current = [
-                    event.accelerationIncludingGravity.x || 0,
-                    event.accelerationIncludingGravity.y || 0,
-                    event.accelerationIncludingGravity.z || 0,
-                ];
-            }
+        const handleDeviceOrientation = (event: DeviceOrientationEvent) => {
+            if (event.gamma === null || event.beta === null) return;
+            const gamma = event.gamma;
+            const beta = event.beta;
+            const x = Math.min(Math.max(gamma, -45), 45) / 45;
+            const y = Math.min(Math.max(beta - 45, -45), 45) / 45; 
+            motionRef.current = [x, -y, 0];
         };
 
         window.addEventListener('mousemove', handleMouseMove);
-        window.addEventListener('devicemotion', handleDeviceMotion);
+        window.addEventListener('deviceorientation', handleDeviceOrientation);
+        
         return () => {
             window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('devicemotion', handleDeviceMotion);
+            window.removeEventListener('deviceorientation', handleDeviceOrientation);
         };
     }, []);
 
     useEffect(() => {
-        audioEngine.init(() => {
-          audioEngine.play('background', true);
-        });
-    
-        onLoaded();
-
+        const loadAssets = async () => {
+             await audioEngine.load();
+             onLoaded();
+             audioEngine.play('background', true);
+        };
+        loadAssets();
         return () => {
           audioEngine.fadeOut('background');
         };
@@ -107,7 +120,7 @@ export default function ThreeCanvas({ onLoaded, showLogo }: { onLoaded: () => vo
     
     const onParticleHit = useCallback((position: THREE.Vector3) => {
         hitListeners.forEach(listener => listener(position));
-        audioEngine.playProceduralHit(); // Play sound on hit
+        audioEngine.playProceduralHit(); 
         hitCount.current += 1;
     }, [hitListeners]);
 
@@ -118,10 +131,7 @@ export default function ThreeCanvas({ onLoaded, showLogo }: { onLoaded: () => vo
             }
             hitCount.current = 0;
         }, 5000);
-
-        return () => {
-            clearInterval(interval);
-        };
+        return () => clearInterval(interval);
     }, [unlockAchievement]);
 
     const subscribeToHit = useCallback((callback: (position: THREE.Vector3) => void) => {
@@ -130,39 +140,34 @@ export default function ThreeCanvas({ onLoaded, showLogo }: { onLoaded: () => vo
     }, [hitListeners]);
 
     const {
-        isPaused,
         particleCount,
         reflectionQuality,
-        setIsPaused,
     } = useThreeCanvasState();
 
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
-                setIsPaused(!isPaused);
-            }
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [isPaused, setIsPaused]);
-
     return (
-        <>
-            <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: -1 }}>
-                <Canvas camera={{ position: [0, 0, 25], fov: 75 }}>
-                    <SceneContent 
-                        showLogo={showLogo}
-                        subscribeToHit={subscribeToHit}
-                        onParticleHit={onParticleHit}
-                        particleCount={particleCount}
-                        mouseRef={mouseRef}
-                        motionRef={motionRef}
-                        reflectionQuality={reflectionQuality}
-                    />
-                </Canvas>
-            </div>
-            <PauseModal />
-        </>
+        <div style={{ 
+            position: 'fixed', 
+            top: 0, 
+            left: 0, 
+            width: '100%', 
+            height: '100%', 
+            zIndex: activeView !== 'home' ? 10 : -1, 
+            pointerEvents: 'none' 
+        }}>
+            <Canvas camera={{ position: [0, 0, 25], fov: 75 }} style={{ pointerEvents: 'auto' }}>
+                <SceneContent 
+                    showLogo={showLogo}
+                    activeView={activeView}
+                    onCloseView={onCloseView}
+                    subscribeToHit={subscribeToHit}
+                    onParticleHit={onParticleHit}
+                    particleCount={particleCount}
+                    mouseRef={mouseRef}
+                    motionRef={motionRef}
+                    reflectionQuality={reflectionQuality}
+                />
+            </Canvas>
+        </div>
     );
 }
 ThreeCanvas.displayName = 'ThreeCanvas';
