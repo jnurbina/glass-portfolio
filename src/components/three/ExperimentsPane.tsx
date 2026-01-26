@@ -7,12 +7,14 @@ import { FaExternalLinkAlt, FaPlay } from 'react-icons/fa';
 import { audioEngine } from '@/lib/audio/audio';
 import { useAchievementState } from '@/hooks/use-achievement-state';
 import { useResponsivePane } from '@/hooks/use-responsive-pane';
+import { ViewMode } from '@/lib/view-types';
 
 interface PaneProps {
   onClose: () => void;
+  onNavigate?: (view: ViewMode) => void;
 }
 
-const ExperimentsPane = ({ onClose }: PaneProps) => {
+const ExperimentsPane = ({ onClose, onNavigate }: PaneProps) => {
   const groupRef = useRef<THREE.Group>(null);
   const { unlockAchievement } = useAchievementState();
   const { style, distanceFactor, isMobile } = useResponsivePane(1000, 600);
@@ -28,6 +30,12 @@ const ExperimentsPane = ({ onClose }: PaneProps) => {
   const handleAction = (actionId: string) => {
     console.log('Triggering action:', actionId);
     audioEngine.play('select');
+    
+    if (actionId === 'launch_game' && onNavigate) {
+        onNavigate('game');
+        return;
+    }
+
     unlockAchievement('mad-scientist');
     // Here we would trigger the 3D effect. 
     // For now, let's just use a window alert or similar visual cue if we can't easily reach the scene state yet.

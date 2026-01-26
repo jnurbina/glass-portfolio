@@ -10,6 +10,14 @@ export interface ExperimentItem {
 
 export const experimentsData: ExperimentItem[] = [
   {
+    id: 'battleship-game',
+    title: 'DimShift',
+    description: 'A 3D isometric turn-based strategy game. Challenge the AI or a friend.',
+    type: 'action',
+    actionId: 'launch_game',
+    image: '/starmap4k.jpg' 
+  },
+  {
     id: 'generative-art',
     title: 'Generative Waves',
     description: 'A collection of p5.js sketches exploring sine waves and noise functions.',

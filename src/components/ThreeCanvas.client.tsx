@@ -14,6 +14,8 @@ import ExperimentsPane from './three/ExperimentsPane';
 import AudioPane from './three/AudioPane';
 import ForYouPane from './three/ForYouPane';
 import AchievementWallPanel from './three/AchievementWallPanel';
+import GameScene from './three/game/GameScene';
+import GameHUD from './three/game/GameHUD';
 import { useThreeCanvasState } from '@/hooks/use-three-canvas-state';
 
 import { useAchievementState } from '@/hooks/use-achievement-state';
@@ -24,6 +26,7 @@ interface SceneContentProps {
     showLogo: boolean;
     activeView: ViewMode;
     onCloseView: () => void;
+    onNavigate: (view: ViewMode) => void;
     subscribeToHit: (callback: (position: THREE.Vector3) => void) => () => void;
     onParticleHit: (position: THREE.Vector3) => void;
     particleCount: number;
@@ -32,7 +35,7 @@ interface SceneContentProps {
     reflectionQuality: number;
 }
 
-const SceneContent = ({ showLogo, activeView, onCloseView, subscribeToHit, onParticleHit, particleCount, mouseRef, motionRef, reflectionQuality }: SceneContentProps) => {
+const SceneContent = ({ showLogo, activeView, onCloseView, onNavigate, subscribeToHit, onParticleHit, particleCount, mouseRef, motionRef, reflectionQuality }: SceneContentProps) => {
     const { viewport, size } = useThree();
     const wallConfig = getWallConfig(viewport.width, viewport.height);
     const isMobile = size.width < 768;
@@ -54,17 +57,18 @@ const SceneContent = ({ showLogo, activeView, onCloseView, subscribeToHit, onPar
                 )}
             </CubeCamera>
             
-            <Particles onHit={onParticleHit} count={particleCount} mouse={mouseRef} />
+            {activeView !== 'game' && <Particles onHit={onParticleHit} count={particleCount} mouse={mouseRef} />}
             <Skybox />
-            <Rig mouse={mouseRef} motion={motionRef} />
+            {activeView !== 'game' && <Rig mouse={mouseRef} motion={motionRef} />}
             <RoomEdges wallConfig={wallConfig} />
-            {showLogo && <Logo />}
-            <AchievementWallPanel />
+            {showLogo && activeView !== 'game' && <Logo />}
+            {activeView !== 'game' && <AchievementWallPanel />}
             
+            {activeView === 'game' && <GameScene onClose={onCloseView} />}
             {activeView === 'settings' && <SettingsPane onClose={onCloseView} />}
             {activeView === 'bio' && <BioPane onClose={onCloseView} />}
             {activeView === 'experience' && <ExperiencePane onClose={onCloseView} />}
-            {activeView === 'experiments' && <ExperimentsPane onClose={onCloseView} />}
+            {activeView === 'experiments' && <ExperimentsPane onClose={onCloseView} onNavigate={onNavigate} />}
             {activeView === 'audio' && <AudioPane onClose={onCloseView} />}
             {activeView === 'foryou' && <ForYouPane onClose={onCloseView} />}
 
@@ -75,7 +79,7 @@ const SceneContent = ({ showLogo, activeView, onCloseView, subscribeToHit, onPar
     );
 };
 
-export default function ThreeCanvas({ onLoaded, showLogo, activeView, onCloseView }: { onLoaded: () => void, showLogo: boolean, activeView: ViewMode, onCloseView: () => void }) {
+export default function ThreeCanvas({ onLoaded, showLogo, activeView, onCloseView, onNavigate }: { onLoaded: () => void, showLogo: boolean, activeView: ViewMode, onCloseView: () => void, onNavigate: (view: ViewMode) => void }) {
     const hitListeners = useRef(new Set<(position: THREE.Vector3) => void>()).current;
     const mouseRef = useRef<[number, number]>([0, 0]);
     const motionRef = useRef<[number, number, number]>([0, 0, 0]);
@@ -142,34 +146,41 @@ export default function ThreeCanvas({ onLoaded, showLogo, activeView, onCloseVie
     }, [hitListeners]);
 
     const {
+        isPaused,
         particleCount,
         reflectionQuality,
+        setIsPaused,
     } = useThreeCanvasState();
 
     return (
-        <div style={{ 
-            position: 'fixed', 
-            top: 0, 
-            left: 0, 
-            width: '100%', 
-            height: '100%', 
-            zIndex: activeView !== 'home' ? 10 : -1, 
-            pointerEvents: 'none' 
-        }}>
-            <Canvas dpr={[1, 2]} camera={{ position: [0, 0, 25], fov: 75 }} style={{ pointerEvents: 'auto' }}>
-                <SceneContent 
-                    showLogo={showLogo}
-                    activeView={activeView}
-                    onCloseView={onCloseView}
-                    subscribeToHit={subscribeToHit}
-                    onParticleHit={onParticleHit}
-                    particleCount={particleCount}
-                    mouseRef={mouseRef}
-                    motionRef={motionRef}
-                    reflectionQuality={reflectionQuality}
-                />
-            </Canvas>
-        </div>
+        <>
+            <div style={{ 
+                position: 'fixed', 
+                top: 0, 
+                left: 0, 
+                width: '100%', 
+                height: '100%', 
+                zIndex: activeView !== 'home' ? 10 : -1, 
+                pointerEvents: 'none' 
+            }}>
+                <Canvas dpr={[1, 2]} camera={{ position: [0, 0, 25], fov: 75 }} style={{ pointerEvents: 'auto' }}>
+                    <SceneContent 
+                        showLogo={showLogo}
+                        activeView={activeView}
+                        onCloseView={onCloseView}
+                        onNavigate={onNavigate}
+                        subscribeToHit={subscribeToHit}
+                        onParticleHit={onParticleHit}
+                        particleCount={particleCount}
+                        mouseRef={mouseRef}
+                        motionRef={motionRef}
+                        reflectionQuality={reflectionQuality}
+                    />
+                </Canvas>
+            </div>
+            {/* Render GameHUD outside Canvas for true fullscreen overlay */}
+            {activeView === 'game' && <GameHUD onAbort={onCloseView} />}
+        </>
     );
 }
 ThreeCanvas.displayName = 'ThreeCanvas';

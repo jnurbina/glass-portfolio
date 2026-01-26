@@ -79,6 +79,11 @@ export default function MainView() {
           resetAfkTimer();
           
           if (e.key === 'Backspace') {
+             if (activeView === 'game') {
+                 // Game handles its own inputs
+                 return;
+             }
+
              if (activeView === 'home') {
                  setActiveView('settings');
                  audioEngine.play('select');
@@ -128,6 +133,7 @@ export default function MainView() {
             showLogo={showLogo && activeView === 'home'}
             activeView={activeView}
             onCloseView={() => setActiveView('home')}
+            onNavigate={(view: ViewMode) => setActiveView(view)}
           />
         </ThreeCanvasProvider>
   

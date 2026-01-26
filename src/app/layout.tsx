@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { AchievementProvider } from '@/hooks/use-achievement-state';
 import { Toaster } from '@/components/ui/sonner';
+import { ConvexClientProvider } from '@/components/ConvexClientProvider';
 
 export const metadata: Metadata = {
   title: 'Glass Portfolio',
@@ -27,10 +28,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <AchievementProvider>
-          {children}
-          <Toaster />
-        </AchievementProvider>
+        <ConvexClientProvider>
+          <AchievementProvider>
+            {children}
+            <Toaster />
+          </AchievementProvider>
+        </ConvexClientProvider>
       </body>
     </html>
   );
