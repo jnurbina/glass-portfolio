@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMutation } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
 import { useGameStore } from '@/hooks/use-game-store';
@@ -9,27 +9,83 @@ interface GameHUDProps {
 
 const GameHUD = ({ onAbort }: GameHUDProps) => {
   const { phase, user, setPhase, setUser, debugInfo } = useGameStore();
-  const [username, setUsername] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const createUser = useMutation(api.users.getOrCreateUser);
+//   const [username, setUsername] = useState('');
+//   const [isSubmitting, setIsSubmitting] = useState(false);
+//   const createUser = useMutation(api.users.getOrCreateUser);
 
-  const handleLoginSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!username.trim() || isSubmitting) return;
-    setIsSubmitting(true);
-    try {
-      const userId = await createUser({ username: username.trim() });
-      setUser({ id: userId, username: username.trim() });
-      setPhase('placement');
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsSubmitting(false);
+//   const handleLoginSubmit = async (e: React.FormEvent) => {
+//     e.preventDefault();
+//     if (!username.trim() || isSubmitting) return;
+//     setIsSubmitting(true);
+//     try {
+//       const userId = await createUser({ username: username.trim() });
+//       setUser({ id: userId, username: username.trim() });
+//       setPhase('placement');
+//     } catch (err) {
+//       console.error(err);
+//     } finally {
+//       setIsSubmitting(false);
+//     }
+//   };
+
+  // Auto-login for freelook testing
+  React.useEffect(() => {
+    if (!user) {
+        setUser({ id: 'guest', username: 'GUEST' });
+        setPhase('placement');
     }
-  };
+  }, [user, setUser, setPhase]);
+  
+  const [isLocked, setIsLocked] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false); // Track if game has started
+
+  useEffect(() => {
+      const handleLockChange = () => {
+          const locked = !!document.pointerLockElement;
+          setIsLocked(locked);
+          if (locked) setHasStarted(true); // Mark as started on first lock
+      };
+      document.addEventListener('pointerlockchange', handleLockChange);
+      return () => document.removeEventListener('pointerlockchange', handleLockChange);
+  }, []);
 
   return (
     <div className="absolute inset-0 w-full h-full pointer-events-none z-50">
+      {/* Pause Menu / Start Menu (Pointer Lock Disengaged) */}
+      {!isLocked && user && (
+          <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/50 pointer-events-auto backdrop-blur-sm">
+              <div className="bg-black/90 border-2 border-cyan-500 p-8 rounded-lg text-center shadow-[0_0_50px_rgba(6,182,212,0.4)] flex flex-col gap-4 min-w-[300px]">
+                  <h2 className="text-3xl font-bold text-cyan-400 mb-2 tracking-widest">
+                      {hasStarted ? '[ PAUSED ]' : 'DIMSHIFT'}
+                  </h2>
+                  
+                  <button 
+                    onClick={() => document.body.requestPointerLock()}
+                    className="bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-3 px-6 rounded transition-all uppercase tracking-widest"
+                  >
+                    {hasStarted ? 'Resume Mission' : 'Click To Begin'}
+                  </button>
+                  
+                  {hasStarted && (
+                      <button 
+                        onClick={onAbort}
+                        className="bg-red-900/20 border border-red-500/50 hover:bg-red-900/40 text-red-400 font-bold py-3 px-6 rounded transition-all uppercase tracking-widest"
+                      >
+                        Abort Mission
+                      </button>
+                  )}
+                  {!hasStarted && (
+                      <button 
+                        onClick={onAbort}
+                        className="bg-red-900/20 border border-red-500/50 hover:bg-red-900/40 text-red-400 font-bold py-3 px-6 rounded transition-all uppercase tracking-widest"
+                      >
+                        Return to Home
+                      </button>
+                  )}
+              </div>
+          </div>
+      )}
+
       {/* Dim Overlay for Login Phase */}
       {phase === 'login' && (
         <div className="absolute inset-0 bg-black/80 z-0 pointer-events-auto transition-opacity duration-1000" />
@@ -47,13 +103,8 @@ const GameHUD = ({ onAbort }: GameHUDProps) => {
                     </span>
                 </div>
             </div>
-
-            <button 
-                onClick={onAbort}
-                className="bg-red-900/20 border border-red-500/50 text-red-400 px-6 py-2 rounded hover:bg-red-900/40 transition-colors uppercase tracking-widest text-sm pointer-events-auto"
-            >
-                ABORT MISSION
-            </button>
+            
+            {/* Top Right is now empty or could hold time/score */}
         </div>
 
         {/* Debug Info */}
@@ -66,7 +117,7 @@ const GameHUD = ({ onAbort }: GameHUDProps) => {
 
         {/* Center Content (Login or Status) */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md pointer-events-auto">
-            {phase === 'login' && (
+            {/* {phase === 'login' && (
                 <div className="bg-black/90 p-8 border-2 border-cyan-500 rounded-lg shadow-[0_0_50px_rgba(6,182,212,0.2)]">
                     <form onSubmit={handleLoginSubmit} className="space-y-4">
                         <h2 className="text-center text-cyan-400 text-lg uppercase tracking-widest mb-6 border-b border-cyan-500/30 pb-2">Initialize Pilot Profile</h2>
@@ -87,7 +138,7 @@ const GameHUD = ({ onAbort }: GameHUDProps) => {
                         </button>
                     </form>
                 </div>
-            )}
+            )} */}
         </div>
 
         {/* Bottom Bar (Action Deck) */}

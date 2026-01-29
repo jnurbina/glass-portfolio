@@ -1,6 +1,6 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { MapControls } from '@react-three/drei';
+import { PointerLockControls } from '@react-three/drei';
 import * as THREE from 'three';
 
 interface GameControlsProps {
@@ -8,9 +8,11 @@ interface GameControlsProps {
 }
 
 const GameControls = ({ onCameraUpdate }: GameControlsProps) => {
-  const controlsRef = useRef<any>(null);
-  const { camera } = useThree();
+  const { camera, gl } = useThree();
   const keys = useRef<{ [key: string]: boolean }>({});
+  const moveSpeed = 20.0;
+  const isTransitioning = useRef(true);
+  const controlsRef = useRef<any>(null);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => { 
@@ -24,10 +26,9 @@ const GameControls = ({ onCameraUpdate }: GameControlsProps) => {
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
     
-    // Initial RTS position - Player 1 View
-    camera.position.set(-12.1, 5.0, -11.0);
-    camera.lookAt(0, 0, 0);
-
+    // Reset transition state on mount
+    isTransitioning.current = true;
+    
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
@@ -39,88 +40,61 @@ const GameControls = ({ onCameraUpdate }: GameControlsProps) => {
   }, [camera]);
 
   useFrame((state, delta) => {
-    if (!controlsRef.current) return;
+    // Camera Entry Transition
+    if (isTransitioning.current) {
+        const targetStartPos = new THREE.Vector3(-21.3, -8.2, -8.7);
+        const lookAtPos = new THREE.Vector3(0, -15, 0);
+        
+        // Smooth exponential ease
+        camera.position.lerp(targetStartPos, 0.05);
+        camera.lookAt(lookAtPos);
+        
+        // Check if close enough to stop transition
+        if (camera.position.distanceTo(targetStartPos) < 0.5) {
+            isTransitioning.current = false;
+            // Snap to final to prevent drift
+            // camera.position.copy(targetStartPos);
+            // camera.lookAt(lookAtPos);
+        }
+        
+        // Allow early exit if user tries to move
+        if (keys.current['KeyW'] || keys.current['KeyS'] || keys.current['KeyA'] || keys.current['KeyD']) {
+             isTransitioning.current = false;
+        }
+    } else {
+        // Normal Movement Logic
+        const { KeyW, KeyS, KeyA, KeyD, KeyQ, KeyE, ShiftLeft, Space } = keys.current;
+        
+        // Only move if controls are locked (mouse captured)
+        if (controlsRef.current?.isLocked) {
+            const actualSpeed = ShiftLeft ? moveSpeed * 2 : moveSpeed;
+            const distance = actualSpeed * delta;
 
+            const forward = new THREE.Vector3();
+            camera.getWorldDirection(forward);
+            
+            const right = new THREE.Vector3();
+            right.crossVectors(forward, camera.up);
+
+            if (KeyW) camera.position.addScaledVector(forward, distance);
+            if (KeyS) camera.position.addScaledVector(forward, -distance);
+            if (KeyA) camera.position.addScaledVector(right, -distance);
+            if (KeyD) camera.position.addScaledVector(right, distance);
+            if (Space) camera.position.y += distance;
+            if (KeyQ) camera.position.y -= distance;
+        }
+    }
+    
     if (onCameraUpdate) {
         onCameraUpdate(camera.position);
     }
-
-    const speed = 15 * delta;
-    const verticalSpeed = 10 * delta;
-    const rotateSpeed = 2 * delta;
-    const { KeyW, KeyA, KeyS, KeyD, KeyQ, KeyE, KeyR, KeyF } = keys.current;
-    const target = controlsRef.current.target;
-    const camPos = camera.position;
-
-    // Rotation (Orbit around target)
-    if (KeyQ) {
-        const x = camPos.x - target.x;
-        const z = camPos.z - target.z;
-        camPos.x = x * Math.cos(rotateSpeed) - z * Math.sin(rotateSpeed) + target.x;
-        camPos.z = x * Math.sin(rotateSpeed) + z * Math.cos(rotateSpeed) + target.z;
-    }
-    if (KeyE) {
-        const x = camPos.x - target.x;
-        const z = camPos.z - target.z;
-        camPos.x = x * Math.cos(-rotateSpeed) - z * Math.sin(-rotateSpeed) + target.x;
-        camPos.z = x * Math.sin(-rotateSpeed) + z * Math.cos(-rotateSpeed) + target.z;
-    }
-
-    // Vertical (Height)
-    if (KeyR) {
-        camPos.y += verticalSpeed;
-    }
-    if (KeyF) {
-        camPos.y -= verticalSpeed;
-    }
-
-    // Forward/Back (Relative to camera direction)
-    const forward = new THREE.Vector3();
-    camera.getWorldDirection(forward);
-    forward.y = 0;
-    forward.normalize();
-
-    const right = new THREE.Vector3();
-    right.crossVectors(forward, new THREE.Vector3(0, 1, 0));
-
-    if (KeyW) {
-        target.addScaledVector(forward, speed);
-        camPos.addScaledVector(forward, speed);
-    }
-    if (KeyS) {
-        target.addScaledVector(forward, -speed);
-        camPos.addScaledVector(forward, -speed);
-    }
-    if (KeyA) {
-        target.addScaledVector(right, -speed);
-        camPos.addScaledVector(right, -speed);
-    }
-    if (KeyD) {
-        target.addScaledVector(right, speed);
-        camPos.addScaledVector(right, speed);
-    }
-
-    // Constraints
-    target.z = Math.max(-20, Math.min(target.z, 20)); // Loosened for exploration
-    target.x = Math.max(-20, Math.min(target.x, 20));
-    
-    // Clamp height (relative to floor at -15)
-    // We'll let it go as low as -10 (close to floor) up to 30
-    camPos.y = Math.max(-10, Math.min(camPos.y, 30)); 
-
-    controlsRef.current.update();
   });
 
   return (
-    <MapControls 
-        ref={controlsRef}
-        enableDamping={true}
-        dampingFactor={0.1}
-        minDistance={10}
-        maxDistance={30}
-        maxPolarAngle={Math.PI / 3} 
-        screenSpacePanning={false}
-        enablePan={false} // We handle panning manually
+    <PointerLockControls 
+        ref={controlsRef} 
+        onLock={() => console.log("Pointer Locked")}
+        onUnlock={() => console.log("Pointer Unlocked")}
     />
   );
 };

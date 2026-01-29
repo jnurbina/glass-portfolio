@@ -92,24 +92,27 @@ function Logo() {
     const desktopPos: [number, number, number] = [-viewport.width / 2.5, viewport.height / 3, -14];
     const position = isMobile ? mobilePos : desktopPos;
 
+    // Force re-render of Text3D when viewport changes to ensure size updates
     return (
-        <Text3D
-            ref={ref}
-            font={'/helvetiker_regular.typeface.json'}
-            position={position}
-            size={size}
-        >
-            1J1
-            <meshStandardMaterial
-                ref={materialRef}
-                attach="material"
-                transparent
-                opacity={0}
-                color="#00ffff"
-                emissive="#00ffff"
-                emissiveIntensity={2}
-            />
-        </Text3D>
+        <group position={position}>
+            <Text3D
+                key={Math.round(viewport.width)} // Force re-mount on significant viewport change
+                ref={ref}
+                font={'/helvetiker_regular.typeface.json'}
+                size={size}
+            >
+                1J1
+                <meshStandardMaterial
+                    ref={materialRef}
+                    attach="material"
+                    transparent
+                    opacity={0}
+                    color="#00ffff"
+                    emissive="#00ffff"
+                    emissiveIntensity={2}
+                />
+            </Text3D>
+        </group>
     );
 }
 Logo.displayName = 'Logo';

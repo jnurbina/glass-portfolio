@@ -11,8 +11,8 @@ class AudioEngine {
   private sounds: SoundMap = {};
   private isInitialized = false;
   private isMuted = false;
-  private sfxVolume = 0.25;
-  private bgmVolume = 0.1875;
+  private sfxVolume = 0.1;
+  private bgmVolume = 0.1;
 
   private constructor() {}
 

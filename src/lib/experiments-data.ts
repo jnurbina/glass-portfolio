@@ -18,6 +18,14 @@ export const experimentsData: ExperimentItem[] = [
     image: '/starmap4k.jpg' 
   },
   {
+    id: 'rubiks-cube',
+    title: 'Cube Art',
+    description: 'Interactive 3x3x3 Cube Art experiment. Relax and spin.',
+    type: 'action',
+    actionId: 'launch_rubiks',
+    image: '/starmap4k.jpg'
+  },
+  {
     id: 'generative-art',
     title: 'Generative Waves',
     description: 'A collection of p5.js sketches exploring sine waves and noise functions.',

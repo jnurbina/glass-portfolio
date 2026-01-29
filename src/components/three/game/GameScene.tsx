@@ -15,8 +15,8 @@ const GameScene = ({ onClose }: GameSceneProps) => {
 
   // Initial setup
   useEffect(() => {
-    setParticleCount(20);
-    return () => setParticleCount(128);
+    setParticleCount(20); // Low count for game
+    return () => setParticleCount(8); // Reset to default (8)
   }, [setParticleCount]);
 
   const handleCellClick = (x: number, y: number) => {
@@ -29,14 +29,14 @@ const GameScene = ({ onClose }: GameSceneProps) => {
     <group>
       <GameControls onCameraUpdate={(pos) => setDebugInfo({ cam: `${pos.x.toFixed(1)}, ${pos.y.toFixed(1)}, ${pos.z.toFixed(1)}` })} />
       
-      {user && (
+      {/* {user && (
         <BattleGrid 
             onCellClick={handleCellClick} 
             onHover={(x, y) => setDebugInfo({ x, y })}
             shipPosition={shipPos} 
             position={[0, -15, 0]} // Align with floor
         />
-      )}
+      )} */}
     </group>
   );
 };

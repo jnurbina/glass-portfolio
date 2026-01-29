@@ -70,17 +70,24 @@ const ExperiencePane = ({ onClose }: PaneProps) => {
   return (
     <group ref={groupRef} position={[0, 0, 10]}>
       <Html transform position={[0, 0, 0]} distanceFactor={distanceFactor} zIndexRange={[100, 0]} style={style}>
-         <div className={`w-full h-full bg-black/90 text-white relative rounded-xl border border-cyan-500/50 backdrop-blur-md overflow-hidden flex flex-col ${isMobile ? 'p-4' : 'p-8'}`}>
-            <button onClick={onClose} aria-label="Close Pane" className="absolute top-4 right-4 text-cyan-500 hover:text-white text-xl font-bold z-50">[ X ]</button>
-            <h2 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6 text-cyan-400 tracking-widest text-center">[ EXPERIENCE ]</h2>
+         <div className={`w-full h-full bg-black/90 text-white relative rounded-xl border border-cyan-500/50 backdrop-blur-md flex flex-col ${isMobile ? 'p-4' : 'p-6 max-w-4xl mx-auto'}`}>
+            {/* Header */}
+            <div className="shrink-0 relative">
+                <button onClick={onClose} aria-label="Close Pane" className="absolute top-0 right-0 text-cyan-500 hover:text-white text-xl font-bold z-50 leading-none">[ X ]</button>
+                <h2 className="text-xl md:text-2xl font-bold mb-2 md:mb-4 text-cyan-400 tracking-widest text-center">[ EXPERIENCE ]</h2>
+            </div>
             
-            <div className="flex-1 flex items-center justify-between px-0 md:px-4 relative overflow-hidden">
-                {/* Navigation Buttons - Smaller and absolute on mobile to save space? Or just stick to sides */}
-                <button onClick={handlePrev} className={`z-20 p-2 md:p-4 hover:text-cyan-400 transition-colors text-xl md:text-3xl bg-black/50 rounded-full hover:bg-white/10 ${isMobile ? 'absolute left-2' : ''}`}>
-                    <FaChevronLeft />
+            {/* Main Content - Flex-1 to take remaining height, min-h-0 to allow nested scrolling */}
+            <div className="flex-1 min-h-0 relative flex items-center">
+                {/* Nav Buttons */}
+                <button 
+                    onClick={handlePrev} 
+                    className={`absolute left-0 z-20 p-2 text-cyan-500 hover:text-white transition-colors bg-black/50 rounded-full hover:bg-cyan-900/30 ${isMobile ? '-ml-2' : ''}`}
+                >
+                    <FaChevronLeft size={isMobile ? 20 : 30} />
                 </button>
 
-                <div className="flex-1 h-full mx-2 md:mx-8 relative flex items-center justify-center overflow-hidden">
+                <div className="w-full h-full px-8 md:px-12 relative overflow-hidden">
                     <AnimatePresence initial={false} custom={direction} mode="wait">
                         <motion.div
                             key={currentIndex}
@@ -93,10 +100,10 @@ const ExperiencePane = ({ onClose }: PaneProps) => {
                                 x: { type: "spring", stiffness: 300, damping: 30 },
                                 opacity: { duration: 0.2 }
                             }}
-                            className={`absolute w-full h-full flex gap-4 md:gap-8 items-center ${isMobile ? 'flex-col justify-start pt-2 overflow-y-auto pb-8' : 'flex-row'}`}
+                            className="absolute inset-0 w-full h-full flex flex-col md:flex-row gap-4 md:gap-6 bg-white/5 rounded-lg border border-white/10 overflow-hidden"
                         >
-                            {/* Image Section */}
-                            <div className={`${isMobile ? 'w-full h-40 shrink-0' : 'w-1/2 h-full'} relative rounded-lg overflow-hidden border border-white/10 group`}>
+                            {/* Image Section - Fixed height on mobile, full height on desktop */}
+                            <div className={`${isMobile ? 'h-1/3 w-full' : 'w-5/12 h-full'} relative shrink-0 overflow-hidden group border-b md:border-b-0 md:border-r border-white/10`}>
                                 {currentItem.image ? (
                                     <img src={currentItem.image} alt={currentItem.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                                 ) : (
@@ -104,21 +111,21 @@ const ExperiencePane = ({ onClose }: PaneProps) => {
                                         No Image
                                     </div>
                                 )}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                                <div className="absolute bottom-4 left-4">
-                                     <h3 className="text-lg md:text-xl font-bold">{currentItem.company}</h3>
-                                     <p className="text-xs md:text-sm text-cyan-300">{currentItem.period}</p>
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent md:bg-gradient-to-t md:from-black/80" />
+                                <div className="absolute bottom-2 left-3 md:bottom-4 md:left-4">
+                                     <h3 className="text-sm md:text-xl font-bold shadow-black drop-shadow-md">{currentItem.company}</h3>
+                                     <p className="text-xs md:text-sm text-cyan-300 shadow-black drop-shadow-md">{currentItem.period}</p>
                                 </div>
                             </div>
 
-                            {/* Text Section */}
-                            <div className={`${isMobile ? 'w-full' : 'w-1/2'} flex flex-col justify-center h-full overflow-y-auto custom-scrollbar pr-2`}>
-                                <h3 className="text-xl md:text-2xl font-bold mb-1 md:mb-2 text-cyan-400">{currentItem.title}</h3>
-                                <h4 className="text-sm md:text-lg text-white/80 mb-4 md:mb-6 font-mono">{currentItem.role}</h4>
-                                <ul className="space-y-2 md:space-y-4">
+                            {/* Text Section - Flex-1 with internal scroll */}
+                            <div className="flex-1 flex flex-col min-h-0 p-3 md:p-6 overflow-y-auto custom-scrollbar">
+                                <h3 className="text-lg md:text-2xl font-bold text-cyan-400 leading-tight">{currentItem.title}</h3>
+                                <h4 className="text-xs md:text-sm text-white/70 mb-3 md:mb-4 font-mono">{currentItem.role}</h4>
+                                <ul className="space-y-2">
                                     {currentItem.highlights.map((highlight, idx) => (
-                                        <li key={idx} className="flex items-start gap-2 md:gap-3 text-white/90 text-sm md:text-base">
-                                            <span className="text-cyan-500 mt-1">▹</span>
+                                        <li key={idx} className="flex items-start gap-2 text-white/90 text-xs md:text-sm leading-relaxed">
+                                            <span className="text-cyan-500 mt-1 shrink-0">▹</span>
                                             <span>{highlight}</span>
                                         </li>
                                     ))}
@@ -128,13 +135,16 @@ const ExperiencePane = ({ onClose }: PaneProps) => {
                     </AnimatePresence>
                 </div>
 
-                <button onClick={handleNext} className={`z-20 p-2 md:p-4 hover:text-cyan-400 transition-colors text-xl md:text-3xl bg-black/50 rounded-full hover:bg-white/10 ${isMobile ? 'absolute right-2' : ''}`}>
-                    <FaChevronRight />
+                <button 
+                    onClick={handleNext} 
+                    className={`absolute right-0 z-20 p-2 text-cyan-500 hover:text-white transition-colors bg-black/50 rounded-full hover:bg-cyan-900/30 ${isMobile ? '-mr-2' : ''}`}
+                >
+                    <FaChevronRight size={isMobile ? 20 : 30} />
                 </button>
             </div>
             
             {/* Pagination Indicators */}
-            <div className="flex justify-center gap-2 mt-2 md:mt-4 pb-2 md:pb-0">
+            <div className="shrink-0 flex justify-center gap-2 mt-3 h-4">
                 {experienceData.map((_, idx) => (
                     <div 
                         key={idx} 

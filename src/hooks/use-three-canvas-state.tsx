@@ -18,7 +18,7 @@ const ThreeCanvasContext = createContext<ThreeCanvasState | undefined>(undefined
 export const ThreeCanvasProvider = ({ children }: { children: React.ReactNode }) => {
   const [isPaused, setIsPaused] = useState(false);
   const [volume, setVolume] = useState(0.5);
-  const [particleCount, setParticleCount] = useState(128); // Default to desktop for SSR match, adjust in effect
+  const [particleCount, setParticleCount] = useState(8); // Default reduced for performance
   const [reflectionQuality, setReflectionQuality] = useState(1);
 
   useEffect(() => {

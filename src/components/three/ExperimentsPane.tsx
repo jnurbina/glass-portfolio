@@ -35,6 +35,11 @@ const ExperimentsPane = ({ onClose, onNavigate }: PaneProps) => {
         onNavigate('game');
         return;
     }
+    
+    if (actionId === 'launch_rubiks' && onNavigate) {
+        onNavigate('rubiks');
+        return;
+    }
 
     unlockAchievement('mad-scientist');
     // Here we would trigger the 3D effect. 
@@ -45,11 +50,11 @@ const ExperimentsPane = ({ onClose, onNavigate }: PaneProps) => {
   return (
     <group ref={groupRef} position={[0, 0, 10]}>
       <Html transform position={[0, 0, 0]} distanceFactor={distanceFactor} zIndexRange={[100, 0]} style={style}>
-         <div className={`w-full h-full bg-black/90 text-white relative rounded-xl border border-cyan-500/50 backdrop-blur-md flex flex-col ${isMobile ? 'p-4' : 'p-8'}`}>
+         <div className={`w-full h-full bg-black/90 text-white relative rounded-xl border border-cyan-500/50 backdrop-blur-md flex flex-col ${isMobile ? 'p-4' : 'p-6 max-w-4xl mx-auto'}`}>
             <button onClick={onClose} aria-label="Close Pane" className="absolute top-4 right-4 text-cyan-500 hover:text-white text-xl font-bold z-50">[ X ]</button>
-            <h2 className="text-2xl md:text-3xl font-bold mb-4 md:mb-8 text-cyan-400 tracking-widest text-center">[ EXPERIMENTS ]</h2>
+            <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-cyan-400 tracking-widest text-center">[ EXPERIMENTS ]</h2>
             
-            <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'} gap-4 md:gap-6 overflow-y-auto pr-2 custom-scrollbar`}>
+            <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'} gap-4 overflow-y-auto pr-2 custom-scrollbar`}>
                 {experimentsData.map((item) => (
                     <div key={item.id} className="bg-white/5 border border-white/10 rounded-lg p-4 md:p-6 hover:bg-white/10 transition-all hover:border-cyan-500/50 group flex flex-col">
                         <div className="flex justify-between items-start mb-2 md:mb-4">

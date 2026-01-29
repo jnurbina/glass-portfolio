@@ -16,6 +16,7 @@ import ForYouPane from './three/ForYouPane';
 import AchievementWallPanel from './three/AchievementWallPanel';
 import GameScene from './three/game/GameScene';
 import GameHUD from './three/game/GameHUD';
+import RubiksCube from './three/RubiksCube';
 import { useThreeCanvasState } from '@/hooks/use-three-canvas-state';
 
 import { useAchievementState } from '@/hooks/use-achievement-state';
@@ -57,14 +58,15 @@ const SceneContent = ({ showLogo, activeView, onCloseView, onNavigate, subscribe
                 )}
             </CubeCamera>
             
-            {activeView !== 'game' && <Particles onHit={onParticleHit} count={particleCount} mouse={mouseRef} />}
+            {activeView !== 'game' && activeView !== 'rubiks' && <Particles onHit={onParticleHit} count={particleCount} mouse={mouseRef} />}
             <Skybox />
-            {activeView !== 'game' && <Rig mouse={mouseRef} motion={motionRef} />}
-            <RoomEdges wallConfig={wallConfig} />
-            {showLogo && activeView !== 'game' && <Logo />}
-            {activeView !== 'game' && <AchievementWallPanel />}
+            {activeView !== 'game' && activeView !== 'rubiks' && <Rig mouse={mouseRef} motion={motionRef} />}
+            {/* <RoomEdges wallConfig={wallConfig} /> */}
+            {showLogo && activeView !== 'game' && activeView !== 'rubiks' && <Logo />}
+            {activeView !== 'game' && activeView !== 'rubiks' && <AchievementWallPanel />}
             
             {activeView === 'game' && <GameScene onClose={onCloseView} />}
+            {activeView === 'rubiks' && <RubiksCube onClose={onCloseView} />}
             {activeView === 'settings' && <SettingsPane onClose={onCloseView} />}
             {activeView === 'bio' && <BioPane onClose={onCloseView} />}
             {activeView === 'experience' && <ExperiencePane onClose={onCloseView} />}
@@ -73,7 +75,7 @@ const SceneContent = ({ showLogo, activeView, onCloseView, onNavigate, subscribe
             {activeView === 'foryou' && <ForYouPane onClose={onCloseView} />}
 
             <EffectComposer>
-                <Bloom luminanceThreshold={0.3} luminanceSmoothing={0.9} height={150} intensity={0.8} />
+                <Bloom luminanceThreshold={0.3} luminanceSmoothing={0.9} height={100} intensity={0.4} />
             </EffectComposer>
         </Suspense>
     );
