@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
-import { v4 as uuidv4 } from 'uuid'; // Using uuid for session ID
+// import { v4 as uuidv4 } from 'uuid'; // REMOVED: Replaced with native crypto.randomUUID()
 
 interface Message {
   id: string;
@@ -18,7 +18,8 @@ export default function SaasHubPage() {
 
   useEffect(() => {
     // Generate a unique session ID when the component mounts
-    setSessionId(uuidv4());
+    // FIX: Use native browser API instead of uuid package
+    setSessionId(crypto.randomUUID());
   }, []);
 
   const handleSendMessage = async (e: FormEvent) => {
@@ -26,7 +27,8 @@ export default function SaasHubPage() {
     if (!inputMessage.trim() || isLoading) return;
 
     const userMessage: Message = {
-      id: uuidv4(),
+      // FIX: Use native browser API instead of uuid package
+      id: crypto.randomUUID(),
       role: 'user',
       content: inputMessage.trim(),
       timestamp: new Date(),
@@ -57,7 +59,8 @@ export default function SaasHubPage() {
         throw new Error('Invalid response format from assistant');
       }
       const modelMessage: Message = {
-        id: uuidv4(),
+        // FIX: Use native browser API instead of uuid package
+        id: crypto.randomUUID(),
         role: 'model',
         content: data.reply,
         timestamp: new Date(),
@@ -66,7 +69,8 @@ export default function SaasHubPage() {
     } catch (error) {
       console.error('Error sending message:', error);
       const errorMessage: Message = {
-        id: uuidv4(),
+        // FIX: Use native browser API instead of uuid package
+        id: crypto.randomUUID(),
         role: 'model',
         content: error instanceof Error ? error.message : 'Sorry, something went wrong.',
         timestamp: new Date(),

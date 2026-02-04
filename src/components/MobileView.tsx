@@ -2,14 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Image from 'next/image';
+// import Image from 'next/image'; // REMOVED: Unused import causes build failure
 import { Background } from '@/components/Background';
 import { ProfileHeader } from '@/components/ProfileHeader';
 import MobileLinkItem from '@/components/MobileLinkItem';
 import { LlmWidget } from '@/components/LlmWidget';
 import LaughingMan from '@/components/LaughingMan';
 import { profile, links } from '@/lib/data';
-
 
 export default function MobileView() {
   const [loading, setLoading] = useState(true);

@@ -6,8 +6,8 @@ import { Toaster } from '@/components/ui/sonner';
 import { ConvexClientProvider } from '@/components/ConvexClientProvider';
 
 export const metadata: Metadata = {
-  title: 'Glass Portfolio',
-  description: 'A portfolio of my work, built with Next.js and Three.js.',
+  title: '1 J 1',
+  description: 'Creative Code meets Audio Engineering',
 };
 
 export const viewport: Viewport = {

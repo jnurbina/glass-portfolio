@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import FF7Menu from './FF7Menu';
@@ -70,7 +70,7 @@ export default function DesktopView() {
   return (
     <div style={{ width: '100vw', height: '100vh' }}>
       <LaughingMan loading={!isLoaded} />
-      
+
       <ThreeCanvasProvider>
         <ThreeCanvas
           onLoaded={() => setIsLoaded(true)}

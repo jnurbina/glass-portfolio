@@ -29,7 +29,7 @@ class AudioEngine {
     this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     this.masterGain = this.audioContext.createGain();
     this.masterGain.connect(this.audioContext.destination);
-    
+
     // Attempt to unlock audio context immediately (might fail if no gesture)
     if (this.audioContext.state === 'suspended') {
       const unlock = () => {
@@ -49,7 +49,7 @@ class AudioEngine {
 
   public async load(): Promise<void> {
     this.init();
-    
+
     // Define sounds if not already defined (idempotent)
     if (Object.keys(this.sounds).length === 0) {
         this.sounds['background'] = new Howl({
@@ -94,7 +94,7 @@ class AudioEngine {
         s.volume(fadein ? 0 : targetVol);
         s.play();
         if (fadein) {
-            s.fade(0, targetVol, 2000); 
+            s.fade(0, targetVol, 2000);
         }
       }
     }
@@ -117,12 +117,15 @@ class AudioEngine {
     }
   }
 
+  public setVolume(volume: number) {
+    Howler.volume(volume);
+  }
+
   public toggleMute() {
     this.isMuted = !this.isMuted;
     if (this.masterGain && this.audioContext) {
       this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 1, this.audioContext.currentTime);
     }
-    // Also toggle Howler's mute
     Howler.mute(this.isMuted);
   }
 
@@ -150,7 +153,7 @@ class AudioEngine {
 
       const dMinorScale = [1174.66, 1318.51, 1396.91, 1567.98, 1760.00, 1864.66, 2093.00];
       const noteIndex = Math.floor(Math.random() * dMinorScale.length);
-      const volume = this.sfxVolume * 0.4; 
+      const volume = this.sfxVolume * 0.4;
 
       const oscillator = this.audioContext.createOscillator();
       oscillator.type = 'sine';

@@ -19,7 +19,6 @@ import GameHUD from './three/game/GameHUD';
 import RubiksCube from './three/RubiksCube';
 import Hinges from './three/Hinges';
 import { useThreeCanvasState } from '@/hooks/use-three-canvas-state';
-
 import { useAchievementState } from '@/hooks/use-achievement-state';
 import { getWallConfig } from '@/lib/three/constants';
 import { ViewMode } from '@/lib/view-types';
@@ -75,7 +74,7 @@ const SceneContent = ({ showLogo, activeView, onCloseView, onNavigate, subscribe
             {/* <RoomEdges wallConfig={wallConfig} /> */}
             {showLogo && activeView !== 'game' && activeView !== 'rubiks' && activeView !== 'hinges' && <Logo />}
             {activeView !== 'game' && activeView !== 'rubiks' && activeView !== 'hinges' && <AchievementWallPanel />}
-            
+
             {activeView === 'game' && <GameScene onClose={onCloseView} />}
             {activeView === 'rubiks' && <RubiksCube onClose={onCloseView} />}
             {activeView === 'hinges' && <Hinges onClose={onCloseView} />}
@@ -113,13 +112,13 @@ export default function ThreeCanvas({ onLoaded, showLogo, activeView, onCloseVie
             const gamma = event.gamma;
             const beta = event.beta;
             const x = Math.min(Math.max(gamma, -45), 45) / 45;
-            const y = Math.min(Math.max(beta - 45, -45), 45) / 45; 
+            const y = Math.min(Math.max(beta - 45, -45), 45) / 45;
             motionRef.current = [x, -y, 0];
         };
 
         window.addEventListener('mousemove', handleMouseMove);
         window.addEventListener('deviceorientation', handleDeviceOrientation);
-        
+
         return () => {
             window.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('deviceorientation', handleDeviceOrientation);
@@ -137,10 +136,10 @@ export default function ThreeCanvas({ onLoaded, showLogo, activeView, onCloseVie
           audioEngine.fadeOut('background');
         };
       }, [onLoaded]);
-    
+
     const onParticleHit = useCallback((position: THREE.Vector3) => {
         hitListeners.forEach(listener => listener(position));
-        audioEngine.playProceduralHit(); 
+        audioEngine.playProceduralHit();
         hitCount.current += 1;
     }, [hitListeners]);
 
@@ -168,17 +167,17 @@ export default function ThreeCanvas({ onLoaded, showLogo, activeView, onCloseVie
 
     return (
         <>
-            <div style={{ 
-                position: 'fixed', 
-                top: 0, 
-                left: 0, 
-                width: '100%', 
-                height: '100%', 
-                zIndex: activeView !== 'home' ? 10 : -1, 
-                pointerEvents: 'none' 
+            <div style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                zIndex: activeView !== 'home' ? 10 : -1,
+                pointerEvents: 'none'
             }}>
                 <Canvas dpr={[1, 2]} camera={{ position: [0, 0, 25], fov: 75 }} frameloop="always" style={{ pointerEvents: 'auto' }}>
-                    <SceneContent 
+                    <SceneContent
                         showLogo={showLogo}
                         activeView={activeView}
                         onCloseView={onCloseView}

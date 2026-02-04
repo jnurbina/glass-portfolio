@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
+// import OpenAI from 'openai';
 
 // This would be set up properly in production with environment variables
 // const openai = new OpenAI({
@@ -8,15 +8,15 @@ import OpenAI from 'openai';
 
 export async function POST(request: NextRequest) {
   try {
-    const { query } = await request.json() as any;
-    
+    const { query } = (await request.json()) as { query: string };
+
     if (!query || typeof query !== 'string') {
       return NextResponse.json(
         { error: 'Invalid request: query is required' },
         { status: 400 }
       );
     }
-    
+
     // In a real implementation, this would call the OpenAI API
     // const response = await openai.chat.completions.create({
     //   model: "gpt-4",
@@ -26,19 +26,19 @@ export async function POST(request: NextRequest) {
     //   ],
     //   max_tokens: 150,
     // });
-    
+
     // For demonstration purposes, we'll simulate a response
     const simulatedResponse = `Thanks for your question about "${query}". As a developer, I specialize in creating modern web applications with cutting-edge technologies like React, Next.js, and TypeScript. I'd be happy to discuss how I can help with your project!`;
-    
+
     // Add a small delay to simulate API call
     await new Promise(resolve => setTimeout(resolve, 500));
-    
-    return NextResponse.json({ 
+
+    return NextResponse.json({
       response: simulatedResponse,
       // In a real implementation, this would use the actual API response
-      // response: response.choices[0].message.content 
+      // response: response.choices[0].message.content
     });
-    
+
   } catch (error) {
     console.error('Error processing LLM request:', error);
     return NextResponse.json(
