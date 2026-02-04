@@ -70,6 +70,7 @@ function Logo() {
     const ref = useRef<THREE.Mesh>(null!);
     const materialRef = useRef<THREE.MeshStandardMaterial>(null!);
     const { viewport } = useThree();
+    const isMobile = viewport.width < viewport.height;
 
     useEffect(() => {
         // This component now fades in based on the parent's `showLogo` prop.
@@ -83,24 +84,35 @@ function Logo() {
         }
     });
 
+    const mobileSize = viewport.width / 5;
+    const desktopSize = viewport.width / 10;
+    const size = isMobile ? mobileSize : desktopSize;
+
+    const mobilePos: [number, number, number] = [-viewport.width / 2 + 1, viewport.height / 3, -10];
+    const desktopPos: [number, number, number] = [-viewport.width / 2.5, viewport.height / 3, -14];
+    const position = isMobile ? mobilePos : desktopPos;
+
+    // Force re-render of Text3D when viewport changes to ensure size updates
     return (
-        <Text3D
-            ref={ref}
-            font={'/helvetiker_regular.typeface.json'}
-            position={[-viewport.width / 2.5, viewport.height / 3, -14]}
-            size={viewport.width / 10}
-        >
-            1J1
-            <meshStandardMaterial
-                ref={materialRef}
-                attach="material"
-                transparent
-                opacity={0}
-                color="#00ffff"
-                emissive="#00ffff"
-                emissiveIntensity={2}
-            />
-        </Text3D>
+        <group position={position}>
+            <Text3D
+                key={Math.round(viewport.width)} // Force re-mount on significant viewport change
+                ref={ref}
+                font={'/helvetiker_regular.typeface.json'}
+                size={size}
+            >
+                1J1
+                <meshStandardMaterial
+                    ref={materialRef}
+                    attach="material"
+                    transparent
+                    opacity={0}
+                    color="#00ffff"
+                    emissive="#00ffff"
+                    emissiveIntensity={2}
+                />
+            </Text3D>
+        </group>
     );
 }
 Logo.displayName = 'Logo';

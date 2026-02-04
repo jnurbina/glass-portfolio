@@ -23,6 +23,7 @@ const containerVariants = {
     opacity: 1,
     y: 0,
     transition: {
+      delay: 0.5, // Wait for panes to close
       staggerChildren: 0.2,
       delayChildren: 0.3,
       ease: "easeOut" as any,
@@ -50,9 +51,9 @@ const FF7Menu = ({ menuItems, onSelect, muteButtonRef, isMuteButtonFocused }: FF
   const playHoverSound = () => audioEngine.play('hover');
   const playSelectSound = () => audioEngine.play('select');
 
-  const handleSelect = () => {
+  const handleSelect = (index: number) => {
     playSelectSound();
-    onSelect(menuItems[selectedIndex].action);
+    onSelect(menuItems[index].action);
   };
 
   useEffect(() => {
@@ -74,7 +75,7 @@ const FF7Menu = ({ menuItems, onSelect, muteButtonRef, isMuteButtonFocused }: FF
         setSelectedIndex((prevIndex) => Math.max(prevIndex - 1, 0));
         playHoverSound();
       } else if (e.key === 'Enter') {
-        handleSelect();
+        handleSelect(selectedIndex);
       }
     };
 
@@ -86,7 +87,7 @@ const FF7Menu = ({ menuItems, onSelect, muteButtonRef, isMuteButtonFocused }: FF
 
   return (
     <motion.div
-      className="absolute bottom-[40vh] right-[15vw] pointer-events-none"
+      className="absolute bottom-32 left-8 md:bottom-[40vh] md:left-auto md:right-[15vw] pointer-events-none z-20"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
@@ -104,7 +105,7 @@ const FF7Menu = ({ menuItems, onSelect, muteButtonRef, isMuteButtonFocused }: FF
                   playHoverSound();
                 }
               }}
-              onClick={handleSelect}
+              onClick={() => handleSelect(index)}
             />
           </motion.div>
         ))}

@@ -1,12 +1,20 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { AchievementProvider } from '@/hooks/use-achievement-state';
 import { Toaster } from '@/components/ui/sonner';
+import { ConvexClientProvider } from '@/components/ConvexClientProvider';
 
 export const metadata: Metadata = {
   title: '1 J 1',
   description: 'Creative Code meets Audio Engineering',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 // Instantiate the font
@@ -20,10 +28,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <AchievementProvider>
-          {children}
-          <Toaster />
-        </AchievementProvider>
+        <ConvexClientProvider>
+          <AchievementProvider>
+            {children}
+            <Toaster />
+          </AchievementProvider>
+        </ConvexClientProvider>
       </body>
     </html>
   );

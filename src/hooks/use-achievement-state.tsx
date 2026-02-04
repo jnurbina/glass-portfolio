@@ -1,9 +1,9 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 
-interface Achievement {
+export interface Achievement {
   id: string;
   title: string;
   description: string;
@@ -12,23 +12,35 @@ interface Achievement {
 interface AchievementContextState {
   unlockedAchievements: string[];
   unlockAchievement: (achievementId: string) => void;
+  achievementCount: number;
+  totalAchievements: number;
 }
 
-const achievements: Achievement[] = [
+export const achievements: Achievement[] = [
   {
     id: 'intrigued-adventurist',
     title: 'Intrigued Adventurist',
     description: 'Navigated past the first screen',
   },
   {
-    id: 'drawer-puller',
-    title: 'Drawer Puller',
-    description: 'Found the back button',
+    id: 'stalker',
+    title: 'Stalker',
+    description: 'Read the bio.',
   },
   {
-    id: 'window-shopper',
-    title: 'Window Shopper',
-    description: 'Opened the interact drawer, but did not click on anything.',
+    id: 'resume-reader',
+    title: 'Resume Reader',
+    description: 'Checked out the For You section.',
+  },
+  {
+    id: 'dj',
+    title: 'The DJ',
+    description: 'Explored the audio section.',
+  },
+  {
+    id: 'mad-scientist',
+    title: 'Mad Scientist',
+    description: 'Ran a simulation experiment.',
   },
   {
     id: 'noisy-neighbor',
@@ -45,6 +57,21 @@ const achievements: Achievement[] = [
     title: 'Konami Code',
     description: 'You know the code!',
   },
+  {
+    id: 'hacker',
+    title: 'Hacker',
+    description: 'Discovered the hidden system configuration menu.',
+  },
+  {
+    id: 'audiophile',
+    title: 'Audiophile',
+    description: 'Fine-tuned the audio settings.',
+  },
+  {
+    id: 'power-user',
+    title: 'Power User',
+    description: 'Customized the graphics settings.',
+  },
 ];
 
 const AchievementContext = createContext<AchievementContextState | undefined>(undefined);
@@ -52,19 +79,33 @@ const AchievementContext = createContext<AchievementContextState | undefined>(un
 export const AchievementProvider = ({ children }: { children: React.ReactNode }) => {
   const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>([]);
 
-  const unlockAchievement = useCallback((achievementId: string) => {
-    if (!unlockedAchievements.includes(achievementId)) {
-      const achievement = achievements.find((a) => a.id === achievementId);
-      if (achievement) {
-        setUnlockedAchievements((prev) => [...prev, achievementId]);
-        toast.success(`Achievement Unlocked: ${achievement.title}`);
-      }
+  useEffect(() => {
+    const saved = localStorage.getItem('unlockedAchievements');
+    if (saved) {
+      setUnlockedAchievements(JSON.parse(saved));
     }
-  }, [unlockedAchievements]);
+  }, []);
+
+  const unlockAchievement = useCallback((achievementId: string) => {
+    setUnlockedAchievements((prev) => {
+      if (!prev.includes(achievementId)) {
+        const achievement = achievements.find((a) => a.id === achievementId);
+        if (achievement) {
+          toast.success(`Achievement Unlocked: ${achievement.title}`);
+          const newValue = [...prev, achievementId];
+          localStorage.setItem('unlockedAchievements', JSON.stringify(newValue));
+          return newValue;
+        }
+      }
+      return prev;
+    });
+  }, []);
 
   const value = {
     unlockedAchievements,
     unlockAchievement,
+    achievementCount: unlockedAchievements.length,
+    totalAchievements: achievements.length,
   };
 
   return (

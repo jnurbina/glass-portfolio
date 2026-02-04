@@ -1,17 +1,16 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import FF7Menu from './FF7Menu';
-import InteractionOverlay from './ui/InteractionOverlay';
 import { audioEngine } from '@/lib/audio/audio';
 import { ThreeCanvasProvider } from '@/hooks/use-three-canvas-state';
-import InteractView from './InteractView';
 import { AnimatePresence } from 'framer-motion';
 import { useAchievementState } from '@/hooks/use-achievement-state';
 import LaughingMan from './LaughingMan';
 import { MuteButton } from './ui/MuteButton';
+import { ViewMode } from '@/lib/view-types';
 
 const ThreeCanvas = dynamic(() => import('./ThreeCanvas.client'), { ssr: false });
 
@@ -22,16 +21,12 @@ const menuItems = [
 ];
 
 export default function DesktopView() {
-  const [preloaderComplete, setPreloaderComplete] = useState(false);
-  const [isInteracted, setIsInteracted] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [showLogo, setShowLogo] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
-  const [isInteractView, setIsInteractView] = useState(false);
+  const [activeView, setActiveView] = useState<ViewMode>('home');
   const { unlockAchievement } = useAchievementState();
   const router = useRouter();
-
-  // FIX: Added ref and state for MuteButton to satisfy FF7Menu props
   const muteButtonRef = useRef<HTMLButtonElement>(null);
   const [isMuteButtonFocused, setIsMuteButtonFocused] = useState(false);
 
@@ -42,30 +37,9 @@ export default function DesktopView() {
     };
   }, []);
 
-  const handleInteraction = useCallback(() => {
-    audioEngine.init(() => {
-      setIsInteracted(true);
-      audioEngine.play('background', true);
-    });
-  }, []);
-
-  const handleMenuSelect = (action: string) => {
-    if (action === 'interact') {
-      setIsInteractView(true);
-      unlockAchievement('intrigued-adventurist');
-    } else if (action === 'movingsale') {
-      router.push('/movingsale');
-    }
-  };
-
-  const handleBack = () => {
-    setIsInteractView(false);
-    unlockAchievement('drawer-puller');
-  };
-
+  // Auto-start animations when loaded
   useEffect(() => {
-    // New animation sequence controlled by isLoaded and isInteracted
-    if (isLoaded && isInteracted) {
+    if (isLoaded) {
       const timer1 = setTimeout(() => setShowLogo(true), 500); // 1. Fade in logo
       const timer2 = setTimeout(() => setShowMenu(true), 1500); // 2. Fade in menu
       return () => {
@@ -73,54 +47,44 @@ export default function DesktopView() {
         clearTimeout(timer2);
       };
     }
-  }, [isLoaded, isInteracted]);
+  }, [isLoaded]);
 
-  if (!preloaderComplete) {
-    return <LaughingMan onLoadComplete={() => setPreloaderComplete(true)} />;
-  }
+  const handleMenuSelect = (action: string) => {
+    if (action === 'interact') {
+      setActiveView('experiments');
+      unlockAchievement('intrigued-adventurist');
+    } else if (action === 'movingsale') {
+      router.push('/movingsale');
+    }
+  };
+
+  const handleCloseView = () => {
+    setActiveView('home');
+    unlockAchievement('drawer-puller');
+  };
+
+  const handleNavigate = (view: ViewMode) => {
+    setActiveView(view);
+  };
 
   return (
     <div style={{ width: '100vw', height: '100vh' }}>
-      {!isInteracted && <InteractionOverlay onInteract={handleInteraction} />}
-      
+      <LaughingMan loading={!isLoaded} />
+
       <ThreeCanvasProvider>
-        <ThreeCanvas 
-          onLoaded={() => setIsLoaded(true)} 
-          showLogo={showLogo && !isInteractView} 
+        <ThreeCanvas
+          onLoaded={() => setIsLoaded(true)}
+          showLogo={showLogo && activeView === 'home'}
+          activeView={activeView}
+          onCloseView={handleCloseView}
+          onNavigate={handleNavigate}
         />
       </ThreeCanvasProvider>
 
       <AnimatePresence>
-        {isLoaded && showMenu && !isInteractView && (
-          <FF7Menu 
-            menuItems={menuItems} 
-            onSelect={handleMenuSelect} 
-            // FIX: Pass the required mute button props
-            muteButtonRef={muteButtonRef}
-            isMuteButtonFocused={isMuteButtonFocused}
-          />
-        )}
+        {isLoaded && showMenu && activeView === 'home' && <FF7Menu menuItems={menuItems} onSelect={handleMenuSelect} muteButtonRef={muteButtonRef} isMuteButtonFocused={isMuteButtonFocused} />}
       </AnimatePresence>
-
-      <AnimatePresence>
-        {isInteractView && <InteractView />}
-      </AnimatePresence>
-
-      {isInteractView && (
-        <button
-          className="absolute top-8 right-8 text-white text-2xl"
-          onClick={handleBack}
-        >
-          [ Back ]
-        </button>
-      )}
-
-      {/* FIX: Render the MuteButton to attach the ref */}
-      <MuteButton 
-        ref={muteButtonRef} 
-        onFocus={() => setIsMuteButtonFocused(true)} 
-        onBlur={() => setIsMuteButtonFocused(false)} 
-      />
+      <MuteButton ref={muteButtonRef} onFocus={() => setIsMuteButtonFocused(true)} onBlur={() => setIsMuteButtonFocused(false)} />
     </div>
   );
 }

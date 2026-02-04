@@ -10,7 +10,7 @@ interface UseTypewriterResult {
 const PAUSE_DURATION = 1200; // Milliseconds to pause after typing
 const CLEAR_PAUSE = 600; // Short pause before clearing/restarting
 
-export const useTypewriter = (text: string, isActive: boolean): UseTypewriterResult => {
+export const useTypewriter = (text: string, isActive: boolean, speedMultiplier: number = 2): UseTypewriterResult => {
   const [displayText, setDisplayText] = useState(text); // Initial state is the full text
   const [isTyping, setIsTyping] = useState(false);
   const currentIndexRef = useRef(0);
@@ -46,7 +46,7 @@ export const useTypewriter = (text: string, isActive: boolean): UseTypewriterRes
         return;
     }
 
-    const TYPE_SPEED = Math.max(10, 1000 / text.length);
+    const TYPE_SPEED = Math.max(10, (1000 / text.length) / speedMultiplier);
 
     if (isActive) {
       // --- Start the loop ---

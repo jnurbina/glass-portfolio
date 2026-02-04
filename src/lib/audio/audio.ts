@@ -1,7 +1,7 @@
 import { Howl, Howler } from 'howler';
 
 type SoundMap = {
-  [key: string]: Howl;
+  [key: string]: any;
 };
 
 class AudioEngine {
@@ -11,6 +11,8 @@ class AudioEngine {
   private sounds: SoundMap = {};
   private isInitialized = false;
   private isMuted = false;
+  private sfxVolume = 0.1;
+  private bgmVolume = 0.1;
 
   private constructor() {}
 
@@ -21,46 +23,66 @@ class AudioEngine {
     return AudioEngine.instance;
   }
 
-  public init(callback: () => void) {
-    if (this.isInitialized || typeof window === 'undefined') {
-      if (this.isInitialized) callback();
-      return;
-    }
+  public init() {
+    if (this.isInitialized || typeof window === 'undefined') return;
 
     this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     this.masterGain = this.audioContext.createGain();
     this.masterGain.connect(this.audioContext.destination);
-    
-    this.loadSounds();
 
-    const startAudio = () => {
-      if (this.audioContext?.state === 'suspended') {
-        this.audioContext.resume();
-      }
-      this.isInitialized = true;
-      callback();
-      window.removeEventListener('click', startAudio);
-      window.removeEventListener('keydown', startAudio);
-    };
+    // Attempt to unlock audio context immediately (might fail if no gesture)
+    if (this.audioContext.state === 'suspended') {
+      const unlock = () => {
+        this.audioContext?.resume().then(() => {
+          window.removeEventListener('click', unlock);
+          window.removeEventListener('touchstart', unlock);
+          window.removeEventListener('keydown', unlock);
+        });
+      };
+      window.addEventListener('click', unlock);
+      window.addEventListener('touchstart', unlock);
+      window.addEventListener('keydown', unlock);
+    }
 
-    window.addEventListener('click', startAudio);
-    window.addEventListener('keydown', startAudio);
+    this.isInitialized = true;
   }
 
-  private loadSounds() {
-    this.sounds['background'] = new Howl({
-      src: ['/landingPage.wav'],
-      loop: true,
-      volume: 0, // Start at 0, fade in
+  public async load(): Promise<void> {
+    this.init();
+
+    // Define sounds if not already defined (idempotent)
+    if (Object.keys(this.sounds).length === 0) {
+        this.sounds['background'] = new Howl({
+            src: ['/landingPage.wav'],
+            loop: true,
+            volume: 0,
+            preload: true,
+        });
+        this.sounds['hover'] = new Howl({
+            src: ['/sfxInputBlur.wav'],
+            volume: this.sfxVolume,
+            preload: true,
+        });
+        this.sounds['select'] = new Howl({
+            src: ['/sfxInputSelect.wav'],
+            volume: this.sfxVolume,
+            preload: true,
+        });
+    }
+
+    // Wait for all sounds to load
+    const loadPromises = Object.values(this.sounds).map(sound => {
+        return new Promise<void>((resolve) => {
+            if (sound.state() === 'loaded') {
+                resolve();
+            } else {
+                sound.once('load', () => resolve());
+                sound.once('loaderror', () => resolve()); // Resolve on error too to avoid blocking
+            }
+        });
     });
-    this.sounds['hover'] = new Howl({
-      src: ['/sfxInputBlur.wav'],
-      volume: 0.25, // 50% of 0.5
-    });
-    this.sounds['select'] = new Howl({
-      src: ['/sfxInputSelect.wav'],
-      volume: 0.25, // 50% of 0.5
-    });
+
+    await Promise.all(loadPromises);
   }
 
   public play(sound: string, fadein: boolean = false) {
@@ -68,9 +90,11 @@ class AudioEngine {
     const s = this.sounds[sound];
     if (s) {
       if (!s.playing()) {
+        const targetVol = sound === 'background' ? this.bgmVolume : this.sfxVolume;
+        s.volume(fadein ? 0 : targetVol);
         s.play();
         if (fadein) {
-            s.fade(0, 0.1875, 2000); // Fade to 18.75%
+            s.fade(0, targetVol, 2000);
         }
       }
     }
@@ -93,7 +117,6 @@ class AudioEngine {
     }
   }
 
-  // FIX: Added setVolume method to control global volume via Howler
   public setVolume(volume: number) {
     Howler.volume(volume);
   }
@@ -110,6 +133,18 @@ class AudioEngine {
     return this.isMuted;
   }
 
+  public setSfxVolume(val: number) {
+    this.sfxVolume = val;
+    // Update instances
+    if (this.sounds['hover']) this.sounds['hover'].volume(val);
+    if (this.sounds['select']) this.sounds['select'].volume(val);
+  }
+
+  public setBgmVolume(val: number) {
+    this.bgmVolume = val;
+    if (this.sounds['background']) this.sounds['background'].volume(val);
+  }
+
   public playProceduralHit() {
       if (!this.audioContext || !this.masterGain || this.isMuted) return;
       if (this.audioContext.state === 'suspended') {
@@ -118,7 +153,7 @@ class AudioEngine {
 
       const dMinorScale = [1174.66, 1318.51, 1396.91, 1567.98, 1760.00, 1864.66, 2093.00];
       const noteIndex = Math.floor(Math.random() * dMinorScale.length);
-      const volume = 0.1; 
+      const volume = this.sfxVolume * 0.4;
 
       const oscillator = this.audioContext.createOscillator();
       oscillator.type = 'sine';

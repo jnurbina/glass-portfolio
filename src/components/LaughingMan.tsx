@@ -3,15 +3,14 @@
 import React, { useState, useEffect, useMemo } from 'react'; // Added useMemo
 
 interface LaughingManProps {
-  onLoadComplete: () => void;
+  loading: boolean;
+  onLoadComplete?: () => void;
 }
 
-const LaughingMan: React.FC<LaughingManProps> = ({ onLoadComplete }) => {
-  const [loading, setLoading] = useState(true);
+const LaughingMan: React.FC<LaughingManProps> = ({ loading, onLoadComplete }) => {
   const [quote, setQuote] = useState('');
-  // Removed smileProgress state
-
-  const quotes = useMemo(() => [ // Use useMemo to prevent redefining array on each render
+  
+  const quotes = useMemo(() => [
     "I remember the future.",
     "I am not what you see.",
     "Time is the substance I am made of.",
@@ -23,35 +22,24 @@ const LaughingMan: React.FC<LaughingManProps> = ({ onLoadComplete }) => {
   ], []);
 
   useEffect(() => {
-    // Select random quote on mount
     const randomIndex = Math.floor(Math.random() * quotes.length);
     setQuote(quotes[randomIndex]);
+  }, [quotes]);
 
-    const loadingDuration = 3000; // ms
+  useEffect(() => {
+    if (!loading && onLoadComplete) {
+      const timer = setTimeout(onLoadComplete, 500); // Wait for fade out
+      return () => clearTimeout(timer);
+    }
+  }, [loading, onLoadComplete]);
 
-    // Timer to end loading state
-    const loadingTimer = setTimeout(() => {
-      setLoading(false);
-      onLoadComplete();
-      // Removed setSmileProgress(1)
-    }, loadingDuration);
-
-    return () => {
-      clearTimeout(loadingTimer);
-      // Removed clearInterval(smileInterval)
-    };
-  }, [onLoadComplete, quotes]);
-
-  // Removed smile interpolation logic and currentMouthPath calculation
-
-  // Fixed positioning for the Laughing Man logo
   const containerStyle = {
     position: 'fixed',
     top: 0,
     left: 0,
     width: '100%',
     height: '100%',
-    backgroundColor: 'rgb(5, 10, 25)', // Match your background start color
+    backgroundColor: 'rgb(5, 10, 25)',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
