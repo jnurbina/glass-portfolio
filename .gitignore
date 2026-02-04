@@ -51,3 +51,17 @@ Thumbs.db
 # Gemini Context
 .gemini_context.md
 /.gemini
+
+# Claude Code
+/.claude
+CLAUDE.md
+
+# Vercel
+.vercel
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Misc
+*.log
+.turbo
