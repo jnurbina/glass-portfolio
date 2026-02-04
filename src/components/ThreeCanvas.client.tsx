@@ -17,6 +17,7 @@ import AchievementWallPanel from './three/AchievementWallPanel';
 import GameScene from './three/game/GameScene';
 import GameHUD from './three/game/GameHUD';
 import RubiksCube from './three/RubiksCube';
+import Hinges from './three/Hinges';
 import { useThreeCanvasState } from '@/hooks/use-three-canvas-state';
 
 import { useAchievementState } from '@/hooks/use-achievement-state';
@@ -42,31 +43,42 @@ const SceneContent = ({ showLogo, activeView, onCloseView, onNavigate, subscribe
     const isMobile = size.width < 768;
     const cubeResolution = isMobile ? 64 : 128;
 
+    const isHingesMode = activeView === 'hinges';
+
     return (
         <Suspense fallback={null}>
-            <ambientLight intensity={0.1} />
-            <hemisphereLight intensity={0.2} groundColor="black" />
-            <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} castShadow />
-            
-            <CubeCamera resolution={cubeResolution} frames={reflectionQuality} near={0.1} far={1000}>
-                {(texture) => (
-                    <>
-                        {Object.entries(wallConfig).map(([key, config]) => (
-                            <TiledWall key={key} config={config} onHit={subscribeToHit} envMap={texture} />
-                        ))}
-                    </>
-                )}
-            </CubeCamera>
-            
-            {activeView !== 'game' && activeView !== 'rubiks' && <Particles onHit={onParticleHit} count={particleCount} mouse={mouseRef} />}
-            <Skybox />
-            {activeView !== 'game' && activeView !== 'rubiks' && <Rig mouse={mouseRef} motion={motionRef} />}
+            {/* Hide main scene lighting in hinges mode - hinges provides its own */}
+            {!isHingesMode && (
+                <>
+                    <ambientLight intensity={0.1} />
+                    <hemisphereLight intensity={0.2} groundColor="black" />
+                    <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} castShadow />
+                </>
+            )}
+
+            {/* Hide tiled walls in hinges mode for dark environment */}
+            {!isHingesMode && (
+                <CubeCamera resolution={cubeResolution} frames={reflectionQuality} near={0.1} far={1000}>
+                    {(texture) => (
+                        <>
+                            {Object.entries(wallConfig).map(([key, config]) => (
+                                <TiledWall key={key} config={config} onHit={subscribeToHit} envMap={texture} />
+                            ))}
+                        </>
+                    )}
+                </CubeCamera>
+            )}
+
+            {activeView !== 'game' && activeView !== 'rubiks' && activeView !== 'hinges' && <Particles onHit={onParticleHit} count={particleCount} mouse={mouseRef} />}
+            {!isHingesMode && <Skybox />}
+            {activeView !== 'game' && activeView !== 'rubiks' && activeView !== 'hinges' && <Rig mouse={mouseRef} motion={motionRef} />}
             {/* <RoomEdges wallConfig={wallConfig} /> */}
-            {showLogo && activeView !== 'game' && activeView !== 'rubiks' && <Logo />}
-            {activeView !== 'game' && activeView !== 'rubiks' && <AchievementWallPanel />}
+            {showLogo && activeView !== 'game' && activeView !== 'rubiks' && activeView !== 'hinges' && <Logo />}
+            {activeView !== 'game' && activeView !== 'rubiks' && activeView !== 'hinges' && <AchievementWallPanel />}
             
             {activeView === 'game' && <GameScene onClose={onCloseView} />}
             {activeView === 'rubiks' && <RubiksCube onClose={onCloseView} />}
+            {activeView === 'hinges' && <Hinges onClose={onCloseView} />}
             {activeView === 'settings' && <SettingsPane onClose={onCloseView} />}
             {activeView === 'bio' && <BioPane onClose={onCloseView} />}
             {activeView === 'experience' && <ExperiencePane onClose={onCloseView} />}
@@ -165,7 +177,7 @@ export default function ThreeCanvas({ onLoaded, showLogo, activeView, onCloseVie
                 zIndex: activeView !== 'home' ? 10 : -1, 
                 pointerEvents: 'none' 
             }}>
-                <Canvas dpr={[1, 2]} camera={{ position: [0, 0, 25], fov: 75 }} style={{ pointerEvents: 'auto' }}>
+                <Canvas dpr={[1, 2]} camera={{ position: [0, 0, 25], fov: 75 }} frameloop="always" style={{ pointerEvents: 'auto' }}>
                     <SceneContent 
                         showLogo={showLogo}
                         activeView={activeView}

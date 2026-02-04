@@ -7,6 +7,7 @@ import { audioEngine } from '@/lib/audio/audio';
 const CUBE_SIZE = 1;
 const GAP = 0.05;
 const TOTAL_SIZE = CUBE_SIZE + GAP;
+const BASE_COLOR = 0x660099; // Lush Purple
 
 interface CubeData {
     id: number;
@@ -15,8 +16,8 @@ interface CubeData {
 }
 
 // Reuse material to save memory
-const baseMaterial = new THREE.MeshStandardMaterial({ 
-    color: 0x660099, // Lush Purple
+const baseMaterial = new THREE.MeshStandardMaterial({
+    color: BASE_COLOR,
     roughness: 0.3,  // Less shiny so color shows
     metalness: 0.7,  // Metallic but colorful
     envMapIntensity: 1.5

@@ -127,9 +127,8 @@ export default function MainView() {
         <LaughingMan loading={!isLoaded} />
         
         <ThreeCanvasProvider>
-          {/* @ts-ignore - Updating ThreeCanvas props next */}
-          <ThreeCanvas 
-            onLoaded={handleLoaded} 
+          <ThreeCanvas
+            onLoaded={handleLoaded}
             showLogo={showLogo && activeView === 'home'}
             activeView={activeView}
             onCloseView={() => setActiveView('home')}

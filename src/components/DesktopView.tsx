@@ -10,6 +10,7 @@ import { AnimatePresence } from 'framer-motion';
 import { useAchievementState } from '@/hooks/use-achievement-state';
 import LaughingMan from './LaughingMan';
 import { MuteButton } from './ui/MuteButton';
+import { ViewMode } from '@/lib/view-types';
 
 const ThreeCanvas = dynamic(() => import('./ThreeCanvas.client'), { ssr: false });
 
@@ -23,7 +24,7 @@ export default function DesktopView() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [showLogo, setShowLogo] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
-  const [isInteractView, setIsInteractView] = useState(false);
+  const [activeView, setActiveView] = useState<ViewMode>('home');
   const { unlockAchievement } = useAchievementState();
   const router = useRouter();
   const muteButtonRef = useRef<HTMLButtonElement>(null);
@@ -50,16 +51,20 @@ export default function DesktopView() {
 
   const handleMenuSelect = (action: string) => {
     if (action === 'interact') {
-      setIsInteractView(true);
+      setActiveView('experiments');
       unlockAchievement('intrigued-adventurist');
     } else if (action === 'movingsale') {
       router.push('/movingsale');
     }
   };
 
-  const handleBack = () => {
-    setIsInteractView(false);
+  const handleCloseView = () => {
+    setActiveView('home');
     unlockAchievement('drawer-puller');
+  };
+
+  const handleNavigate = (view: ViewMode) => {
+    setActiveView(view);
   };
 
   return (
@@ -67,16 +72,17 @@ export default function DesktopView() {
       <LaughingMan loading={!isLoaded} />
       
       <ThreeCanvasProvider>
-        <ThreeCanvas 
-          onLoaded={() => setIsLoaded(true)} 
-          showLogo={showLogo && !isInteractView}
-          isInteractView={isInteractView}
-          onCloseInteract={handleBack}
+        <ThreeCanvas
+          onLoaded={() => setIsLoaded(true)}
+          showLogo={showLogo && activeView === 'home'}
+          activeView={activeView}
+          onCloseView={handleCloseView}
+          onNavigate={handleNavigate}
         />
       </ThreeCanvasProvider>
 
       <AnimatePresence>
-        {isLoaded && showMenu && !isInteractView && <FF7Menu menuItems={menuItems} onSelect={handleMenuSelect} muteButtonRef={muteButtonRef} isMuteButtonFocused={isMuteButtonFocused} />}
+        {isLoaded && showMenu && activeView === 'home' && <FF7Menu menuItems={menuItems} onSelect={handleMenuSelect} muteButtonRef={muteButtonRef} isMuteButtonFocused={isMuteButtonFocused} />}
       </AnimatePresence>
       <MuteButton ref={muteButtonRef} onFocus={() => setIsMuteButtonFocused(true)} onBlur={() => setIsMuteButtonFocused(false)} />
     </div>

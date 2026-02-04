@@ -26,6 +26,14 @@ export const experimentsData: ExperimentItem[] = [
     image: '/starmap4k.jpg'
   },
   {
+    id: 'hinges-experiment',
+    title: 'Hinges',
+    description: 'Kinetic light sculpture. Tutting-style bar rotations with RGB light trails.',
+    type: 'action',
+    actionId: 'launch_hinges',
+    image: '/starmap4k.jpg'
+  },
+  {
     id: 'generative-art',
     title: 'Generative Waves',
     description: 'A collection of p5.js sketches exploring sine waves and noise functions.',
