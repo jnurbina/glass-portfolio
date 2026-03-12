@@ -1,16 +1,18 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
+import nextConfig from "eslint-config-next";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
-
-const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+export default [
+  ...nextConfig,
+  {
+    ignores: ["node_modules/", ".next/", "out/", "scripts/"],
+  },
+  {
+    rules: {
+      // Disable overly strict rules - legitimate patterns for this project
+      "react-hooks/set-state-in-effect": "off",
+      // Math.random() is valid for particle systems, animations, 3D effects
+      "react-hooks/purity": "off",
+      // Three.js camera/object mutations are intentional and required
+      "react-hooks/immutability": "off",
+    },
+  },
 ];
-
-export default eslintConfig;

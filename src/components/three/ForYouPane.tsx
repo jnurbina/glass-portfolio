@@ -59,7 +59,7 @@ const ForYouPane = ({ onClose }: PaneProps) => {
                 {activeTab === 'resources' ? (
                     <div className="flex flex-col items-center justify-center h-full text-center">
                         <p className="text-base md:text-xl text-white/80 mb-6 md:mb-12 max-w-lg">
-                            I've prepared some resources for you. Grab a copy of my resume or check back later for more digital goodies.
+                            I&apos;ve prepared some resources for you. Grab a copy of my resume or check back later for more digital goodies.
                         </p>
 
                         <div className="flex flex-col gap-4 md:gap-6 w-full max-w-md">
