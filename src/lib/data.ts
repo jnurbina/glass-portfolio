@@ -5,7 +5,7 @@ import { StaticImageData } from 'next/image';
 export const profile = {
   name: "Jason [Dosc] Urbina",
   title: "Audio Engineer | Software Engineer | Creative Coder ",
-  avatarUrl: "/profile.png",
+  avatarUrl: "https://bizi8uwyyyejujyu.public.blob.vercel-storage.com/portfolio/profile.jfif",
   description: "Greetings. I write code, I make music, and I combine the two and result in magic."
 };
 
@@ -79,7 +79,7 @@ export const links: Link[] = [
   // },
   {
     title: "Resume (PDF)",
-    url: "/Resume.pdf", // Link to the PDF in public folder
+    url: "https://bizi8uwyyyejujyu.public.blob.vercel-storage.com/portfolio/urbinaResume2026.pdf",
     icon: FaFilePdf,
     glowColor: "rgba(255, 255, 255, 0.4)"
   },

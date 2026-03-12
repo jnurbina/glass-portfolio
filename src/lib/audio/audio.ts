@@ -53,7 +53,7 @@ class AudioEngine {
     // Define sounds if not already defined (idempotent)
     if (Object.keys(this.sounds).length === 0) {
         this.sounds['background'] = new Howl({
-            src: ['/landingPage.wav'],
+            src: ['https://bizi8uwyyyejujyu.public.blob.vercel-storage.com/portfolio/landingPage.wav'],
             loop: true,
             volume: 0,
             preload: true,

@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import { experienceData } from '@/lib/experience-data';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { useResponsivePane } from '@/hooks/use-responsive-pane';
+import StackedImageDeck from './StackedImageDeck';
 
 interface PaneProps {
   onClose: () => void;
@@ -102,17 +103,17 @@ const ExperiencePane = ({ onClose }: PaneProps) => {
                             }}
                             className="absolute inset-0 w-full h-full flex flex-col md:flex-row gap-4 md:gap-6 bg-white/5 rounded-lg border border-white/10 overflow-hidden"
                         >
-                            {/* Image Section - Fixed height on mobile, full height on desktop */}
+                            {/* Image Section - Stacked image deck */}
                             <div className={`${isMobile ? 'h-1/3 w-full' : 'w-5/12 h-full'} relative shrink-0 overflow-hidden group border-b md:border-b-0 md:border-r border-white/10`}>
-                                {currentItem.image ? (
-                                    <img src={currentItem.image} alt={currentItem.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                                ) : (
-                                    <div className="w-full h-full bg-gray-800 flex items-center justify-center text-gray-500">
-                                        No Image
-                                    </div>
-                                )}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent md:bg-gradient-to-t md:from-black/80" />
-                                <div className="absolute bottom-2 left-3 md:bottom-4 md:left-4">
+                                {/* Padding for stack overflow (images peek top-left) */}
+                                <div className="absolute inset-0 p-4 md:p-6">
+                                    <StackedImageDeck
+                                        images={currentItem.images || []}
+                                        interval={3500}
+                                    />
+                                </div>
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent md:bg-gradient-to-t md:from-black/80 pointer-events-none" />
+                                <div className="absolute bottom-2 left-3 md:bottom-4 md:left-4 z-10">
                                      <h3 className="text-sm md:text-xl font-bold shadow-black drop-shadow-md">{currentItem.company}</h3>
                                      <p className="text-xs md:text-sm text-cyan-300 shadow-black drop-shadow-md">{currentItem.period}</p>
                                 </div>

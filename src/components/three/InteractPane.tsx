@@ -163,7 +163,7 @@ const InteractPane = ({ onClose }: InteractPaneProps) => {
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-6 text-lg hover:text-cyan-400 transition-all group p-4 hover:bg-white/5 rounded-xl border border-transparent hover:border-white/10 cursor-pointer relative overflow-hidden"
                                 onClick={(e) => e.stopPropagation()}
-                                download={link.title === 'Resume (PDF)' ? 'Resume.pdf' : undefined}
+                                download={link.title === 'Resume (PDF)' ? 'urbinaResume2026.pdf' : undefined}
                                 >
                                     {/* Icon Mirror */}
                                     <span className="relative text-3xl text-cyan-500/80 group-hover:text-cyan-400 group-hover:scale-110 transition-transform">

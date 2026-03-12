@@ -65,3 +65,6 @@ CLAUDE.md
 # Misc
 *.log
 .turbo
+
+# Scripts output
+scripts/blob-urls.json
