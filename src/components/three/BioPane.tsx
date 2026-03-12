@@ -40,7 +40,7 @@ const BioPane = ({ onClose }: PaneProps) => {
             {/* Left Column: Image/Avatar (Placeholder) */}
             <div className="w-full md:w-1/3 flex flex-col items-center justify-start pt-4 md:pt-8">
                 <div className={`${isMobile ? 'w-32 h-32' : 'w-48 h-48'} rounded-full border-4 border-cyan-500/30 overflow-hidden mb-6 shadow-[0_0_20px_rgba(6,182,212,0.5)]`}>
-                    <img src="/profile.png" alt="Profile" className="w-full h-full object-cover" onError={(e) => e.currentTarget.src = 'https://github.com/jnurbina.png'} />
+                    <img src="https://bizi8uwyyyejujyu.public.blob.vercel-storage.com/portfolio/profile.jfif" alt="Profile" className="w-full h-full object-cover" onError={(e) => e.currentTarget.src = 'https://github.com/jnurbina.png'} />
                 </div>
                 <h2 className="text-2xl font-bold text-cyan-400 mb-2 text-center">Jason Urbina</h2>
                 <h3 className="text-lg text-white/60 font-mono mb-2 md:mb-6 text-center">Creative Technologist</h3>

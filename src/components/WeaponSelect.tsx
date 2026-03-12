@@ -47,7 +47,7 @@ const links = [
     },
     {
       title: "Resume (PDF)",
-      url: "/Resume.pdf",
+      url: "https://bizi8uwyyyejujyu.public.blob.vercel-storage.com/portfolio/urbinaResume2026.pdf",
       icon: <FaFilePdf />,
     },
     {

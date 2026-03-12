@@ -31,7 +31,7 @@ const AudioPlayer = () => {
     }
   }, [hasInteracted]);
 
-  return <audio ref={audioRef} src="/landingPage.wav" loop />;
+  return <audio ref={audioRef} src="https://bizi8uwyyyejujyu.public.blob.vercel-storage.com/portfolio/landingPage.wav" loop />;
 };
 
 export default AudioPlayer;
