@@ -16,7 +16,30 @@ const ExperiencePane = ({ onClose }: PaneProps) => {
   const groupRef = useRef<THREE.Group>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { style, distanceFactor, isMobile } = useResponsivePane(1000, 600);
+
+  // Reset image index when switching experience cards
+  useEffect(() => {
+    setCurrentImageIndex(0);
+  }, [currentIndex]);
+
+  // Get the current link and label based on the visible image
+  const getCurrentLinkInfo = () => {
+    const item = experienceData[currentIndex];
+    if (item.imageLinkLabels && item.imageLinks) {
+      return {
+        url: item.imageLinks[currentImageIndex] || item.imageLinks[0],
+        label: item.imageLinkLabels[currentImageIndex] || item.imageLinkLabels[0]
+      };
+    }
+    return {
+      url: item.link,
+      label: item.linkLabel
+    };
+  };
+
+  const linkInfo = getCurrentLinkInfo();
 
   const handleNext = () => {
     setDirection(1);
@@ -110,6 +133,9 @@ const ExperiencePane = ({ onClose }: PaneProps) => {
                                     <StackedImageDeck
                                         images={currentItem.images || []}
                                         interval={3500}
+                                        link={currentItem.link}
+                                        imageLinks={currentItem.imageLinks}
+                                        onImageChange={setCurrentImageIndex}
                                     />
                                 </div>
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent md:bg-gradient-to-t md:from-black/80 pointer-events-none" />
@@ -131,6 +157,30 @@ const ExperiencePane = ({ onClose }: PaneProps) => {
                                         </li>
                                     ))}
                                 </ul>
+
+                                {/* Visit Link */}
+                                {linkInfo.url && linkInfo.label && (
+                                    <div className="mt-4 pt-3 border-t border-white/10">
+                                        <AnimatePresence mode="wait">
+                                            <motion.a
+                                                key={linkInfo.label}
+                                                href={linkInfo.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors text-sm md:text-base font-medium"
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: -10 }}
+                                                transition={{ duration: 0.3, ease: "easeInOut" }}
+                                            >
+                                                <span>Visit {linkInfo.label}</span>
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                </svg>
+                                            </motion.a>
+                                        </AnimatePresence>
+                                    </div>
+                                )}
                             </div>
                         </motion.div>
                     </AnimatePresence>

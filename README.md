@@ -1,6 +1,14 @@
-# Personal Portfolio & Link Hub
+# 1J1 — Personal Portfolio & Link Hub
 
-This project serves as a central one-pager platform, inspired by the Linktree layout, to consolidate links to my social media profiles and showcase my endeavors in:
+## What is 1J1?
+
+**1J1** (pronounced "One J One") is a creative play on **Jason** — as in "One Jason." It serves as the umbrella project and entity encompassing all of J. Urbina's creative endeavors, from software engineering to audio engineering and music production. The goal is to merge both technical and artistic pursuits into a single unified presence, giving fans, community members, industry professionals, hiring companies, and recruiters a comprehensive view of capabilities and ongoing work.
+
+> Live at: [onejas.one](https://onejas.one)
+
+---
+
+This interactive 3D portfolio consolidates links to social media profiles and showcases endeavors in:
 
 *   Software Development
 *   Audio Engineering

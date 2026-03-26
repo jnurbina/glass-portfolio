@@ -55,6 +55,12 @@ Thumbs.db
 # Claude Code
 /.claude
 CLAUDE.md
+.agents/
+AGENTS.md
+skills-lock.json
+
+# Convex AI helper files
+convex/_generated/ai/
 
 # Vercel
 .vercel
