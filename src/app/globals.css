@@ -20,22 +20,52 @@
   }
 }
 
-:root {
-  --foreground-rgb: 255, 255, 255;
-  --background-start-rgb: 5, 10, 25;
-  --background-end-rgb: 10, 15, 35;
+@layer base {
+  :root {
+    --background: 0 0% 96.5%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 45 88% 42%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 180 100% 35%;
+    --secondary-foreground: 0 0% 98%;
+    --destructive: 338 100% 43%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 45 88% 42%;
+    --radius: 0.5rem;
+  }
+ 
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 45 100% 50%; /* Amber/Yellow */
+    --primary-foreground: 45 100% 5%;
+    --secondary: 180 100% 50%; /* Cyan */
+    --secondary-foreground: 180 100% 5%;
+    --destructive: 338 100% 50%; /* Magenta */
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 4% 16%;
+    --input: 240 4% 16%;
+    --ring: 45 100% 50%;
+  }
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom right,
-      rgb(var(--background-start-rgb)),
-      rgb(var(--background-end-rgb))
-    )
-    fixed;
-  min-height: 100vh;
-  overflow: hidden;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }
 
 /* Custom scrollbar */
