@@ -31,8 +31,8 @@
   "include": [
     "next-env.d.ts",
     "env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
     ".next/types/**/*.ts",
     "next.config.mjs",
     ".next/dev/types/**/*.ts"

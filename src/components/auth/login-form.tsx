@@ -3,8 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { useToast } from "@/hooks/use-toast";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -16,7 +15,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/components/ui/use-toast";
 
 const FormSchema = z.object({
   email: z.string().email({
@@ -28,7 +26,7 @@ const FormSchema = z.object({
 });
 
 export function LoginForm() {
-  const logIn = useMutation(api.auth.logIn);
+  const { toast } = useToast();
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -39,12 +37,12 @@ export function LoginForm() {
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     try {
-      await logIn({ email: data.email, password: data.password });
+      // TODO: Wire up Convex Auth sign-in flow
+      console.log("Login attempt:", data.email);
       toast({
-        title: "Login Successful",
-        description: "You have been logged in.",
+        title: "Login",
+        description: "Auth flow not yet connected.",
       });
-      // Optionally redirect to a dashboard or home page
     } catch (error: any) {
       toast({
         title: "Login Failed",

@@ -2,6 +2,7 @@
 const nextConfig = {
   typescript: {
     ignoreBuildErrors: false,
+    tsconfigPath: './tsconfig.next.json'
   },
 };
 
