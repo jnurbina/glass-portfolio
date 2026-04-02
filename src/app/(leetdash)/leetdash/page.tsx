@@ -1,9 +1,9 @@
-import PeriodicTableCard from '@/components/leetdash/PeriodicTableCard';
 import DashboardLayout from '@/components/leetdash/DashboardLayout';
 import { MonitoringPanel } from '@/components/leetdash/MonitoringPanel';
 import { AgentStatusPanel } from '@/components/leetdash/AgentStatusPanel';
 import { CalendarPanel } from '@/components/leetdash/CalendarPanel';
 import { TasksPanel } from '@/components/leetdash/TasksPanel';
+import { ChatPanel } from '@/components/leetdash/ChatPanel';
 
 export default function LeetDashPage() {
   return (
@@ -19,9 +19,7 @@ export default function LeetDashPage() {
 
         <AgentStatusPanel />
 
-        <PeriodicTableCard symbol="Ch" name="Chat" metric="5">
-          <p>New messages and conversations.</p>
-        </PeriodicTableCard>
+        <ChatPanel />
 
         <MonitoringPanel />
       </div>
