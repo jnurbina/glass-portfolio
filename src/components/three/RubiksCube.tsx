@@ -36,6 +36,7 @@ export default function RubiksCube({ onClose }: { onClose: () => void }) {
     const [rotationFrequency, setRotationFrequency] = useState(2.0); // Seconds
     const [cubeGap, setCubeGap] = useState(0.05);
     const [wholeCubeAngularVelocity, setWholeCubeAngularVelocity] = useState(0);
+    const [panelOpen, setPanelOpen] = useState(false);
 
     const rotationSpeedRef = useRef(700);
     const cubesRef = useRef<CubeData[]>([]);
@@ -377,61 +378,73 @@ export default function RubiksCube({ onClose }: { onClose: () => void }) {
              ))}
              
              <Html position={[0, 0, 0]} fullscreen style={{ pointerEvents: 'none' }}>
-                <div className="absolute top-4 right-4 bg-white/80 backdrop-blur-md p-4 rounded-xl shadow-lg w-64 pointer-events-auto text-gray-800 flex flex-col gap-4">
-                     <h3 className="font-bold text-center border-b border-gray-300 pb-2">Cube Control</h3>
+                {/* Toggle button — always visible */}
+                <button
+                  onClick={() => setPanelOpen(v => !v)}
+                  className="absolute top-3 right-3 z-10 pointer-events-auto bg-white/80 backdrop-blur-md rounded-full w-9 h-9 flex items-center justify-center shadow-lg text-gray-700 hover:bg-white transition-colors text-lg font-bold"
+                  title={panelOpen ? 'Collapse controls' : 'Expand controls'}
+                >
+                  {panelOpen ? '✕' : '⚙'}
+                </button>
+
+                {/* Control panel — collapsible */}
+                {panelOpen && (
+                <div className="absolute top-14 right-3 bg-white/80 backdrop-blur-md rounded-xl shadow-lg pointer-events-auto text-gray-800 flex flex-col gap-2 p-3 w-48 sm:w-56 max-h-[70vh] overflow-y-auto">
+                     <h3 className="font-bold text-center text-sm border-b border-gray-300 pb-1">Cube Control</h3>
                      
-                     <div className="flex flex-col gap-1">
-                        <label className="text-xs font-bold text-gray-600">Rotation Speed: {rotationSpeed}ms</label>
+                     <div className="flex flex-col gap-0.5">
+                        <label className="text-[10px] font-bold text-gray-600">Speed: {rotationSpeed}ms</label>
                         <input 
                             type="range" min="200" max="2000" step="50" 
                             value={rotationSpeed} 
                             onChange={(e) => setRotationSpeed(parseInt(e.target.value))}
-                            className="w-full accent-red-500"
+                            className="w-full accent-red-500 h-4"
                         />
                      </div>
                      
-                     <div className="flex flex-col gap-1">
-                        <label className="text-xs font-bold text-gray-600">Freq: {rotationFrequency}s</label>
+                     <div className="flex flex-col gap-0.5">
+                        <label className="text-[10px] font-bold text-gray-600">Freq: {rotationFrequency}s</label>
                         <input 
                             type="range" min="0.5" max="5.0" step="0.1" 
                             value={rotationFrequency} 
                             onChange={(e) => setRotationFrequency(parseFloat(e.target.value))}
-                            className="w-full accent-red-500"
+                            className="w-full accent-red-500 h-4"
                         />
                      </div>
                      
-                     <div className="flex flex-col gap-1">
-                        <label className="text-xs font-bold text-gray-600">Gap: {cubeGap}</label>
+                     <div className="flex flex-col gap-0.5">
+                        <label className="text-[10px] font-bold text-gray-600">Gap: {cubeGap}</label>
                         <input 
                             type="range" min="0" max="0.5" step="0.01" 
                             value={cubeGap} 
                             onChange={(e) => setCubeGap(parseFloat(e.target.value))}
-                            className="w-full accent-red-500"
+                            className="w-full accent-red-500 h-4"
                         />
                      </div>
                      
-                     <div className="flex flex-col gap-1">
-                        <label className="text-xs font-bold text-gray-600">Nudge Cube</label>
-                        <div className="flex gap-2">
-                            <button onClick={() => setWholeCubeAngularVelocity(v => v - 0.05)} className="flex-1 bg-gray-200 hover:bg-gray-300 rounded px-2 py-1 font-bold">&lt;</button>
-                            <button onClick={() => setWholeCubeAngularVelocity(v => v + 0.05)} className="flex-1 bg-gray-200 hover:bg-gray-300 rounded px-2 py-1 font-bold">&gt;</button>
+                     <div className="flex flex-col gap-0.5">
+                        <label className="text-[10px] font-bold text-gray-600">Nudge</label>
+                        <div className="flex gap-1">
+                            <button onClick={() => setWholeCubeAngularVelocity(v => v - 0.05)} className="flex-1 bg-gray-200 hover:bg-gray-300 rounded px-2 py-1 text-sm font-bold">&lt;</button>
+                            <button onClick={() => setWholeCubeAngularVelocity(v => v + 0.05)} className="flex-1 bg-gray-200 hover:bg-gray-300 rounded px-2 py-1 text-sm font-bold">&gt;</button>
                         </div>
                      </div>
                      
                      <button 
                         onClick={resetCube} 
-                        className="w-full bg-red-500 text-white font-bold py-2 rounded shadow hover:bg-red-600 transition-colors mt-2"
+                        className="w-full bg-red-500 text-white font-bold py-1.5 rounded shadow hover:bg-red-600 transition-colors text-xs mt-1"
                     >
                         Return to Stasis
                     </button>
                     
                     <button 
                         onClick={onClose} 
-                        className="w-full bg-gray-700 text-white font-bold py-2 rounded shadow hover:bg-gray-600 transition-colors mt-2"
+                        className="w-full bg-gray-700 text-white font-bold py-1.5 rounded shadow hover:bg-gray-600 transition-colors text-xs"
                     >
                         Return (Exit)
                     </button>
                 </div>
+                )}
              </Html>
         </group>
     );
