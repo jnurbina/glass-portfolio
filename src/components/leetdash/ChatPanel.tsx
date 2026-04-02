@@ -10,6 +10,7 @@ import {
   MessageSquare,
   User,
   Bot,
+  ExternalLink,
 } from 'lucide-react';
 
 const fetcher = (url: string) =>
@@ -134,6 +135,19 @@ export function ChatPanel() {
                   </p>
                 </div>
               ))}
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-between border-t border-border pt-1.5">
+              <a
+                href="https://for.onejas.one/411"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center space-x-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+              >
+                <ExternalLink size={12} />
+                <span>Open Full Chat</span>
+              </a>
             </div>
 
             {/* Input area */}
