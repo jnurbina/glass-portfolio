@@ -27,6 +27,14 @@ export default defineSchema({
     expires: v.number(),
   }).index("by_token", ["token"]), 
   
+  tasks: defineTable({
+    title: v.string(),
+    done: v.boolean(),
+    createdAt: v.number(),
+    completedAt: v.optional(v.number()),
+    order: v.optional(v.number()),
+  }),
+
   battles: defineTable({
     player1Id: v.id("users"),
     player2Id: v.optional(v.id("users")),
