@@ -2,6 +2,8 @@ import PeriodicTableCard from '@/components/leetdash/PeriodicTableCard';
 import DashboardLayout from '@/components/leetdash/DashboardLayout';
 import { MonitoringPanel } from '@/components/leetdash/MonitoringPanel';
 import { AgentStatusPanel } from '@/components/leetdash/AgentStatusPanel';
+import { CalendarPanel } from '@/components/leetdash/CalendarPanel';
+import { TasksPanel } from '@/components/leetdash/TasksPanel';
 
 export default function LeetDashPage() {
   return (
@@ -11,13 +13,9 @@ export default function LeetDashPage() {
       </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <PeriodicTableCard symbol="Tk" name="Tasks" metric="24">
-          <p>Upcoming tasks and deadlines.</p>
-        </PeriodicTableCard>
+        <TasksPanel />
 
-        <PeriodicTableCard symbol="Ca" name="Calendar" metric="MAR">
-          <p>Schedule of events and meetings.</p>
-        </PeriodicTableCard>
+        <CalendarPanel />
 
         <AgentStatusPanel />
 
