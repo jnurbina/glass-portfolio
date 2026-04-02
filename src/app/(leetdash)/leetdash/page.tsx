@@ -1,6 +1,7 @@
 import PeriodicTableCard from '@/components/leetdash/PeriodicTableCard';
 import DashboardLayout from '@/components/leetdash/DashboardLayout';
 import { MonitoringPanel } from '@/components/leetdash/MonitoringPanel';
+import { AgentStatusPanel } from '@/components/leetdash/AgentStatusPanel';
 
 export default function LeetDashPage() {
   return (
@@ -18,9 +19,7 @@ export default function LeetDashPage() {
           <p>Schedule of events and meetings.</p>
         </PeriodicTableCard>
 
-        <PeriodicTableCard symbol="Ag" name="Agents" metric="12">
-          <p>Active and pending agent operations.</p>
-        </PeriodicTableCard>
+        <AgentStatusPanel />
 
         <PeriodicTableCard symbol="Ch" name="Chat" metric="5">
           <p>New messages and conversations.</p>
