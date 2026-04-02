@@ -4,8 +4,8 @@ import { v } from "convex/values";
 export default defineSchema({
   users: defineTable({
     // auth-related fields
-    externalId: v.string(),
-    email: v.string(),
+    externalId: v.optional(v.string()),
+    email: v.optional(v.string()),
     // existing fields
     username: v.string(),
     points: v.number(),
