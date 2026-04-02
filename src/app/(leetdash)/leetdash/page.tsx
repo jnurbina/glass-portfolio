@@ -1,10 +1,13 @@
 import PeriodicTableCard from '@/components/leetdash/PeriodicTableCard';
 import DashboardLayout from '@/components/leetdash/DashboardLayout';
+import { MonitoringPanel } from '@/components/leetdash/MonitoringPanel';
 
 export default function LeetDashPage() {
   return (
     <DashboardLayout>
-      <h1 className="text-4xl font-bold mb-8 text-foreground">LeetDash Dashboard</h1>
+      <h1 className="text-4xl font-bold mb-8 text-foreground font-display">
+        LeetDash Dashboard
+      </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <PeriodicTableCard symbol="Tk" name="Tasks" metric="24">
@@ -23,10 +26,9 @@ export default function LeetDashPage() {
           <p>New messages and conversations.</p>
         </PeriodicTableCard>
 
-        <PeriodicTableCard symbol="Mn" name="Monitor" metric="OK">
-          <p>System health and performance.</p>
-        </PeriodicTableCard>
+        <MonitoringPanel />
       </div>
     </DashboardLayout>
   );
 }
+

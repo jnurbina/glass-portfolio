@@ -77,6 +77,8 @@
     "react-responsive": "^10.0.1",
     "recharts": "^2.12.4",
     "sonner": "^1.7.2",
+    "swr": "^2.4.1",
+    "systeminformation": "^5.31.5",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "three": "^0.179.1",
