@@ -30,7 +30,7 @@ const GROUND_Y = 520;
 const AVATAR_SPEED = 5;
 const DEBUG = true;
 const DEBUG_GRID = true;
-const NPC_PATROL = false;
+const NPC_PATROL = true;
 const NPC_INTERACT_RANGE = 80;
 
 interface DialogLine { speaker: string; text: string; color: string; }
@@ -153,7 +153,7 @@ export default function LornScroll({ onClose }: LornScrollProps) {
       sprites: { idle: { img: assets.avatarIdle as HTMLImageElement, framesMax: 4 }, walk: { img: assets.avatarWalk as HTMLImageElement, framesMax: 5 } },
     });
 
-    const TOASTER_FLIP_OFFSET = 80;
+    const TOASTER_FLIP_OFFSET = 89; // calibrated: 80 + (27 nudge / 3 scale) = 89
     const npc1 = new Sprite({ context: ctx, image: assets.npc1Run as HTMLImageElement, position: { x: 0, y: GROUND_Y - 22 * 3 + 17 }, scale: 3, framesMax: 8, flipOffsetX: TOASTER_FLIP_OFFSET });
     npc1.framesHold = 4;
     const npc2 = new Sprite({ context: ctx, image: assets.npc1Run as HTMLImageElement, position: { x: 0, y: GROUND_Y - 22 * 3 + 17 }, scale: 3, framesMax: 8, flipOffsetX: TOASTER_FLIP_OFFSET });
