@@ -30,7 +30,7 @@ const GROUND_Y = 520;
 const AVATAR_SPEED = 5;
 const DEBUG = true;
 const DEBUG_GRID = true;
-const NPC_PATROL = true;
+const NPC_PATROL = false;
 const NPC_INTERACT_RANGE = 80;
 
 interface DialogLine { speaker: string; text: string; color: string; }
@@ -280,6 +280,30 @@ export default function LornScroll({ onClose }: LornScrollProps) {
         ctx.strokeStyle = '#0ff'; ctx.beginPath(); ctx.moveTo(avsx,0); ctx.lineTo(avsx,CANVAS_H); ctx.stroke(); ctx.setLineDash([]);
         ctx.fillStyle = '#f00'; ctx.font = 'bold 11px monospace'; ctx.fillText(`NPC1 @${dbg.worldX.toFixed(0)}`, npc1sx+4, 140); ctx.fillText(`NPC2 @${npc2WorldX.toFixed(0)}`, npc2sx+4, 140);
         ctx.fillStyle = '#0ff'; ctx.fillText(`YOU @${avatarWorldX.toFixed(0)}`, avsx+4, 155);
+
+        // Visual center marker — shows where the NPC character visually IS
+        // When facing right: char starts ~6px from left of frame, char width ~25px → visual center at ~18px from left
+        // Frame = 106px, scale = 3 → visual center screen offset from position.x = 18 * 3 = 54
+        // When facing left with flipOffset 89: visual center shifts
+        const frameW_src = 106; // source frame width
+        const charLeftPad = 6; // px from left edge to char
+        const charWidth = 25; // approx char pixel width
+        const charCenterSrc = charLeftPad + charWidth / 2; // ~18.5
+        const npcScale = 3;
+        let visualCenterScreenX: number;
+        if (dbg.dir > 0) {
+          // Facing right: visual center = npc screen X + charCenter * scale
+          visualCenterScreenX = npc1sx + charCenterSrc * npcScale;
+        } else {
+          // Facing left: flipped, so visual center = npc screen X + (frameW - charCenter - flipOffset adjustment) * scale
+          // The flip draws at (dx + drawWidth - flipCompensation) then mirrors
+          // Effective: visual center = npc screen X + (frameW_src - charCenterSrc) * npcScale - 89 * npcScale
+          visualCenterScreenX = npc1sx + (frameW_src - charCenterSrc) * npcScale - 89 * npcScale;
+        }
+        ctx.strokeStyle = 'rgba(0,255,0,0.9)'; ctx.lineWidth = 2; ctx.setLineDash([2,2]);
+        ctx.beginPath(); ctx.moveTo(visualCenterScreenX, 0); ctx.lineTo(visualCenterScreenX, CANVAS_H); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#0f0'; ctx.fillText(`VIS CENTER`, visualCenterScreenX + 4, 170);
         ctx.restore();
       }
       if (DEBUG && !DEBUG_GRID) {
