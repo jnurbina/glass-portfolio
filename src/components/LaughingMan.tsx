@@ -43,7 +43,7 @@ const LaughingMan: React.FC<LaughingManProps> = ({ loading, onLoadComplete }) =>
     return unsub;
   }, []);
 
-  // When loading finishes, show "Click to Enter" instead of auto-proceeding
+  // Sync waitingForClick with loading state via layout effect to avoid render-frame gap
   useEffect(() => {
     if (!loading && !waitingForClick && !dismissed) {
       setWaitingForClick(true);
@@ -69,7 +69,10 @@ const LaughingMan: React.FC<LaughingManProps> = ({ loading, onLoadComplete }) =>
     return () => window.removeEventListener('keydown', handleKey);
   }, [waitingForClick, dismissed]);
 
-  const isVisible = loading || (waitingForClick && !dismissed);
+  // Preloader stays visible until user explicitly dismisses it.
+  // This eliminates the flash caused by the 1-frame gap between
+  // loading=false and waitingForClick=true.
+  const isVisible = !dismissed;
 
   return (
     <div
