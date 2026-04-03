@@ -1,4 +1,4 @@
-const GRAVITY = 0.7;
+const GRAVITY = 1.0; // snappier fall
 
 function mod(n: number, m: number): number {
   return ((n % m) + m) % m;

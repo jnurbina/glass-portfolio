@@ -28,9 +28,9 @@ const CANVAS_W = 800;
 const CANVAS_H = 600;
 const GROUND_Y = 520;
 const AVATAR_SPEED = 5;
-const DEBUG = true;
-const DEBUG_GRID = true;
-const NPC_PATROL = true; // calibrated, patrol on
+const DEBUG = false;
+const DEBUG_GRID = false;
+const NPC_PATROL = true;
 const NPC_INTERACT_RANGE = 80;
 
 interface DialogLine { speaker: string; text: string; color: string; }
@@ -211,7 +211,7 @@ export default function LornScroll({ onClose }: LornScrollProps) {
         if (keys[' '] || keys['ArrowUp'] || keys['w']) {
           const groundCheck = CANVAS_H - 80;
           if (avatar.position.y + avatar.height >= groundCheck) {
-            avatar.velocity.y = -16;
+            avatar.velocity.y = -8; // 50% lower jump
             if (!jumpSound.paused) { jumpSound.pause(); jumpSound.currentTime = 0; }
             jumpSound.play().catch(() => {});
           }

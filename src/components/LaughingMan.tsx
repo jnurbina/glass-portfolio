@@ -10,6 +10,8 @@ interface LaughingManProps {
 
 const LaughingMan: React.FC<LaughingManProps> = ({ loading, onLoadComplete }) => {
   const [quote, setQuote] = useState('');
+  const [waitingForClick, setWaitingForClick] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
   const [progress, setProgress] = useState<LoadingState>({
     phase: 'init',
     detail: 'Initializing',
@@ -41,12 +43,31 @@ const LaughingMan: React.FC<LaughingManProps> = ({ loading, onLoadComplete }) =>
     return unsub;
   }, []);
 
+  // When loading finishes, show "Click to Enter" instead of auto-proceeding
   useEffect(() => {
-    if (!loading && onLoadComplete) {
-      const timer = setTimeout(onLoadComplete, 500);
-      return () => clearTimeout(timer);
+    if (!loading && !waitingForClick && !dismissed) {
+      setWaitingForClick(true);
     }
-  }, [loading, onLoadComplete]);
+  }, [loading, waitingForClick, dismissed]);
+
+  const handleEnter = () => {
+    if (!waitingForClick) return;
+    setDismissed(true);
+    if (onLoadComplete) {
+      setTimeout(onLoadComplete, 500);
+    }
+  };
+
+  // Also listen for any keypress
+  useEffect(() => {
+    if (!waitingForClick || dismissed) return;
+    const handleKey = (e: KeyboardEvent) => {
+      e.preventDefault();
+      handleEnter();
+    };
+    window.addEventListener('keydown', handleKey, { once: true });
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [waitingForClick, dismissed]);
 
   const containerStyle = {
     position: 'fixed',
@@ -60,12 +81,13 @@ const LaughingMan: React.FC<LaughingManProps> = ({ loading, onLoadComplete }) =>
     alignItems: 'center',
     zIndex: 9999,
     transition: 'opacity 0.5s ease-out',
-    opacity: loading ? 1 : 0,
-    pointerEvents: loading ? 'all' : 'none',
+    opacity: (loading || (waitingForClick && !dismissed)) ? 1 : 0,
+    pointerEvents: (loading || (waitingForClick && !dismissed)) ? 'all' : 'none',
+    cursor: waitingForClick && !dismissed ? 'pointer' : 'default',
   } as React.CSSProperties;
 
   return (
-    <div style={containerStyle}>
+    <div style={containerStyle} onClick={handleEnter}>
       <div style={{ position: 'relative', width: '1024px', height: '1024px' }}>
         <svg viewBox="0 0 1024 1024" width="1024" height="1024">
           <defs>
@@ -154,16 +176,17 @@ const LaughingMan: React.FC<LaughingManProps> = ({ loading, onLoadComplete }) =>
           {/* Status text */}
           <span
             style={{
-              color: '#00defe',
-              fontSize: '14px',
+              color: waitingForClick && !dismissed ? '#ffffff' : '#00defe',
+              fontSize: waitingForClick && !dismissed ? '16px' : '14px',
               fontFamily: 'monospace',
               letterSpacing: '1px',
               textTransform: 'uppercase',
               opacity: 0.9,
               textAlign: 'center',
+              animation: waitingForClick && !dismissed ? 'pulse 1.5s ease-in-out infinite' : 'none',
             }}
           >
-            {progress.detail}
+            {waitingForClick && !dismissed ? '▶ CLICK TO ENTER' : progress.detail}
           </span>
 
           {/* Progress bar container */}
