@@ -2,6 +2,7 @@
 
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Sprite, Avatar } from './SpriteEngine';
+import { audioEngine } from '@/lib/audio/audio';
 
 // Sprites served from public/, audio from Vercel Blob (too large for git)
 const ASSET_BASE = '/lornscroll';
@@ -42,6 +43,14 @@ export default function LornScroll({ onClose }: LornScrollProps) {
   const [showDialog, setShowDialog] = useState(false);
   const [dialogText, setDialogText] = useState('');
   const dialogFullText = 'It was a zipadeedoodah kind of day...';
+
+  // Suspend portfolio audio on mount, resume on unmount
+  useEffect(() => {
+    audioEngine.suspend();
+    return () => {
+      audioEngine.resume();
+    };
+  }, []);
 
   // Load assets
   useEffect(() => {

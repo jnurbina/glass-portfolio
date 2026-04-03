@@ -145,6 +145,42 @@ class AudioEngine {
     if (this.sounds['background']) this.sounds['background'].volume(val);
   }
 
+  private _suspendedVolume: number | null = null;
+
+  /** Fade out and pause all portfolio audio (for handing off to a sub-experience like LornScroll) */
+  public suspend(fadeDuration = 500) {
+    this._suspendedVolume = Howler.volume();
+    // Fade Howler master to 0
+    const steps = 20;
+    const stepMs = fadeDuration / steps;
+    const startVol = this._suspendedVolume ?? 1;
+    let step = 0;
+    const interval = setInterval(() => {
+      step++;
+      Howler.volume(startVol * (1 - step / steps));
+      if (step >= steps) {
+        clearInterval(interval);
+        // Pause all playing sounds
+        Object.values(this.sounds).forEach((s: any) => {
+          if (s && s.playing()) s.pause();
+        });
+      }
+    }, stepMs);
+  }
+
+  /** Resume portfolio audio after suspend */
+  public resume() {
+    const targetVol = this._suspendedVolume ?? 1;
+    Howler.volume(targetVol);
+    this._suspendedVolume = null;
+    // Resume background music
+    const bg = this.sounds['background'];
+    if (bg && !bg.playing()) {
+      bg.volume(this.bgmVolume);
+      bg.play();
+    }
+  }
+
   public playProceduralHit() {
       if (!this.audioContext || !this.masterGain || this.isMuted) return;
       if (this.audioContext.state === 'suspended') {
