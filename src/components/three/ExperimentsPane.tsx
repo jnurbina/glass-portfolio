@@ -46,6 +46,11 @@ const ExperimentsPane = ({ onClose, onNavigate }: PaneProps) => {
         return;
     }
 
+    if (actionId === 'launch_lornscroll' && onNavigate) {
+        onNavigate('lornscroll');
+        return;
+    }
+
     unlockAchievement('mad-scientist');
     // Here we would trigger the 3D effect. 
     // For now, let's just use a window alert or similar visual cue if we can't easily reach the scene state yet.

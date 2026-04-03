@@ -18,6 +18,9 @@ import GameScene from './three/game/GameScene';
 import GameHUD from './three/game/GameHUD';
 import RubiksCube from './three/RubiksCube';
 import Hinges from './three/Hinges';
+import dynamic from 'next/dynamic';
+
+const LornScroll = dynamic(() => import('./lornscroll/LornScroll'), { ssr: false });
 import { useThreeCanvasState } from '@/hooks/use-three-canvas-state';
 import { useAchievementState } from '@/hooks/use-achievement-state';
 import { getWallConfig } from '@/lib/three/constants';
@@ -193,6 +196,7 @@ export default function ThreeCanvas({ onLoaded, showLogo, activeView, onCloseVie
             </div>
             {/* Render GameHUD outside Canvas for true fullscreen overlay */}
             {activeView === 'game' && <GameHUD onAbort={onCloseView} />}
+            {activeView === 'lornscroll' && <LornScroll onClose={onCloseView} />}
         </>
     );
 }

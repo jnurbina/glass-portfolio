@@ -34,6 +34,14 @@ export const experimentsData: ExperimentItem[] = [
     image: '/starmap4k.jpg'
   },
   {
+    id: 'lornscroll',
+    title: 'LornScroll',
+    description: 'Side-scrolling action game. Pixel art sprites, parallax city, and physics.',
+    type: 'action',
+    actionId: 'launch_lornscroll',
+    image: '/starmap4k.jpg'
+  },
+  {
     id: 'generative-art',
     title: 'Generative Waves',
     description: 'A collection of p5.js sketches exploring sine waves and noise functions.',

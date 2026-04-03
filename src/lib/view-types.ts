@@ -1,1 +1,1 @@
-export type ViewMode = 'home' | 'bio' | 'experience' | 'experiments' | 'audio' | 'foryou' | 'settings' | 'game' | 'rubiks' | 'hinges';
+export type ViewMode = 'home' | 'bio' | 'experience' | 'experiments' | 'audio' | 'foryou' | 'settings' | 'game' | 'rubiks' | 'hinges' | 'lornscroll';
