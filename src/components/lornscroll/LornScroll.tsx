@@ -153,7 +153,7 @@ export default function LornScroll({ onClose }: LornScrollProps) {
       sprites: { idle: { img: assets.avatarIdle as HTMLImageElement, framesMax: 4 }, walk: { img: assets.avatarWalk as HTMLImageElement, framesMax: 5 } },
     });
 
-    const TOASTER_FLIP_OFFSET = 89; // calibrated: 80 + (27 nudge / 3 scale) = 89
+    const TOASTER_FLIP_OFFSET = 71; // calibrated from J's nudge data: converges at 71
     const npc1 = new Sprite({ context: ctx, image: assets.npc1Run as HTMLImageElement, position: { x: 0, y: GROUND_Y - 22 * 3 + 17 }, scale: 3, framesMax: 8, flipOffsetX: TOASTER_FLIP_OFFSET });
     npc1.framesHold = 4;
     const npc2 = new Sprite({ context: ctx, image: assets.npc1Run as HTMLImageElement, position: { x: 0, y: GROUND_Y - 22 * 3 + 17 }, scale: 3, framesMax: 8, flipOffsetX: TOASTER_FLIP_OFFSET });
