@@ -248,17 +248,15 @@ export default function LornScroll({ onClose }: LornScrollProps) {
     npc2.framesHold = 4;
     npc1Ref.current.sprite = npc1;
 
-    // Karl — tumbling walk + idle
+    // Karl — tumbling walk + idle (both normalized to 597x585 per frame)
     const KARL_SCALE = 0.130;
     const karlFrameH = 585;
-    const karlIdleFrameH = 765;
     const karlBaseY = GROUND_Y - karlFrameH * KARL_SCALE + 17 + 44;
-    const karlIdleBaseY = GROUND_Y - karlIdleFrameH * KARL_SCALE + 17 + 44;
-    const karlSprite = new Sprite({ context: ctx, image: assets.karlIdle as HTMLImageElement, position: { x: 0, y: karlIdleBaseY }, scale: KARL_SCALE, framesMax: 5 });
+    const karlSprite = new Sprite({ context: ctx, image: assets.karlIdle as HTMLImageElement, position: { x: 0, y: karlBaseY }, scale: KARL_SCALE, framesMax: 5 });
     karlSprite.framesHold = 10;
     let karlWorldX = 900, karlDir = -1;
     const karlSprites = {
-      idle: { img: assets.karlIdle as HTMLImageElement, framesMax: 5, baseY: karlIdleBaseY },
+      idle: { img: assets.karlIdle as HTMLImageElement, framesMax: 5, baseY: karlBaseY },
       walk: { img: assets.karlWalk as HTMLImageElement, framesMax: 9, baseY: karlBaseY },
     };
     let karlState: 'patrol' | 'idle' | 'turning' = 'patrol';
@@ -268,15 +266,13 @@ export default function LornScroll({ onClose }: LornScrollProps) {
 
     // Jathan Names — fire poi walk + idle
     const JATHAN_SCALE = 0.130;
-    const jathanFrameH = 648;
-    const jathanIdleFrameH = 647;
+    const jathanFrameH = 648; // walk is 648, idle is 647 — close enough
     const jathanBaseY = GROUND_Y - jathanFrameH * JATHAN_SCALE + 17 + 45;
-    const jathanIdleBaseY = GROUND_Y - jathanIdleFrameH * JATHAN_SCALE + 17 + 45;
-    const jathanSprite = new Sprite({ context: ctx, image: assets.jathanIdle as HTMLImageElement, position: { x: 0, y: jathanIdleBaseY }, scale: JATHAN_SCALE, framesMax: 5 });
+    const jathanSprite = new Sprite({ context: ctx, image: assets.jathanIdle as HTMLImageElement, position: { x: 0, y: jathanBaseY }, scale: JATHAN_SCALE, framesMax: 5 });
     jathanSprite.framesHold = 12;
     let jathanWorldX = 1600, jathanDir = 1;
     const jathanSprites = {
-      idle: { img: assets.jathanIdle as HTMLImageElement, framesMax: 5, baseY: jathanIdleBaseY },
+      idle: { img: assets.jathanIdle as HTMLImageElement, framesMax: 5, baseY: jathanBaseY },
       walk: { img: assets.jathanWalk as HTMLImageElement, framesMax: 9, baseY: jathanBaseY },
     };
     let jathanState: 'patrol' | 'idle' | 'turning' = 'idle';
