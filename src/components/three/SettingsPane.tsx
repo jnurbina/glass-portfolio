@@ -15,7 +15,7 @@ interface PaneProps {
 
 const SettingsPane = ({ onClose }: PaneProps) => {
   const groupRef = useRef<THREE.Group>(null);
-  const { style, distanceFactor, isMobile } = useResponsivePane(600, 500);
+  const { style, distanceFactor, isMobile, isDesktop, tier } = useResponsivePane(600, 600);
   
   const { 
       particleCount, setParticleCount,
@@ -65,64 +65,62 @@ const SettingsPane = ({ onClose }: PaneProps) => {
   return (
     <group ref={groupRef} position={[0, 0, 10]}>
       <Html transform position={[0, 0, 0]} distanceFactor={distanceFactor} zIndexRange={[100, 0]} style={style}>
-         <div className={`w-full h-full bg-black/90 text-white relative rounded-xl border border-cyan-500/50 backdrop-blur-md shadow-[0_0_50px_rgba(6,182,212,0.2)] flex flex-col ${isMobile ? 'p-4' : 'p-8'}`}>
-            <div className="flex justify-between items-center mb-4 md:mb-8 border-b border-white/10 pb-4">
-                <h2 className="text-lg md:text-2xl font-bold font-mono text-cyan-400 uppercase tracking-widest">[ SYSTEM_CONFIG ]</h2>
-                <button 
-                    onClick={onClose} 
-                    aria-label="Close Pane" 
-                    className="text-white/50 hover:text-white font-mono text-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 rounded px-2"
-                >
-                    [ X ]
-                </button>
+         <div className={`w-full h-full bg-black/90 text-white relative rounded-xl border border-cyan-500/50 backdrop-blur-md shadow-[0_0_50px_rgba(6,182,212,0.2)] flex flex-col ${isDesktop ? 'p-4' : 'p-4'}`}>
+            <div className={`flex justify-between items-center ${isDesktop ? 'mb-4 pb-2' : 'mb-3 pb-2'} border-b border-white/10`}>
+                <h2 className={`${isDesktop ? 'text-sm' : 'text-sm'} font-bold font-mono text-cyan-400 uppercase tracking-widest`}>[ SYSTEM_CONFIG ]</h2>
+                <button onClick={onClose} aria-label="Close Pane" className={`text-white/50 hover:text-white font-mono ${isDesktop ? 'text-sm' : 'text-lg'}`}>[ X ]</button>
             </div>
 
-            <div className="space-y-6 md:space-y-8 flex-1 overflow-y-auto custom-scrollbar pr-2">
-                {/* Audio Controls */}
-                <div className="space-y-4">
-                    <h3 className="text-xs md:text-sm font-bold text-white/50 uppercase tracking-wider flex items-center gap-2">
-                        <span className="w-2 h-2 bg-cyan-500 rounded-full"></span> Audio
-                    </h3>
-                    
-                    <div className="space-y-2 bg-white/5 p-4 rounded-lg border border-white/5 hover:border-cyan-500/30 transition-colors">
-                        <div className="flex justify-between text-sm">
-                            <Label>BGM Volume</Label>
-                            <span className="font-mono text-cyan-500">{Math.round(bgmVol * 100)}%</span>
+            <div className={`${isDesktop ? 'space-y-4 flex flex-col justify-center' : 'space-y-3'} flex-1 min-h-0`}>
+                {isDesktop ? (
+                    <>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-white/5 p-4 rounded-lg border border-white/5">
+                                <div className="flex justify-between text-xs mb-2"><span className="text-white/50">BGM Volume</span><span className="text-cyan-500 font-mono">{Math.round(bgmVol * 100)}%</span></div>
+                                <Slider value={[bgmVol]} max={1} step={0.01} onValueChange={handleBgmChange} />
+                            </div>
+                            <div className="bg-white/5 p-4 rounded-lg border border-white/5">
+                                <div className="flex justify-between text-xs mb-2"><span className="text-white/50">SFX Volume</span><span className="text-cyan-500 font-mono">{Math.round(sfxVol * 100)}%</span></div>
+                                <Slider value={[sfxVol]} max={1} step={0.01} onValueChange={handleSfxChange} />
+                            </div>
                         </div>
-                        <Slider value={[bgmVol]} max={1} step={0.01} onValueChange={handleBgmChange} className="py-2" />
-                    </div>
-
-                    <div className="space-y-2 bg-white/5 p-4 rounded-lg border border-white/5 hover:border-cyan-500/30 transition-colors">
-                        <div className="flex justify-between text-sm">
-                            <Label>SFX Volume</Label>
-                            <span className="font-mono text-cyan-500">{Math.round(sfxVol * 100)}%</span>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-white/5 p-4 rounded-lg border border-white/5">
+                                <div className="flex justify-between text-xs mb-2"><span className="text-white/50">Particles</span><span className="text-cyan-500 font-mono">{particleCount}</span></div>
+                                <Slider value={[particleCount]} min={0} max={200} step={1} onValueChange={handleParticleChange} />
+                            </div>
+                            <div className="bg-white/5 p-4 rounded-lg border border-white/5">
+                                <div className="flex justify-between text-xs mb-2"><span className="text-white/50">Reflections</span><span className="text-cyan-500 font-mono">{reflectionQuality === 1 ? 'Low' : reflectionQuality === 2 ? 'Med' : 'Hi'}</span></div>
+                                <Slider value={[reflectionQuality]} min={1} max={3} step={1} onValueChange={handleQualityChange} />
+                            </div>
                         </div>
-                        <Slider value={[sfxVol]} max={1} step={0.01} onValueChange={handleSfxChange} className="py-2" />
-                    </div>
-                </div>
-
-                {/* Visual Controls */}
-                <div className="space-y-4">
-                    <h3 className="text-xs md:text-sm font-bold text-white/50 uppercase tracking-wider flex items-center gap-2">
-                         <span className="w-2 h-2 bg-purple-500 rounded-full"></span> Visuals
-                    </h3>
-                    
-                    <div className="space-y-2 bg-white/5 p-4 rounded-lg border border-white/5 hover:border-purple-500/30 transition-colors">
-                        <div className="flex justify-between text-sm">
-                            <Label>Particle Count</Label>
-                            <span className="font-mono text-cyan-500">{particleCount}</span>
+                    </>
+                ) : (
+                    <>
+                        <div className="space-y-2">
+                            <h3 className="text-[10px] font-bold text-white/50 uppercase flex items-center gap-1"><span className="w-1 h-1 bg-cyan-500 rounded-full"></span> Audio</h3>
+                            <div className="space-y-1 bg-white/5 p-2 rounded-lg border border-white/5">
+                                <div className="flex justify-between text-xs"><Label>BGM</Label><span className="font-mono text-cyan-500">{Math.round(bgmVol * 100)}%</span></div>
+                                <Slider value={[bgmVol]} max={1} step={0.01} onValueChange={handleBgmChange} />
+                            </div>
+                            <div className="space-y-1 bg-white/5 p-2 rounded-lg border border-white/5">
+                                <div className="flex justify-between text-xs"><Label>SFX</Label><span className="font-mono text-cyan-500">{Math.round(sfxVol * 100)}%</span></div>
+                                <Slider value={[sfxVol]} max={1} step={0.01} onValueChange={handleSfxChange} />
+                            </div>
                         </div>
-                        <Slider value={[particleCount]} min={0} max={200} step={1} onValueChange={handleParticleChange} className="py-2" />
-                    </div>
-
-                    <div className="space-y-2 bg-white/5 p-4 rounded-lg border border-white/5 hover:border-purple-500/30 transition-colors">
-                        <div className="flex justify-between text-sm">
-                            <Label>Reflection Quality</Label>
-                            <span className="font-mono text-cyan-500">{reflectionQuality === 1 ? 'Low' : reflectionQuality === 2 ? 'Med' : 'High'}</span>
+                        <div className="space-y-2">
+                            <h3 className="text-[10px] font-bold text-white/50 uppercase flex items-center gap-1"><span className="w-1 h-1 bg-purple-500 rounded-full"></span> Visuals</h3>
+                            <div className="space-y-1 bg-white/5 p-2 rounded-lg border border-white/5">
+                                <div className="flex justify-between text-xs"><Label>Particles</Label><span className="font-mono text-cyan-500">{particleCount}</span></div>
+                                <Slider value={[particleCount]} min={0} max={200} step={1} onValueChange={handleParticleChange} />
+                            </div>
+                            <div className="space-y-1 bg-white/5 p-2 rounded-lg border border-white/5">
+                                <div className="flex justify-between text-xs"><Label>Reflections</Label><span className="font-mono text-cyan-500">{reflectionQuality === 1 ? 'Low' : reflectionQuality === 2 ? 'Med' : 'Hi'}</span></div>
+                                <Slider value={[reflectionQuality]} min={1} max={3} step={1} onValueChange={handleQualityChange} />
+                            </div>
                         </div>
-                        <Slider value={[reflectionQuality]} min={1} max={3} step={1} onValueChange={handleQualityChange} className="py-2" />
-                    </div>
-                </div>
+                    </>
+                )}
             </div>
          </div>
       </Html>
