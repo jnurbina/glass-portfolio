@@ -16,7 +16,9 @@ const ASSET_SOURCES = {
   avatarWalk: `${ASSET_BASE}/merchant/walk.png`,
   npc1Idle: `${ASSET_BASE}/toasterbot/idle.png`,
   npc1Run: `${ASSET_BASE}/toasterbot/run.png`,
+  karlIdle: `${ASSET_BASE}/karl/idle.png`,
   karlWalk: `${ASSET_BASE}/karl/walk.png`,
+  jathanIdle: `${ASSET_BASE}/jathan/idle.png`,
   jathanWalk: `${ASSET_BASE}/jathan/walk.png`,
   walkAudio: `${BLOB_BASE}/audio/walking.wav`,
   jumpAudio: `${BLOB_BASE}/audio/jump.wav`,
@@ -246,23 +248,41 @@ export default function LornScroll({ onClose }: LornScrollProps) {
     npc2.framesHold = 4;
     npc1Ref.current.sprite = npc1;
 
-    // Karl — 9 frames, 597x585 each, bottom-aligned tumbling walk
-    // Calibrated: scale 0.130, yOff +44 from default
+    // Karl — tumbling walk + idle
     const KARL_SCALE = 0.130;
     const karlFrameH = 585;
+    const karlIdleFrameH = 765;
     const karlBaseY = GROUND_Y - karlFrameH * KARL_SCALE + 17 + 44;
-    const karlSprite = new Sprite({ context: ctx, image: assets.karlWalk as HTMLImageElement, position: { x: 0, y: karlBaseY }, scale: KARL_SCALE, framesMax: 9 });
-    karlSprite.framesHold = 6;
+    const karlIdleBaseY = GROUND_Y - karlIdleFrameH * KARL_SCALE + 17 + 44;
+    const karlSprite = new Sprite({ context: ctx, image: assets.karlIdle as HTMLImageElement, position: { x: 0, y: karlIdleBaseY }, scale: KARL_SCALE, framesMax: 5 });
+    karlSprite.framesHold = 10;
     let karlWorldX = 900, karlDir = -1;
+    const karlSprites = {
+      idle: { img: assets.karlIdle as HTMLImageElement, framesMax: 5, baseY: karlIdleBaseY },
+      walk: { img: assets.karlWalk as HTMLImageElement, framesMax: 9, baseY: karlBaseY },
+    };
+    let karlState: 'patrol' | 'idle' | 'turning' = 'patrol';
+    let karlStateTimer = 0;
+    let karlIdleDuration = 2000 + Math.random() * 3000;
+    let karlPatrolDuration = 3000 + Math.random() * 4000;
 
-    // Jathan Names — 9 frames, 496x648 each, fire poi walk
-    // Calibrated: scale 0.130, yOff +45 from default
+    // Jathan Names — fire poi walk + idle
     const JATHAN_SCALE = 0.130;
     const jathanFrameH = 648;
+    const jathanIdleFrameH = 647;
     const jathanBaseY = GROUND_Y - jathanFrameH * JATHAN_SCALE + 17 + 45;
-    const jathanSprite = new Sprite({ context: ctx, image: assets.jathanWalk as HTMLImageElement, position: { x: 0, y: jathanBaseY }, scale: JATHAN_SCALE, framesMax: 9 });
-    jathanSprite.framesHold = 7;
+    const jathanIdleBaseY = GROUND_Y - jathanIdleFrameH * JATHAN_SCALE + 17 + 45;
+    const jathanSprite = new Sprite({ context: ctx, image: assets.jathanIdle as HTMLImageElement, position: { x: 0, y: jathanIdleBaseY }, scale: JATHAN_SCALE, framesMax: 5 });
+    jathanSprite.framesHold = 12;
     let jathanWorldX = 1600, jathanDir = 1;
+    const jathanSprites = {
+      idle: { img: assets.jathanIdle as HTMLImageElement, framesMax: 5, baseY: jathanIdleBaseY },
+      walk: { img: assets.jathanWalk as HTMLImageElement, framesMax: 9, baseY: jathanBaseY },
+    };
+    let jathanState: 'patrol' | 'idle' | 'turning' = 'idle';
+    let jathanStateTimer = 0;
+    let jathanIdleDuration = 3000 + Math.random() * 2000;
+    let jathanPatrolDuration = 4000 + Math.random() * 3000;
 
     let avatarWorldX = CANVAS_W / 2;
     let cameraX = 0;
@@ -362,26 +382,60 @@ export default function LornScroll({ onClose }: LornScrollProps) {
       npc2WorldX += 0.8 * npc2Dir;
       if (npc2WorldX >= 1350) npc2Dir = -1; else if (npc2WorldX <= 1050) npc2Dir = 1;
 
-      // Karl patrol — sync with debug ref
+      // --- NPC state machine helper ---
+      const switchNpcSprite = (sprite: Sprite, target: { img: HTMLImageElement; framesMax: number; baseY: number }) => {
+        if (sprite.image !== target.img) {
+          sprite.image = target.img;
+          sprite.width = target.img.width;
+          sprite.framesMax = target.framesMax;
+          sprite.framesCurrent = 0;
+          sprite.position.y = target.baseY;
+        }
+      };
+
+      // Karl behavior
       const karlDbg = npcsRef.current.karl;
       if (karlDbg) {
         if (patrolRef.current) {
-          karlDbg.worldX += 0.6 * karlDbg.dir;
-          if (karlDbg.worldX >= 1050) karlDbg.dir = -1;
-          else if (karlDbg.worldX <= 800) karlDbg.dir = 1;
+          karlStateTimer += dt;
+          if (karlState === 'patrol') {
+            karlDbg.worldX += 0.6 * karlDbg.dir;
+            if (karlDbg.worldX >= 1050) { karlDbg.dir = -1; karlState = 'idle'; karlStateTimer = 0; karlIdleDuration = 1500 + Math.random() * 2000; }
+            else if (karlDbg.worldX <= 800) { karlDbg.dir = 1; karlState = 'idle'; karlStateTimer = 0; karlIdleDuration = 1500 + Math.random() * 2000; }
+            else if (karlStateTimer >= karlPatrolDuration) { karlState = 'idle'; karlStateTimer = 0; karlIdleDuration = 2000 + Math.random() * 3000; }
+            switchNpcSprite(karlSprite, karlSprites.walk);
+          } else if (karlState === 'idle') {
+            switchNpcSprite(karlSprite, karlSprites.idle);
+            if (karlStateTimer >= karlIdleDuration) {
+              // Maybe change direction
+              if (Math.random() < 0.4) karlDbg.dir *= -1;
+              karlState = 'patrol'; karlStateTimer = 0; karlPatrolDuration = 3000 + Math.random() * 4000;
+            }
+          }
         }
         karlSprite.direction = karlDbg.dir > 0 ? 'right' : 'left';
         karlSprite.position.x = karlDbg.worldX - cameraX;
         if (karlDbg.scaleOverride !== null) karlSprite.scale = karlDbg.scaleOverride;
       }
 
-      // Jathan Names patrol — sync with debug ref
+      // Jathan behavior
       const jathanDbg = npcsRef.current.jathan;
       if (jathanDbg) {
         if (patrolRef.current) {
-          jathanDbg.worldX += 0.5 * jathanDbg.dir;
-          if (jathanDbg.worldX >= 1800) jathanDbg.dir = -1;
-          else if (jathanDbg.worldX <= 1500) jathanDbg.dir = 1;
+          jathanStateTimer += dt;
+          if (jathanState === 'patrol') {
+            jathanDbg.worldX += 0.5 * jathanDbg.dir;
+            if (jathanDbg.worldX >= 1800) { jathanDbg.dir = -1; jathanState = 'idle'; jathanStateTimer = 0; jathanIdleDuration = 2000 + Math.random() * 2000; }
+            else if (jathanDbg.worldX <= 1500) { jathanDbg.dir = 1; jathanState = 'idle'; jathanStateTimer = 0; jathanIdleDuration = 2000 + Math.random() * 2000; }
+            else if (jathanStateTimer >= jathanPatrolDuration) { jathanState = 'idle'; jathanStateTimer = 0; jathanIdleDuration = 3000 + Math.random() * 2000; }
+            switchNpcSprite(jathanSprite, jathanSprites.walk);
+          } else if (jathanState === 'idle') {
+            switchNpcSprite(jathanSprite, jathanSprites.idle);
+            if (jathanStateTimer >= jathanIdleDuration) {
+              if (Math.random() < 0.4) jathanDbg.dir *= -1;
+              jathanState = 'patrol'; jathanStateTimer = 0; jathanPatrolDuration = 4000 + Math.random() * 3000;
+            }
+          }
         }
         jathanSprite.direction = jathanDbg.dir > 0 ? 'right' : 'left';
         jathanSprite.position.x = jathanDbg.worldX - cameraX;
