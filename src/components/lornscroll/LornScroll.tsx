@@ -247,16 +247,20 @@ export default function LornScroll({ onClose }: LornScrollProps) {
     npc1Ref.current.sprite = npc1;
 
     // Karl — 9 frames, 597x585 each, bottom-aligned tumbling walk
-    const KARL_SCALE = 0.15;
+    // Calibrated: scale 0.130, yOff +44 from default
+    const KARL_SCALE = 0.130;
     const karlFrameH = 585;
-    const karlSprite = new Sprite({ context: ctx, image: assets.karlWalk as HTMLImageElement, position: { x: 0, y: GROUND_Y - karlFrameH * KARL_SCALE + 17 }, scale: KARL_SCALE, framesMax: 9 });
+    const karlBaseY = GROUND_Y - karlFrameH * KARL_SCALE + 17 + 44;
+    const karlSprite = new Sprite({ context: ctx, image: assets.karlWalk as HTMLImageElement, position: { x: 0, y: karlBaseY }, scale: KARL_SCALE, framesMax: 9 });
     karlSprite.framesHold = 6;
     let karlWorldX = 900, karlDir = -1;
 
     // Jathan Names — 9 frames, 496x648 each, fire poi walk
-    const JATHAN_SCALE = 0.15;
+    // Calibrated: scale 0.130, yOff +45 from default
+    const JATHAN_SCALE = 0.130;
     const jathanFrameH = 648;
-    const jathanSprite = new Sprite({ context: ctx, image: assets.jathanWalk as HTMLImageElement, position: { x: 0, y: GROUND_Y - jathanFrameH * JATHAN_SCALE + 17 }, scale: JATHAN_SCALE, framesMax: 9 });
+    const jathanBaseY = GROUND_Y - jathanFrameH * JATHAN_SCALE + 17 + 45;
+    const jathanSprite = new Sprite({ context: ctx, image: assets.jathanWalk as HTMLImageElement, position: { x: 0, y: jathanBaseY }, scale: JATHAN_SCALE, framesMax: 9 });
     jathanSprite.framesHold = 7;
     let jathanWorldX = 1600, jathanDir = 1;
 
