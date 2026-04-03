@@ -217,10 +217,13 @@ export default function LornScroll({ onClose }: LornScrollProps) {
     });
     npc2.framesHold = 10;
 
-    // NPC patrol state
+    // NPC patrol state (in world-space)
+    let npc1WorldX = 500;
+    let npc2WorldX = 900;
     let npc1Dir = 1;
     let npc2Dir = -1;
-    const NPC_SPEED = 0.5;
+    const NPC_SPEED = 0.3;
+    let worldOffset = 0; // tracks how far the "camera" has scrolled
 
     const backgrounds = [bgSkyline, bgFar, bgNear, fgTexture];
     const speeds = [0.1, 0.25, 0.5, 0.75];
@@ -232,11 +235,9 @@ export default function LornScroll({ onClose }: LornScrollProps) {
       ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
       // Parallax
+      const atEdge = avatar.position.x <= 32 || avatar.position.x >= CANVAS_W - 160;
       backgrounds.forEach((bg, i) => {
-        const mult =
-          avatar.position.x <= 32 || avatar.position.x >= CANVAS_W - 160
-            ? speeds[i]
-            : speeds[i] * 0.5;
+        const mult = atEdge ? speeds[i] : speeds[i] * 0.5;
         bg.position.x -= avatar.velocity.x * mult;
 
         const frameW = (bg.width / bg.framesMax) * bg.scale;
@@ -244,6 +245,10 @@ export default function LornScroll({ onClose }: LornScrollProps) {
         const totalW = frameW * repeatX;
         if (bg.position.x < -totalW) bg.position.x += totalW;
       });
+
+      // Track world scroll (foreground speed = 0.75)
+      const scrollMult = atEdge ? 0.75 : 0.75 * 0.5;
+      worldOffset += avatar.velocity.x * scrollMult;
 
       avatar.position.x = Math.max(
         32,
@@ -258,18 +263,22 @@ export default function LornScroll({ onClose }: LornScrollProps) {
       ctx.fillStyle = 'rgba(255, 255, 255, .10)';
       ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
-      // Draw NPCs
-      npc1.update();
-      npc2.update();
-
-      // NPC patrol movement
-      npc1.position.x += NPC_SPEED * npc1Dir;
-      if (npc1.position.x > 600 || npc1.position.x < 400) npc1Dir *= -1;
+      // NPC patrol in world-space
+      npc1WorldX += NPC_SPEED * npc1Dir;
+      if (npc1WorldX > 600 || npc1WorldX < 400) npc1Dir *= -1;
       npc1.direction = npc1Dir > 0 ? 'right' : 'left';
 
-      npc2.position.x += NPC_SPEED * npc2Dir;
-      if (npc2.position.x > 700 || npc2.position.x < 500) npc2Dir *= -1;
+      npc2WorldX += NPC_SPEED * npc2Dir;
+      if (npc2WorldX > 1000 || npc2WorldX < 800) npc2Dir *= -1;
       npc2.direction = npc2Dir > 0 ? 'right' : 'left';
+
+      // Convert world-space to screen-space
+      npc1.position.x = npc1WorldX - worldOffset;
+      npc2.position.x = npc2WorldX - worldOffset;
+
+      // Only draw NPCs if they're on screen
+      if (npc1.position.x > -100 && npc1.position.x < CANVAS_W + 100) npc1.update();
+      if (npc2.position.x > -100 && npc2.position.x < CANVAS_W + 100) npc2.update();
 
       // Draw avatar
       avatar.update();
