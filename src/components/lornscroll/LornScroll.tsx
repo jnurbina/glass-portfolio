@@ -30,7 +30,7 @@ const GROUND_Y = 520;
 const AVATAR_SPEED = 5;
 const DEBUG = true;
 const DEBUG_GRID = true;
-const NPC_PATROL = false;
+const NPC_PATROL = true; // calibrated, patrol on
 const NPC_INTERACT_RANGE = 80;
 
 interface DialogLine { speaker: string; text: string; color: string; }
@@ -42,8 +42,9 @@ const NPC1_DIALOG: DialogLine[] = [
 const NOTHING_DIALOG: DialogLine[] = [{ speaker: 'Dosc', text: "Nothing's here...", color: '#ff4444' }];
 
 // Debug component with clickable controls
-const DebugControls = ({ npc1Ref, setDebugLog, debugLog }: any) => {
+const DebugControls = ({ npc1Ref, setDebugLog, debugLog, patrolRef }: any) => {
   const [nudge, setNudge] = useState(0);
+  const [patrolOn, setPatrolOn] = useState(NPC_PATROL);
 
   const handleFlip = () => {
     npc1Ref.current.dir *= -1;
@@ -58,11 +59,21 @@ const DebugControls = ({ npc1Ref, setDebugLog, debugLog }: any) => {
     const log = `dir: ${npc1Ref.current.dir > 0 ? 'R' : 'L'}, offset: ${s.flipOffsetX}, nudge: ${nudge}, finalWorldX: ${npc1Ref.current.worldX}`;
     setDebugLog((prev: string[]) => [log, ...prev.slice(0, 4)]);
   };
+  const handleTogglePatrol = () => {
+    const next = !patrolOn;
+    setPatrolOn(next);
+    patrolRef.current = next;
+  };
+  const handleReset = () => {
+    npc1Ref.current.worldX = 600;
+    npc1Ref.current.dir = 1;
+    setNudge(0);
+  };
 
   return (
     <div className="absolute bottom-4 left-4 z-50 p-2 bg-gray-900/80 text-white rounded font-mono text-xs flex flex-col gap-2">
       <div className="font-bold">NPC1 Debug</div>
-      <div>Nudge: {nudge}</div>
+      <div>Nudge: {nudge} | Patrol: {patrolOn ? 'ON' : 'OFF'}</div>
       <div className="flex gap-1">
         <button onClick={() => handleNudge(-10)} className="bg-red-500 px-2 py-1">-10</button>
         <button onClick={() => handleNudge(-1)} className="bg-red-500 px-2 py-1">-1</button>
@@ -70,8 +81,12 @@ const DebugControls = ({ npc1Ref, setDebugLog, debugLog }: any) => {
         <button onClick={() => handleNudge(10)} className="bg-green-500 px-2 py-1">+10</button>
       </div>
       <div className="flex gap-1">
-        <button onClick={handleFlip} className="bg-blue-500 px-2 py-1 flex-1">Flip Dir</button>
+        <button onClick={handleFlip} className="bg-blue-500 px-2 py-1 flex-1">Flip</button>
         <button onClick={handleLog} className="bg-purple-500 px-2 py-1 flex-1">Log</button>
+        <button onClick={handleReset} className="bg-yellow-600 px-2 py-1 flex-1">Reset</button>
+      </div>
+      <div className="flex gap-1">
+        <button onClick={handleTogglePatrol} className={`${patrolOn ? 'bg-green-600' : 'bg-gray-600'} px-2 py-1 flex-1`}>{patrolOn ? 'Patrol ON' : 'Patrol OFF'}</button>
       </div>
       <textarea readOnly value={debugLog.join('\n')} className="bg-black/50 h-24 w-full text-xs" />
     </div>
@@ -93,6 +108,7 @@ export default function LornScroll({ onClose }: LornScrollProps) {
   const [started, setStarted] = useState(false);
   const [debugLog, setDebugLog] = useState<string[]>([]);
   const npc1Ref = useRef<{ sprite: Sprite | null; worldX: number; dir: number }>({ sprite: null, worldX: 600, dir: 1 });
+  const patrolRef = useRef(NPC_PATROL);
 
   const dialogStateRef = useRef({ active: false, lines: [] as DialogLine[], lineIndex: 0, charIndex: 0, charTimer: 0, charSpeed: 30, waitingForAdvance: false, dismissTimer: 0 });
   const inputLockedRef = useRef(false);
@@ -153,7 +169,7 @@ export default function LornScroll({ onClose }: LornScrollProps) {
       sprites: { idle: { img: assets.avatarIdle as HTMLImageElement, framesMax: 4 }, walk: { img: assets.avatarWalk as HTMLImageElement, framesMax: 5 } },
     });
 
-    const TOASTER_FLIP_OFFSET = 71; // calibrated from J's nudge data: converges at 71
+    const TOASTER_FLIP_OFFSET = 68; // final calibration: 71 - (8 nudge / 3 scale) ≈ 68
     const npc1 = new Sprite({ context: ctx, image: assets.npc1Run as HTMLImageElement, position: { x: 0, y: GROUND_Y - 22 * 3 + 17 }, scale: 3, framesMax: 8, flipOffsetX: TOASTER_FLIP_OFFSET });
     npc1.framesHold = 4;
     const npc2 = new Sprite({ context: ctx, image: assets.npc1Run as HTMLImageElement, position: { x: 0, y: GROUND_Y - 22 * 3 + 17 }, scale: 3, framesMax: 8, flipOffsetX: TOASTER_FLIP_OFFSET });
@@ -233,8 +249,8 @@ export default function LornScroll({ onClose }: LornScrollProps) {
       });
 
       const dbg = npc1Ref.current;
-      if (!NPC_PATROL && dbg.sprite) { dbg.sprite.direction = dbg.dir > 0 ? 'right' : 'left'; }
-      else if (NPC_PATROL) {
+      if (!patrolRef.current && dbg.sprite) { dbg.sprite.direction = dbg.dir > 0 ? 'right' : 'left'; }
+      else if (patrolRef.current) {
         dbg.worldX += 0.8 * dbg.dir;
         if (dbg.worldX >= 720) dbg.dir = -1; else if (dbg.worldX <= 480) dbg.dir = 1;
         dbg.sprite!.direction = dbg.dir > 0 ? 'right' : 'left';
@@ -346,7 +362,7 @@ export default function LornScroll({ onClose }: LornScrollProps) {
         </div>
       )}
       <canvas ref={canvasRef} className={`${started ? 'block' : 'hidden'}`} style={{ width: '100%', maxWidth: `${CANVAS_W}px`, height: 'auto', maxHeight: '100vh', aspectRatio: `${CANVAS_W}/${CANVAS_H}`, imageRendering: 'pixelated' }} />
-      {started && DEBUG && <DebugControls npc1Ref={npc1Ref} setDebugLog={setDebugLog} debugLog={debugLog} />}
+      {started && DEBUG && <DebugControls npc1Ref={npc1Ref} setDebugLog={setDebugLog} debugLog={debugLog} patrolRef={patrolRef} />}
     </div>
   );
 }
