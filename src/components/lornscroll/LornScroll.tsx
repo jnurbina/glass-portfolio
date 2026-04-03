@@ -171,7 +171,12 @@ export default function LornScroll({ onClose }: LornScrollProps) {
     let ftuTimer = 0;
 
     const backgrounds = [bgSkyline, bgFar, bgNear, fgTexture];
-    const speeds = [0.15, 0.35, 0.65, 1.0];
+    // Visual parallax speeds / sprite scale = actual position speed
+    // drawPatternCanvas interprets position.x in source pixels, but draws at scale
+    // So 1 unit of position.x = `scale` visual pixels. Divide to compensate.
+    const bgScales = [3, 4, 4, 5]; // scale of each layer
+    const visualSpeeds = [0.15, 0.4, 0.7, 1.0]; // desired visual scroll rates
+    const speeds = visualSpeeds.map((s, i) => s / bgScales[i]);
 
     // Helper: start a dialog scene
     const startDialog = (lines: DialogLine[]) => {
