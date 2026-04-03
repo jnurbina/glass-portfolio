@@ -13,6 +13,7 @@ export interface SpriteConfig {
   offset?: { x: number; y: number };
   direction?: 'left' | 'right';
   noRepeat?: boolean;
+  flipOffsetX?: number; // source-pixel offset to compensate for asymmetric sprite frames when flipped
 }
 
 export class Sprite {
@@ -27,6 +28,7 @@ export class Sprite {
   offset: { x: number; y: number };
   direction: 'left' | 'right';
   noRepeat: boolean;
+  flipOffsetX: number;
   width: number;
   height: number;
   patternCanvas: HTMLCanvasElement | null;
@@ -40,6 +42,7 @@ export class Sprite {
     offset = { x: 0, y: 0 },
     direction = 'right',
     noRepeat = true,
+    flipOffsetX = 0,
   }: SpriteConfig) {
     this.context = context;
     this.image = image;
@@ -52,6 +55,7 @@ export class Sprite {
     this.offset = offset;
     this.direction = direction;
     this.noRepeat = noRepeat;
+    this.flipOffsetX = flipOffsetX;
     this.width = image.width;
     this.height = image.height;
     this.patternCanvas = null;
@@ -92,10 +96,11 @@ export class Sprite {
 
     if (this.direction === 'left') {
       this.context.save();
-      // Flip: mirror the drawn frame in-place around its visual center
+      // Flip: mirror the frame, then shift by flipOffsetX to compensate for asymmetric padding
       const dx = this.position.x - this.offset.x;
       const dy = this.position.y - this.offset.y;
-      this.context.translate(dx + drawWidth, 0);
+      const flipCompensation = this.flipOffsetX * this.scale;
+      this.context.translate(dx + drawWidth - flipCompensation, 0);
       this.context.scale(-1, 1);
       this.context.drawImage(
         this.image,

@@ -30,7 +30,7 @@ const GROUND_Y = 520;
 const AVATAR_SPEED = 5;
 const DEBUG = true;
 const DEBUG_GRID = true; // ruler gridlines
-const NPC_PATROL = false; // disable patrol for position debugging
+const NPC_PATROL = true; // re-enabled with flip fix
 const NPC_INTERACT_RANGE = 80;
 
 // Dialog scene data
@@ -154,9 +154,12 @@ export default function LornScroll({ onClose }: LornScrollProps) {
     });
 
     // NPCs
-    const npc1 = new Sprite({ context: ctx, image: assets.npc1Run as HTMLImageElement, position: { x: 0, y: GROUND_Y - 22 * 3 + 17 }, scale: 3, framesMax: 8 });
+    // Toaster Bot: 848px / 8 frames = 106px per frame. Character sits ~6px from left with ~60px empty on right.
+    // flipOffsetX compensates so the visible bot stays in place when sprite flips.
+    const TOASTER_FLIP_OFFSET = 55; // source pixels — tune if flip still jumps
+    const npc1 = new Sprite({ context: ctx, image: assets.npc1Run as HTMLImageElement, position: { x: 0, y: GROUND_Y - 22 * 3 + 17 }, scale: 3, framesMax: 8, flipOffsetX: TOASTER_FLIP_OFFSET });
     npc1.framesHold = 4;
-    const npc2 = new Sprite({ context: ctx, image: assets.npc1Run as HTMLImageElement, position: { x: 0, y: GROUND_Y - 22 * 3 + 17 }, scale: 3, framesMax: 8 });
+    const npc2 = new Sprite({ context: ctx, image: assets.npc1Run as HTMLImageElement, position: { x: 0, y: GROUND_Y - 22 * 3 + 17 }, scale: 3, framesMax: 8, flipOffsetX: TOASTER_FLIP_OFFSET });
     npc2.framesHold = 4;
 
     let npc1WorldX = 600, npc2WorldX = 1200;
