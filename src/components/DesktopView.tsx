@@ -22,6 +22,7 @@ const menuItems = [
 
 export default function DesktopView() {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [assetsReady, setAssetsReady] = useState(false);
   const [showLogo, setShowLogo] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [activeView, setActiveView] = useState<ViewMode>('home');
@@ -69,11 +70,11 @@ export default function DesktopView() {
 
   return (
     <div style={{ width: '100vw', height: '100vh' }}>
-      <LaughingMan loading={!isLoaded} />
+      <LaughingMan loading={!assetsReady} onLoadComplete={() => setIsLoaded(true)} />
 
       <ThreeCanvasProvider>
         <ThreeCanvas
-          onLoaded={() => setIsLoaded(true)}
+          onLoaded={() => setAssetsReady(true)}
           showLogo={showLogo && activeView === 'home'}
           activeView={activeView}
           onCloseView={handleCloseView}

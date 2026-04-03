@@ -24,6 +24,7 @@ const menuItems = [
 
 export default function MainView() {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [assetsReady, setAssetsReady] = useState(false);
   const [showLogo, setShowLogo] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [activeView, setActiveView] = useState<ViewMode>('home');
@@ -53,7 +54,11 @@ export default function MainView() {
       }
     }, [isLoaded]);
 
-    const handleLoaded = useCallback(() => {
+    const handleAssetsReady = useCallback(() => {
+      setAssetsReady(true);
+    }, []);
+
+    const handleEnterClick = useCallback(() => {
       setIsLoaded(true);
     }, []);
 
@@ -124,11 +129,11 @@ export default function MainView() {
   
     return (
       <div style={{ width: '100vw', height: '100vh' }}>
-        <LaughingMan loading={!isLoaded} />
+        <LaughingMan loading={!assetsReady} onLoadComplete={handleEnterClick} />
         
         <ThreeCanvasProvider>
           <ThreeCanvas
-            onLoaded={handleLoaded}
+            onLoaded={handleAssetsReady}
             showLogo={showLogo && activeView === 'home'}
             activeView={activeView}
             onCloseView={() => setActiveView('home')}
