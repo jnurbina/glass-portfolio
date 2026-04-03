@@ -88,7 +88,8 @@ const LaughingMan: React.FC<LaughingManProps> = ({ loading, onLoadComplete }) =>
 
   return (
     <div style={containerStyle} onClick={handleEnter}>
-      <div style={{ position: 'relative', width: '1024px', height: '1024px' }}>
+      {/* SVG spinner — scales down on small screens */}
+      <div style={{ position: 'relative', width: 'min(1024px, 90vw)', height: 'min(1024px, 70vh)' }}>
         <svg viewBox="0 0 1024 1024" width="1024" height="1024">
           <defs>
             <path
@@ -159,20 +160,23 @@ const LaughingMan: React.FC<LaughingManProps> = ({ loading, onLoadComplete }) =>
           </g>
         </svg>
 
-        {/* Progress bar and status — below the spinner */}
-        <div
-          style={{
-            position: 'absolute',
-            bottom: '80px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: '60%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '8px',
-          }}
-        >
+      </div>
+
+      {/* Progress bar and status — positioned relative to VIEWPORT, below spinner */}
+      <div
+        style={{
+          position: 'fixed',
+          bottom: 'max(40px, 8vh)',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: 'min(80%, 400px)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '8px',
+          zIndex: 10000,
+        }}
+      >
           {/* Status text */}
           <span
             style={{
@@ -221,7 +225,6 @@ const LaughingMan: React.FC<LaughingManProps> = ({ loading, onLoadComplete }) =>
           >
             {progress.progress}%
           </span>
-        </div>
       </div>
     </div>
   );
