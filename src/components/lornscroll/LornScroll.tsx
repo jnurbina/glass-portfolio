@@ -156,7 +156,7 @@ export default function LornScroll({ onClose }: LornScrollProps) {
     // NPCs
     // Toaster Bot: 848px / 8 frames = 106px per frame. Character sits ~6px from left with ~60px empty on right.
     // flipOffsetX compensates so the visible bot stays in place when sprite flips.
-    const TOASTER_FLIP_OFFSET = 55; // source pixels — tune if flip still jumps
+    const TOASTER_FLIP_OFFSET = 80; // source pixels — (frame=106px, char ~6px from left, ~75px empty right)
     const npc1 = new Sprite({ context: ctx, image: assets.npc1Run as HTMLImageElement, position: { x: 0, y: GROUND_Y - 22 * 3 + 17 }, scale: 3, framesMax: 8, flipOffsetX: TOASTER_FLIP_OFFSET });
     npc1.framesHold = 4;
     const npc2 = new Sprite({ context: ctx, image: assets.npc1Run as HTMLImageElement, position: { x: 0, y: GROUND_Y - 22 * 3 + 17 }, scale: 3, framesMax: 8, flipOffsetX: TOASTER_FLIP_OFFSET });
