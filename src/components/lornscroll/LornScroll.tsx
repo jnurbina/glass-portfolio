@@ -30,7 +30,7 @@ const CANVAS_W = 800;
 const CANVAS_H = 600;
 const GROUND_Y = 520;
 const AVATAR_SPEED = 5;
-const DEBUG = false;
+const DEBUG = true;
 const DEBUG_GRID = false;
 const NPC_PATROL = true;
 const NPC_INTERACT_RANGE = 80;
@@ -53,23 +53,62 @@ const JATHAN_DIALOG: DialogLine[] = [
 ];
 const NOTHING_DIALOG: DialogLine[] = [{ speaker: 'Dosc', text: "Nothing's here...", color: '#ff4444' }];
 
-// Debug component with clickable controls
-const DebugControls = ({ npc1Ref, setDebugLog, debugLog, patrolRef }: any) => {
-  const [nudge, setNudge] = useState(0);
+// Debug component with NPC selector, X/Y nudge, scale, and patrol controls
+interface NpcDebugRef {
+  sprite: Sprite | null;
+  worldX: number;
+  dir: number;
+  yOffset: number;
+  scaleOverride: number | null;
+  label: string;
+}
+
+const DebugControls = ({ npcsRef, setDebugLog, debugLog, patrolRef }: {
+  npcsRef: React.MutableRefObject<Record<string, NpcDebugRef>>;
+  setDebugLog: React.Dispatch<React.SetStateAction<string[]>>;
+  debugLog: string[];
+  patrolRef: React.MutableRefObject<boolean>;
+}) => {
+  const npcKeys = Object.keys(npcsRef.current);
+  const [selected, setSelected] = useState(npcKeys[0] || '');
+  const [nudgeX, setNudgeX] = useState(0);
+  const [nudgeY, setNudgeY] = useState(0);
+  const [scaleAdj, setScaleAdj] = useState(0);
   const [patrolOn, setPatrolOn] = useState(NPC_PATROL);
 
-  const handleFlip = () => {
-    npc1Ref.current.dir *= -1;
+  const npc = npcsRef.current[selected];
+
+  const handleSelect = (key: string) => {
+    setSelected(key);
+    setNudgeX(0);
+    setNudgeY(0);
+    setScaleAdj(0);
   };
-  const handleNudge = (val: number) => {
-    setNudge(n => n + val);
-    npc1Ref.current.worldX += val;
+
+  const handleNudgeX = (val: number) => {
+    if (!npc) return;
+    setNudgeX(n => n + val);
+    npc.worldX += val;
   };
+  const handleNudgeY = (val: number) => {
+    if (!npc) return;
+    setNudgeY(n => n + val);
+    npc.yOffset += val;
+    if (npc.sprite) npc.sprite.position.y += val;
+  };
+  const handleScale = (val: number) => {
+    if (!npc || !npc.sprite) return;
+    setScaleAdj(n => +(n + val).toFixed(2));
+    const newScale = +(npc.sprite.scale + val).toFixed(4);
+    npc.sprite.scale = newScale;
+    npc.scaleOverride = newScale;
+  };
+  const handleFlip = () => { if (npc) npc.dir *= -1; };
   const handleLog = () => {
-    const s = npc1Ref.current.sprite;
-    if (!s) return;
-    const log = `dir: ${npc1Ref.current.dir > 0 ? 'R' : 'L'}, offset: ${s.flipOffsetX}, nudge: ${nudge}, finalWorldX: ${npc1Ref.current.worldX}`;
-    setDebugLog((prev: string[]) => [log, ...prev.slice(0, 4)]);
+    if (!npc?.sprite) return;
+    const s = npc.sprite;
+    const log = `[${npc.label}] dir:${npc.dir > 0 ? 'R' : 'L'} scale:${s.scale.toFixed(3)} yOff:${npc.yOffset} nudgeX:${nudgeX} nudgeY:${nudgeY} worldX:${npc.worldX.toFixed(0)} posY:${s.position.y.toFixed(0)}`;
+    setDebugLog((prev) => [log, ...prev.slice(0, 6)]);
   };
   const handleTogglePatrol = () => {
     const next = !patrolOn;
@@ -77,30 +116,48 @@ const DebugControls = ({ npc1Ref, setDebugLog, debugLog, patrolRef }: any) => {
     patrolRef.current = next;
   };
   const handleReset = () => {
-    npc1Ref.current.worldX = 600;
-    npc1Ref.current.dir = 1;
-    setNudge(0);
+    if (!npc) return;
+    npc.worldX = 600; npc.dir = 1; npc.yOffset = 0; npc.scaleOverride = null;
+    setNudgeX(0); setNudgeY(0); setScaleAdj(0);
   };
 
   return (
-    <div className="absolute bottom-4 left-4 z-50 p-2 bg-gray-900/80 text-white rounded font-mono text-xs flex flex-col gap-2">
-      <div className="font-bold">NPC1 Debug</div>
-      <div>Nudge: {nudge} | Patrol: {patrolOn ? 'ON' : 'OFF'}</div>
+    <div className="absolute bottom-4 left-4 z-50 p-2 bg-gray-900/90 text-white rounded font-mono text-xs flex flex-col gap-1.5 min-w-[240px]">
+      <div className="font-bold text-cyan-400">NPC Debug</div>
+      <select value={selected} onChange={e => handleSelect(e.target.value)} className="bg-gray-800 text-white px-1 py-0.5 rounded text-xs">
+        {npcKeys.map(k => <option key={k} value={k}>{npcsRef.current[k].label}</option>)}
+      </select>
+      <div className="text-gray-400">X:{nudgeX} Y:{nudgeY} Scale:{scaleAdj >= 0 ? '+' : ''}{scaleAdj}</div>
+      <div className="text-yellow-300 text-[10px]">X Nudge</div>
       <div className="flex gap-1">
-        <button onClick={() => handleNudge(-10)} className="bg-red-500 px-2 py-1">-10</button>
-        <button onClick={() => handleNudge(-1)} className="bg-red-500 px-2 py-1">-1</button>
-        <button onClick={() => handleNudge(1)} className="bg-green-500 px-2 py-1">+1</button>
-        <button onClick={() => handleNudge(10)} className="bg-green-500 px-2 py-1">+10</button>
+        <button onClick={() => handleNudgeX(-10)} className="bg-red-700 px-2 py-0.5 rounded">-10</button>
+        <button onClick={() => handleNudgeX(-1)} className="bg-red-600 px-2 py-0.5 rounded">-1</button>
+        <button onClick={() => handleNudgeX(1)} className="bg-green-600 px-2 py-0.5 rounded">+1</button>
+        <button onClick={() => handleNudgeX(10)} className="bg-green-700 px-2 py-0.5 rounded">+10</button>
+      </div>
+      <div className="text-yellow-300 text-[10px]">Y Nudge</div>
+      <div className="flex gap-1">
+        <button onClick={() => handleNudgeY(-10)} className="bg-red-700 px-2 py-0.5 rounded">-10</button>
+        <button onClick={() => handleNudgeY(-1)} className="bg-red-600 px-2 py-0.5 rounded">-1</button>
+        <button onClick={() => handleNudgeY(1)} className="bg-green-600 px-2 py-0.5 rounded">+1</button>
+        <button onClick={() => handleNudgeY(10)} className="bg-green-700 px-2 py-0.5 rounded">+10</button>
+      </div>
+      <div className="text-yellow-300 text-[10px]">Scale</div>
+      <div className="flex gap-1">
+        <button onClick={() => handleScale(-0.05)} className="bg-red-700 px-2 py-0.5 rounded">-.05</button>
+        <button onClick={() => handleScale(-0.01)} className="bg-red-600 px-2 py-0.5 rounded">-.01</button>
+        <button onClick={() => handleScale(0.01)} className="bg-green-600 px-2 py-0.5 rounded">+.01</button>
+        <button onClick={() => handleScale(0.05)} className="bg-green-700 px-2 py-0.5 rounded">+.05</button>
       </div>
       <div className="flex gap-1">
-        <button onClick={handleFlip} className="bg-blue-500 px-2 py-1 flex-1">Flip</button>
-        <button onClick={handleLog} className="bg-purple-500 px-2 py-1 flex-1">Log</button>
-        <button onClick={handleReset} className="bg-yellow-600 px-2 py-1 flex-1">Reset</button>
+        <button onClick={handleFlip} className="bg-blue-600 px-2 py-0.5 rounded flex-1">Flip</button>
+        <button onClick={handleLog} className="bg-purple-600 px-2 py-0.5 rounded flex-1">Log</button>
+        <button onClick={handleReset} className="bg-yellow-700 px-2 py-0.5 rounded flex-1">Reset</button>
       </div>
       <div className="flex gap-1">
-        <button onClick={handleTogglePatrol} className={`${patrolOn ? 'bg-green-600' : 'bg-gray-600'} px-2 py-1 flex-1`}>{patrolOn ? 'Patrol ON' : 'Patrol OFF'}</button>
+        <button onClick={handleTogglePatrol} className={`${patrolOn ? 'bg-green-600' : 'bg-gray-600'} px-2 py-0.5 rounded flex-1`}>{patrolOn ? 'Patrol ON' : 'Patrol OFF'}</button>
       </div>
-      <textarea readOnly value={debugLog.join('\n')} className="bg-black/50 h-24 w-full text-xs" />
+      <textarea readOnly value={debugLog.join('\n')} className="bg-black/50 h-20 w-full text-[10px] rounded" />
     </div>
   );
 };
@@ -120,6 +177,7 @@ export default function LornScroll({ onClose }: LornScrollProps) {
   const [started, setStarted] = useState(false);
   const [debugLog, setDebugLog] = useState<string[]>([]);
   const npc1Ref = useRef<{ sprite: Sprite | null; worldX: number; dir: number }>({ sprite: null, worldX: 600, dir: 1 });
+  const npcsRef = useRef<Record<string, NpcDebugRef>>({});
   const patrolRef = useRef(NPC_PATROL);
 
   const dialogStateRef = useRef({ active: false, lines: [] as DialogLine[], lineIndex: 0, charIndex: 0, charTimer: 0, charSpeed: 30, waitingForAdvance: false, dismissTimer: 0 });
@@ -189,14 +247,14 @@ export default function LornScroll({ onClose }: LornScrollProps) {
     npc1Ref.current.sprite = npc1;
 
     // Karl — 9 frames, 597x585 each, bottom-aligned tumbling walk
-    const KARL_SCALE = 0.28;
+    const KARL_SCALE = 0.15;
     const karlFrameH = 585;
     const karlSprite = new Sprite({ context: ctx, image: assets.karlWalk as HTMLImageElement, position: { x: 0, y: GROUND_Y - karlFrameH * KARL_SCALE + 17 }, scale: KARL_SCALE, framesMax: 9 });
     karlSprite.framesHold = 6;
     let karlWorldX = 900, karlDir = -1;
 
     // Jathan Names — 9 frames, 496x648 each, fire poi walk
-    const JATHAN_SCALE = 0.25;
+    const JATHAN_SCALE = 0.15;
     const jathanFrameH = 648;
     const jathanSprite = new Sprite({ context: ctx, image: assets.jathanWalk as HTMLImageElement, position: { x: 0, y: GROUND_Y - jathanFrameH * JATHAN_SCALE + 17 }, scale: JATHAN_SCALE, framesMax: 9 });
     jathanSprite.framesHold = 7;
@@ -207,6 +265,14 @@ export default function LornScroll({ onClose }: LornScrollProps) {
     let lastTime = performance.now();
     let ftuShown = false, ftuTimer = 0;
     let npc2WorldX = 1200, npc2Dir = -1;
+
+    // Register NPCs for debug panel
+    npcsRef.current = {
+      toasterbot1: { sprite: npc1, worldX: npc1Ref.current.worldX, dir: npc1Ref.current.dir, yOffset: 0, scaleOverride: null, label: 'ToasterBot 1' },
+      toasterbot2: { sprite: npc2, worldX: npc2WorldX, dir: npc2Dir, yOffset: 0, scaleOverride: null, label: 'ToasterBot 2' },
+      karl: { sprite: karlSprite, worldX: karlWorldX, dir: karlDir, yOffset: 0, scaleOverride: null, label: 'Karl' },
+      jathan: { sprite: jathanSprite, worldX: jathanWorldX, dir: jathanDir, yOffset: 0, scaleOverride: null, label: 'Jathan Names' },
+    };
 
     const backgrounds = [bgSkyline, bgFar, bgNear, fgTexture];
     const visualSpeeds = [0.15, 0.4, 0.7, 1.0];
@@ -245,9 +311,11 @@ export default function LornScroll({ onClose }: LornScrollProps) {
         if (keys['ArrowDown'] || keys['s']) { if (avatar.position.y + avatar.height < CANVAS_H - avatar.height) avatar.velocity.y += 1.4; }
         if (justPressed['Enter']) {
           justPressed['Enter'] = false;
+          const kd = npcsRef.current.karl;
+          const jd = npcsRef.current.jathan;
           if (Math.abs(avatarWorldX - npc1Ref.current.worldX) < NPC_INTERACT_RANGE) startDialog(NPC1_DIALOG);
-          else if (Math.abs(avatarWorldX - karlWorldX) < NPC_INTERACT_RANGE) startDialog(KARL_DIALOG);
-          else if (Math.abs(avatarWorldX - jathanWorldX) < NPC_INTERACT_RANGE) startDialog(JATHAN_DIALOG);
+          else if (kd && Math.abs(avatarWorldX - kd.worldX) < NPC_INTERACT_RANGE) startDialog(KARL_DIALOG);
+          else if (jd && Math.abs(avatarWorldX - jd.worldX) < NPC_INTERACT_RANGE) startDialog(JATHAN_DIALOG);
           else startDialog(NOTHING_DIALOG);
         }
         if (isMoving) { avatar.switchSprite('walk'); walkSound.play().catch(() => {}); }
@@ -290,17 +358,31 @@ export default function LornScroll({ onClose }: LornScrollProps) {
       npc2WorldX += 0.8 * npc2Dir;
       if (npc2WorldX >= 1350) npc2Dir = -1; else if (npc2WorldX <= 1050) npc2Dir = 1;
 
-      // Karl patrol
-      karlWorldX += 0.6 * karlDir;
-      if (karlWorldX >= 1050) karlDir = -1; else if (karlWorldX <= 800) karlDir = 1;
-      karlSprite.direction = karlDir > 0 ? 'right' : 'left';
-      karlSprite.position.x = karlWorldX - cameraX;
+      // Karl patrol — sync with debug ref
+      const karlDbg = npcsRef.current.karl;
+      if (karlDbg) {
+        if (patrolRef.current) {
+          karlDbg.worldX += 0.6 * karlDbg.dir;
+          if (karlDbg.worldX >= 1050) karlDbg.dir = -1;
+          else if (karlDbg.worldX <= 800) karlDbg.dir = 1;
+        }
+        karlSprite.direction = karlDbg.dir > 0 ? 'right' : 'left';
+        karlSprite.position.x = karlDbg.worldX - cameraX;
+        if (karlDbg.scaleOverride !== null) karlSprite.scale = karlDbg.scaleOverride;
+      }
 
-      // Jathan Names patrol
-      jathanWorldX += 0.5 * jathanDir;
-      if (jathanWorldX >= 1800) jathanDir = -1; else if (jathanWorldX <= 1500) jathanDir = 1;
-      jathanSprite.direction = jathanDir > 0 ? 'right' : 'left';
-      jathanSprite.position.x = jathanWorldX - cameraX;
+      // Jathan Names patrol — sync with debug ref
+      const jathanDbg = npcsRef.current.jathan;
+      if (jathanDbg) {
+        if (patrolRef.current) {
+          jathanDbg.worldX += 0.5 * jathanDbg.dir;
+          if (jathanDbg.worldX >= 1800) jathanDbg.dir = -1;
+          else if (jathanDbg.worldX <= 1500) jathanDbg.dir = 1;
+        }
+        jathanSprite.direction = jathanDbg.dir > 0 ? 'right' : 'left';
+        jathanSprite.position.x = jathanDbg.worldX - cameraX;
+        if (jathanDbg.scaleOverride !== null) jathanSprite.scale = jathanDbg.scaleOverride;
+      }
 
       npc1.position.x = dbg.worldX - cameraX;
       npc2.position.x = npc2WorldX - cameraX;
@@ -408,7 +490,7 @@ export default function LornScroll({ onClose }: LornScrollProps) {
         </div>
       )}
       <canvas ref={canvasRef} className={`${started ? 'block' : 'hidden'}`} style={{ width: '100%', maxWidth: `${CANVAS_W}px`, height: 'auto', maxHeight: '100vh', aspectRatio: `${CANVAS_W}/${CANVAS_H}`, imageRendering: 'pixelated' }} />
-      {started && DEBUG && <DebugControls npc1Ref={npc1Ref} setDebugLog={setDebugLog} debugLog={debugLog} patrolRef={patrolRef} />}
+      {started && DEBUG && <DebugControls npcsRef={npcsRef} setDebugLog={setDebugLog} debugLog={debugLog} patrolRef={patrolRef} />}
     </div>
   );
 }
