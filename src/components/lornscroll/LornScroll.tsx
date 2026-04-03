@@ -16,6 +16,8 @@ const ASSET_SOURCES = {
   avatarWalk: `${ASSET_BASE}/merchant/walk.png`,
   npc1Idle: `${ASSET_BASE}/toasterbot/idle.png`,
   npc1Run: `${ASSET_BASE}/toasterbot/run.png`,
+  karlWalk: `${ASSET_BASE}/karl/walk.png`,
+  jathanWalk: `${ASSET_BASE}/jathan/walk.png`,
   walkAudio: `${BLOB_BASE}/audio/walking.wav`,
   jumpAudio: `${BLOB_BASE}/audio/jump.wav`,
   bgMusic: `${BLOB_BASE}/audio/bgmusic.wav`,
@@ -38,6 +40,16 @@ const NPC1_DIALOG: DialogLine[] = [
   { speaker: 'Dosc', text: 'Sup', color: '#ff4444' },
   { speaker: 'ToasterBot', text: "Sup i already know you're testing if i reply, so yup here i am", color: '#ffaa00' },
   { speaker: 'Dosc', text: '...fair enough', color: '#ff4444' },
+];
+const KARL_DIALOG: DialogLine[] = [
+  { speaker: 'Dosc', text: 'You good bro?', color: '#ff4444' },
+  { speaker: 'Karl', text: '*tumbles aggressively*', color: '#66ccff' },
+  { speaker: 'Dosc', text: 'I\'ll take that as a yes', color: '#ff4444' },
+];
+const JATHAN_DIALOG: DialogLine[] = [
+  { speaker: 'Dosc', text: 'Sick poi', color: '#ff4444' },
+  { speaker: 'Jathan Names', text: 'Thanks, I\'ve been practicing since before time was invented', color: '#ff8844' },
+  { speaker: 'Dosc', text: '...what', color: '#ff4444' },
 ];
 const NOTHING_DIALOG: DialogLine[] = [{ speaker: 'Dosc', text: "Nothing's here...", color: '#ff4444' }];
 
@@ -176,6 +188,20 @@ export default function LornScroll({ onClose }: LornScrollProps) {
     npc2.framesHold = 4;
     npc1Ref.current.sprite = npc1;
 
+    // Karl — 9 frames, 597x585 each, bottom-aligned tumbling walk
+    const KARL_SCALE = 0.28;
+    const karlFrameH = 585;
+    const karlSprite = new Sprite({ context: ctx, image: assets.karlWalk as HTMLImageElement, position: { x: 0, y: GROUND_Y - karlFrameH * KARL_SCALE + 17 }, scale: KARL_SCALE, framesMax: 9 });
+    karlSprite.framesHold = 6;
+    let karlWorldX = 900, karlDir = -1;
+
+    // Jathan Names — 9 frames, 496x648 each, fire poi walk
+    const JATHAN_SCALE = 0.25;
+    const jathanFrameH = 648;
+    const jathanSprite = new Sprite({ context: ctx, image: assets.jathanWalk as HTMLImageElement, position: { x: 0, y: GROUND_Y - jathanFrameH * JATHAN_SCALE + 17 }, scale: JATHAN_SCALE, framesMax: 9 });
+    jathanSprite.framesHold = 7;
+    let jathanWorldX = 1600, jathanDir = 1;
+
     let avatarWorldX = CANVAS_W / 2;
     let cameraX = 0;
     let lastTime = performance.now();
@@ -217,7 +243,13 @@ export default function LornScroll({ onClose }: LornScrollProps) {
           }
         }
         if (keys['ArrowDown'] || keys['s']) { if (avatar.position.y + avatar.height < CANVAS_H - avatar.height) avatar.velocity.y += 1.4; }
-        if (justPressed['Enter']) { justPressed['Enter'] = false; if (Math.abs(avatarWorldX - npc1Ref.current.worldX) < NPC_INTERACT_RANGE) startDialog(NPC1_DIALOG); else startDialog(NOTHING_DIALOG); }
+        if (justPressed['Enter']) {
+          justPressed['Enter'] = false;
+          if (Math.abs(avatarWorldX - npc1Ref.current.worldX) < NPC_INTERACT_RANGE) startDialog(NPC1_DIALOG);
+          else if (Math.abs(avatarWorldX - karlWorldX) < NPC_INTERACT_RANGE) startDialog(KARL_DIALOG);
+          else if (Math.abs(avatarWorldX - jathanWorldX) < NPC_INTERACT_RANGE) startDialog(JATHAN_DIALOG);
+          else startDialog(NOTHING_DIALOG);
+        }
         if (isMoving) { avatar.switchSprite('walk'); walkSound.play().catch(() => {}); }
         else { avatar.switchSprite('idle'); walkSound.pause(); walkSound.currentTime = 0; }
       } else { avatar.switchSprite('idle'); walkSound.pause(); walkSound.currentTime = 0; }
@@ -258,6 +290,18 @@ export default function LornScroll({ onClose }: LornScrollProps) {
       npc2WorldX += 0.8 * npc2Dir;
       if (npc2WorldX >= 1350) npc2Dir = -1; else if (npc2WorldX <= 1050) npc2Dir = 1;
 
+      // Karl patrol
+      karlWorldX += 0.6 * karlDir;
+      if (karlWorldX >= 1050) karlDir = -1; else if (karlWorldX <= 800) karlDir = 1;
+      karlSprite.direction = karlDir > 0 ? 'right' : 'left';
+      karlSprite.position.x = karlWorldX - cameraX;
+
+      // Jathan Names patrol
+      jathanWorldX += 0.5 * jathanDir;
+      if (jathanWorldX >= 1800) jathanDir = -1; else if (jathanWorldX <= 1500) jathanDir = 1;
+      jathanSprite.direction = jathanDir > 0 ? 'right' : 'left';
+      jathanSprite.position.x = jathanWorldX - cameraX;
+
       npc1.position.x = dbg.worldX - cameraX;
       npc2.position.x = npc2WorldX - cameraX;
       npc2.direction = npc2Dir > 0 ? 'right' : 'left';
@@ -267,6 +311,8 @@ export default function LornScroll({ onClose }: LornScrollProps) {
       ctx.fillStyle = 'rgba(255,255,255,.1)'; ctx.fillRect(0,0,CANVAS_W,CANVAS_H);
       if (npc1.position.x > -100 && npc1.position.x < CANVAS_W + 100) npc1.update();
       if (npc2.position.x > -100 && npc2.position.x < CANVAS_W + 100) npc2.update();
+      if (karlSprite.position.x > -200 && karlSprite.position.x < CANVAS_W + 200) karlSprite.update();
+      if (jathanSprite.position.x > -200 && jathanSprite.position.x < CANVAS_W + 200) jathanSprite.update();
       avatar.update();
 
       if (ds.active) {
