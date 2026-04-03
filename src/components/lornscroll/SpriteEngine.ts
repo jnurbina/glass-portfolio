@@ -48,7 +48,7 @@ export class Sprite {
     this.framesMax = framesMax;
     this.framesCurrent = 0;
     this.framesElapsed = 0;
-    this.framesHold = 12;
+    this.framesHold = 8; // faster default animation
     this.offset = offset;
     this.direction = direction;
     this.noRepeat = noRepeat;

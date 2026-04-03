@@ -195,16 +195,16 @@ export default function LornScroll({ onClose }: LornScrollProps) {
       },
     });
 
-    // NPC 1 — Toaster Bot (idle, patrolling right side)
+    // NPC 1 — Toaster Bot
     const npc1 = new Sprite({
       context: ctx,
-      image: assets.npc1Idle as HTMLImageElement,
-      position: { x: 500, y: GROUND_Y - 22 * 3 + 17 }, // scaled 3x, offset to ground
+      image: assets.npc1Run as HTMLImageElement,
+      position: { x: 500, y: GROUND_Y - 22 * 3 + 17 },
       scale: 3,
-      framesMax: 5,
+      framesMax: 8,
       noRepeat: true,
     });
-    npc1.framesHold = 14; // slightly slower animation
+    npc1.framesHold = 6; // faster animation for smoother look
 
     // NPC 2 — second Toaster Bot further out
     const npc2 = new Sprite({
@@ -215,15 +215,20 @@ export default function LornScroll({ onClose }: LornScrollProps) {
       framesMax: 8,
       noRepeat: true,
     });
-    npc2.framesHold = 10;
+    npc2.framesHold = 6;
 
     // NPC patrol state (in world-space)
-    let npc1WorldX = 500;
-    let npc2WorldX = 900;
+    // These are absolute world positions — the avatar starts at worldX ~100
+    let npc1WorldX = 600;
+    let npc2WorldX = 1200;
+    const npc1Home = 600; // center of patrol
+    const npc1Range = 120; // patrol radius
+    const npc2Home = 1200;
+    const npc2Range = 150;
     let npc1Dir = 1;
     let npc2Dir = -1;
-    const NPC_SPEED = 0.3;
-    let worldOffset = 0; // tracks how far the "camera" has scrolled
+    const NPC_SPEED = 0.6;
+    let worldOffset = 0; // tracks cumulative world scroll
 
     const backgrounds = [bgSkyline, bgFar, bgNear, fgTexture];
     const speeds = [0.1, 0.25, 0.5, 0.75];
@@ -234,7 +239,7 @@ export default function LornScroll({ onClose }: LornScrollProps) {
       ctx.fillStyle = 'rgba(0, 0, 0, 1)';
       ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
-      // Parallax
+      // Parallax — world scrolls when avatar is at screen edges
       const atEdge = avatar.position.x <= 32 || avatar.position.x >= CANVAS_W - 160;
       backgrounds.forEach((bg, i) => {
         const mult = atEdge ? speeds[i] : speeds[i] * 0.5;
@@ -246,8 +251,10 @@ export default function LornScroll({ onClose }: LornScrollProps) {
         if (bg.position.x < -totalW) bg.position.x += totalW;
       });
 
-      // Track world scroll (foreground speed = 0.75)
-      const scrollMult = atEdge ? 0.75 : 0.75 * 0.5;
+      // World offset tracks at foreground rate — NPCs are ON the foreground
+      // This must match exactly how the foreground scrolls
+      const fgSpeed = speeds[3]; // 0.75 — foreground layer
+      const scrollMult = atEdge ? fgSpeed : fgSpeed * 0.5;
       worldOffset += avatar.velocity.x * scrollMult;
 
       avatar.position.x = Math.max(
@@ -263,20 +270,22 @@ export default function LornScroll({ onClose }: LornScrollProps) {
       ctx.fillStyle = 'rgba(255, 255, 255, .10)';
       ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
-      // NPC patrol in world-space
+      // NPC patrol — walk to edge of range, turn around, walk back
       npc1WorldX += NPC_SPEED * npc1Dir;
-      if (npc1WorldX > 600 || npc1WorldX < 400) npc1Dir *= -1;
+      if (npc1WorldX >= npc1Home + npc1Range) { npc1Dir = -1; }
+      else if (npc1WorldX <= npc1Home - npc1Range) { npc1Dir = 1; }
       npc1.direction = npc1Dir > 0 ? 'right' : 'left';
 
       npc2WorldX += NPC_SPEED * npc2Dir;
-      if (npc2WorldX > 1000 || npc2WorldX < 800) npc2Dir *= -1;
+      if (npc2WorldX >= npc2Home + npc2Range) { npc2Dir = -1; }
+      else if (npc2WorldX <= npc2Home - npc2Range) { npc2Dir = 1; }
       npc2.direction = npc2Dir > 0 ? 'right' : 'left';
 
       // Convert world-space to screen-space
       npc1.position.x = npc1WorldX - worldOffset;
       npc2.position.x = npc2WorldX - worldOffset;
 
-      // Only draw NPCs if they're on screen
+      // Only draw if on screen
       if (npc1.position.x > -100 && npc1.position.x < CANVAS_W + 100) npc1.update();
       if (npc2.position.x > -100 && npc2.position.x < CANVAS_W + 100) npc2.update();
 
