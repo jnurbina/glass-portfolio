@@ -29,31 +29,57 @@ const CANVAS_H = 600;
 const GROUND_Y = 520;
 const AVATAR_SPEED = 5;
 const DEBUG = true;
-const DEBUG_GRID = true; // ruler gridlines
-const NPC_PATROL = true; // re-enabled with flip fix
+const DEBUG_GRID = true;
+const NPC_PATROL = false;
 const NPC_INTERACT_RANGE = 80;
 
-// Dialog scene data
-interface DialogLine {
-  speaker: string;
-  text: string;
-  color: string;
-}
-
+interface DialogLine { speaker: string; text: string; color: string; }
 const NPC1_DIALOG: DialogLine[] = [
   { speaker: 'Dosc', text: 'Sup', color: '#ff4444' },
   { speaker: 'ToasterBot', text: "Sup i already know you're testing if i reply, so yup here i am", color: '#ffaa00' },
   { speaker: 'Dosc', text: '...fair enough', color: '#ff4444' },
 ];
+const NOTHING_DIALOG: DialogLine[] = [{ speaker: 'Dosc', text: "Nothing's here...", color: '#ff4444' }];
 
-const NOTHING_DIALOG: DialogLine[] = [
-  { speaker: 'Dosc', text: "Nothing's here...", color: '#ff4444' },
-];
+// Debug component with clickable controls
+const DebugControls = ({ npc1Ref, setDebugLog, debugLog }: any) => {
+  const [nudge, setNudge] = useState(0);
 
-interface LornScrollProps {
-  onClose: () => void;
-}
+  const handleFlip = () => {
+    npc1Ref.current.dir *= -1;
+  };
+  const handleNudge = (val: number) => {
+    setNudge(n => n + val);
+    npc1Ref.current.worldX += val;
+  };
+  const handleLog = () => {
+    const s = npc1Ref.current.sprite;
+    if (!s) return;
+    const log = `dir: ${npc1Ref.current.dir > 0 ? 'R' : 'L'}, offset: ${s.flipOffsetX}, nudge: ${nudge}, finalWorldX: ${npc1Ref.current.worldX}`;
+    setDebugLog((prev: string[]) => [log, ...prev.slice(0, 4)]);
+  };
 
+  return (
+    <div className="absolute bottom-4 left-4 z-50 p-2 bg-gray-900/80 text-white rounded font-mono text-xs flex flex-col gap-2">
+      <div className="font-bold">NPC1 Debug</div>
+      <div>Nudge: {nudge}</div>
+      <div className="flex gap-1">
+        <button onClick={() => handleNudge(-10)} className="bg-red-500 px-2 py-1">-10</button>
+        <button onClick={() => handleNudge(-1)} className="bg-red-500 px-2 py-1">-1</button>
+        <button onClick={() => handleNudge(1)} className="bg-green-500 px-2 py-1">+1</button>
+        <button onClick={() => handleNudge(10)} className="bg-green-500 px-2 py-1">+10</button>
+      </div>
+      <div className="flex gap-1">
+        <button onClick={handleFlip} className="bg-blue-500 px-2 py-1 flex-1">Flip Dir</button>
+        <button onClick={handleLog} className="bg-purple-500 px-2 py-1 flex-1">Log</button>
+      </div>
+      <textarea readOnly value={debugLog.join('\n')} className="bg-black/50 h-24 w-full text-xs" />
+    </div>
+  );
+};
+
+
+interface LornScrollProps { onClose: () => void; }
 export default function LornScroll({ onClose }: LornScrollProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -65,28 +91,13 @@ export default function LornScroll({ onClose }: LornScrollProps) {
   const [loadingPct, setLoadingPct] = useState(0);
   const [loadingText, setLoadingText] = useState('Loading...');
   const [started, setStarted] = useState(false);
+  const [debugLog, setDebugLog] = useState<string[]>([]);
+  const npc1Ref = useRef<{ sprite: Sprite | null; worldX: number; dir: number }>({ sprite: null, worldX: 600, dir: 1 });
 
-  // Dialog state — managed in game loop via refs for performance
-  const dialogStateRef = useRef({
-    active: false,
-    lines: [] as DialogLine[],
-    lineIndex: 0,
-    charIndex: 0,
-    charTimer: 0,
-    charSpeed: 30, // ms per character
-    waitingForAdvance: false,
-    dismissTimer: 0,
-  });
-
-  // Input lock during dialog
+  const dialogStateRef = useRef({ active: false, lines: [] as DialogLine[], lineIndex: 0, charIndex: 0, charTimer: 0, charSpeed: 30, waitingForAdvance: false, dismissTimer: 0 });
   const inputLockedRef = useRef(false);
 
-  useEffect(() => {
-    audioEngine.suspend();
-    return () => { audioEngine.resume(); };
-  }, []);
-
-  // Load assets
+  useEffect(() => { audioEngine.suspend(); return () => { audioEngine.resume(); }; }, []);
   useEffect(() => {
     const entries = Object.entries(ASSET_SOURCES);
     const total = entries.length;
@@ -96,12 +107,12 @@ export default function LornScroll({ onClose }: LornScrollProps) {
       new Promise<void>((resolve, reject) => {
         if (src.endsWith('.wav')) {
           const audio = new Audio();
-          audio.oncanplaythrough = () => { assets[key as AssetKey] = audio; loaded++; setLoadingPct((loaded / total) * 100); resolve(); };
+          audio.oncanplaythrough = () => { assets[key as AssetKey] = audio; loaded++; setLoadingPct((l) => (loaded / total) * 100); resolve(); };
           audio.onerror = () => reject(new Error(`Failed: ${src}`));
           audio.src = src;
         } else {
           const img = new window.Image();
-          img.onload = () => { assets[key as AssetKey] = img; loaded++; setLoadingPct((loaded / total) * 100); resolve(); };
+          img.onload = () => { assets[key as AssetKey] = img; loaded++; setLoadingPct((l) => (loaded / total) * 100); resolve(); };
           img.onerror = () => reject(new Error(`Failed: ${src}`));
           img.src = src;
         }
@@ -116,7 +127,6 @@ export default function LornScroll({ onClose }: LornScrollProps) {
 
   const handleStart = useCallback(() => { if (!loading) setStarted(true); }, [loading]);
 
-  // === GAME LOOP ===
   useEffect(() => {
     if (!started || !canvasRef.current || !containerRef.current) return;
     const assets = (containerRef.current as any).__assets as LoadedAssets;
@@ -124,107 +134,64 @@ export default function LornScroll({ onClose }: LornScrollProps) {
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d')!;
-    canvas.width = CANVAS_W;
-    canvas.height = CANVAS_H;
+    canvas.width = CANVAS_W; canvas.height = CANVAS_H;
 
-    // Backgrounds
     const bgSkyline = new Sprite({ context: ctx, image: assets.backgroundSkyline as HTMLImageElement, position: { x: 0, y: -135 }, scale: 3, noRepeat: false });
     const bgFar = new Sprite({ context: ctx, image: assets.backgroundBuildingsFar as HTMLImageElement, position: { x: 0, y: 65 }, scale: 4, noRepeat: false });
     const bgNear = new Sprite({ context: ctx, image: assets.backgroundBuildingsNear as HTMLImageElement, position: { x: 0, y: -250 }, scale: 4, noRepeat: false });
     const fgTexture = new Sprite({ context: ctx, image: assets.foregroundTexture as HTMLImageElement, position: { x: 0, y: -300 }, scale: 5, noRepeat: false });
 
-    // Audio
-    const bgMusic = assets.bgMusic as HTMLAudioElement;
-    const walkSound = assets.walkAudio as HTMLAudioElement;
-    const jumpSound = assets.jumpAudio as HTMLAudioElement;
+    const bgMusic = assets.bgMusic as HTMLAudioElement, walkSound = assets.walkAudio as HTMLAudioElement, jumpSound = assets.jumpAudio as HTMLAudioElement;
     walkSound.volume = 0.3; jumpSound.volume = 0.35; bgMusic.volume = 0.08;
     bgMusic.loop = true; walkSound.loop = true;
     bgMusic.play().catch(() => {});
 
-    // Player
     const avatar = new Avatar({
       context: ctx, image: assets.avatarIdle as HTMLImageElement,
-      position: { x: 100, y: GROUND_Y - 64 * 3 + 80 },
-      velocity: { x: 0, y: 0 }, framesMax: 4, scale: 3,
-      offset: { x: 28, y: 80 },
-      sprites: {
-        idle: { img: assets.avatarIdle as HTMLImageElement, framesMax: 4 },
-        walk: { img: assets.avatarWalk as HTMLImageElement, framesMax: 5 },
-      },
+      position: { x: 0, y: 0 }, velocity: { x: 0, y: 0 },
+      framesMax: 4, scale: 3, offset: { x: 28, y: 80 },
+      sprites: { idle: { img: assets.avatarIdle as HTMLImageElement, framesMax: 4 }, walk: { img: assets.avatarWalk as HTMLImageElement, framesMax: 5 } },
     });
 
-    // NPCs
-    // Toaster Bot: 848px / 8 frames = 106px per frame. Character sits ~6px from left with ~60px empty on right.
-    // flipOffsetX compensates so the visible bot stays in place when sprite flips.
-    const TOASTER_FLIP_OFFSET = 80; // source pixels — (frame=106px, char ~6px from left, ~75px empty right)
+    const TOASTER_FLIP_OFFSET = 80;
     const npc1 = new Sprite({ context: ctx, image: assets.npc1Run as HTMLImageElement, position: { x: 0, y: GROUND_Y - 22 * 3 + 17 }, scale: 3, framesMax: 8, flipOffsetX: TOASTER_FLIP_OFFSET });
     npc1.framesHold = 4;
     const npc2 = new Sprite({ context: ctx, image: assets.npc1Run as HTMLImageElement, position: { x: 0, y: GROUND_Y - 22 * 3 + 17 }, scale: 3, framesMax: 8, flipOffsetX: TOASTER_FLIP_OFFSET });
     npc2.framesHold = 4;
+    npc1Ref.current.sprite = npc1;
 
-    let npc1WorldX = 600, npc2WorldX = 1200;
-    let npc1Dir = 1, npc2Dir = -1;
-    const NPC_SPEED = 0.8;
-    let avatarWorldX = CANVAS_W / 2; // spawn at screen center for testing
-    let cameraX = 0; // camera left edge in world-space
+    let avatarWorldX = CANVAS_W / 2;
+    let cameraX = 0;
     let lastTime = performance.now();
-
-    // FTU dialog
-    let ftuShown = false;
-    let ftuTimer = 0;
+    let ftuShown = false, ftuTimer = 0;
+    let npc2WorldX = 1200, npc2Dir = -1;
 
     const backgrounds = [bgSkyline, bgFar, bgNear, fgTexture];
-    // Visual parallax speeds / sprite scale = actual position speed
-    // drawPatternCanvas interprets position.x in source pixels, but draws at scale
-    // So 1 unit of position.x = `scale` visual pixels. Divide to compensate.
-    const bgScales = [3, 4, 4, 5]; // scale of each layer
-    const visualSpeeds = [0.15, 0.4, 0.7, 1.0]; // desired visual scroll rates
+    const visualSpeeds = [0.15, 0.4, 0.7, 1.0];
+    const bgScales = [3, 4, 4, 5];
     const speeds = visualSpeeds.map((s, i) => s / bgScales[i]);
 
-    // Helper: start a dialog scene
     const startDialog = (lines: DialogLine[]) => {
       const ds = dialogStateRef.current;
-      ds.active = true;
-      ds.lines = lines;
-      ds.lineIndex = 0;
-      ds.charIndex = 0;
-      ds.charTimer = 0;
-      ds.waitingForAdvance = false;
-      ds.dismissTimer = 0;
+      ds.active = true; ds.lines = lines; ds.lineIndex = 0; ds.charIndex = 0;
+      ds.charTimer = 0; ds.waitingForAdvance = false; ds.dismissTimer = 0;
       inputLockedRef.current = true;
     };
 
-    // Helper: get avatar world X
-    const getAvatarWorldX = () => avatarWorldX;
-
     const animate = (now: number) => {
       animFrameRef.current = requestAnimationFrame(animate);
-      const dt = Math.min(now - lastTime, 33); // cap at ~30fps worth of delta
+      const dt = Math.min(now - lastTime, 33);
       lastTime = now;
-
       const ds = dialogStateRef.current;
       const keys = keysRef.current;
       const justPressed = keyJustPressedRef.current;
 
-      // === 1. INPUT ===
-      avatar.velocity.x = 0;
       let isMoving = false;
-
       if (!inputLockedRef.current) {
-        // Movement — moves avatar in world-space
-        if (keys['ArrowLeft'] || keys['a']) {
-          avatar.direction = 'left';
-          avatarWorldX -= AVATAR_SPEED;
-          isMoving = true;
-        } else if (keys['ArrowRight'] || keys['d']) {
-          avatar.direction = 'right';
-          avatarWorldX += AVATAR_SPEED;
-          isMoving = true;
-        }
-        // Clamp avatar to world bounds (don't go negative)
+        if (keys['ArrowLeft'] || keys['a']) { avatar.direction = 'left'; avatarWorldX -= AVATAR_SPEED; isMoving = true; }
+        else if (keys['ArrowRight'] || keys['d']) { avatar.direction = 'right'; avatarWorldX += AVATAR_SPEED; isMoving = true; }
         avatarWorldX = Math.max(0, avatarWorldX);
 
-        // Jump
         if (keys[' '] || keys['ArrowUp'] || keys['w']) {
           const groundCheck = CANVAS_H - 80;
           if (avatar.position.y + avatar.height >= groundCheck) {
@@ -233,307 +200,114 @@ export default function LornScroll({ onClose }: LornScrollProps) {
             jumpSound.play().catch(() => {});
           }
         }
+        if (keys['ArrowDown'] || keys['s']) { if (avatar.position.y + avatar.height < CANVAS_H - avatar.height) avatar.velocity.y += 1.4; }
+        if (justPressed['Enter']) { justPressed['Enter'] = false; if (Math.abs(avatarWorldX - npc1Ref.current.worldX) < NPC_INTERACT_RANGE) startDialog(NPC1_DIALOG); else startDialog(NOTHING_DIALOG); }
+        if (isMoving) { avatar.switchSprite('walk'); walkSound.play().catch(() => {}); }
+        else { avatar.switchSprite('idle'); walkSound.pause(); walkSound.currentTime = 0; }
+      } else { avatar.switchSprite('idle'); walkSound.pause(); walkSound.currentTime = 0; }
 
-        // Fast fall
-        if (keys['ArrowDown'] || keys['s']) {
-          if (avatar.position.y + avatar.height < CANVAS_H - avatar.height) {
-            avatar.velocity.y += 1.4;
-          }
-        }
-
-        // CHECK button (Enter)
-        if (justPressed['Enter']) {
-          justPressed['Enter'] = false;
-          // Check proximity to NPC1
-          const avatarWX = avatarWorldX;
-          if (Math.abs(avatarWX - npc1WorldX) < NPC_INTERACT_RANGE) {
-            startDialog(NPC1_DIALOG);
-          } else {
-            startDialog(NOTHING_DIALOG);
-          }
-        }
-
-        // Set sprite
-        if (isMoving) {
-          avatar.switchSprite('walk');
-          walkSound.play().catch(() => {});
-        } else {
-          avatar.switchSprite('idle');
-          walkSound.pause(); walkSound.currentTime = 0;
-        }
-      } else {
-        // During dialog, Enter advances
-        avatar.switchSprite('idle');
-        walkSound.pause(); walkSound.currentTime = 0;
-      }
-
-      // === 2. DIALOG UPDATE ===
       if (ds.active) {
         const line = ds.lines[ds.lineIndex];
         if (!ds.waitingForAdvance) {
           ds.charTimer += dt;
-          // Button mashing Enter speeds up text
           const speed = keys['Enter'] ? ds.charSpeed * 0.3 : ds.charSpeed;
-          while (ds.charTimer >= speed && ds.charIndex < line.text.length) {
-            ds.charIndex++;
-            ds.charTimer -= speed;
-          }
-          if (ds.charIndex >= line.text.length) {
-            ds.waitingForAdvance = true;
-            ds.dismissTimer = 0;
-          }
-        } else {
-          // Waiting for Enter to advance
-          if (justPressed['Enter']) {
-            justPressed['Enter'] = false;
-            ds.lineIndex++;
-            if (ds.lineIndex >= ds.lines.length) {
-              // Dialog complete
-              ds.active = false;
-              inputLockedRef.current = false;
-            } else {
-              ds.charIndex = 0;
-              ds.charTimer = 0;
-              ds.waitingForAdvance = false;
-            }
-          }
+          while (ds.charTimer >= speed && ds.charIndex < line.text.length) { ds.charIndex++; ds.charTimer -= speed; }
+          if (ds.charIndex >= line.text.length) ds.waitingForAdvance = true;
+        } else if (justPressed['Enter']) {
+          justPressed['Enter'] = false; ds.lineIndex++;
+          if (ds.lineIndex >= ds.lines.length) { ds.active = false; inputLockedRef.current = false; }
+          else { ds.charIndex = 0; ds.charTimer = 0; ds.waitingForAdvance = false; }
         }
       }
 
-      // FTU dialog
-      if (!ftuShown) {
-        ftuTimer += dt;
-        if (ftuTimer > 1000) {
-          ftuShown = true;
-          startDialog([{ speaker: 'Dosc', text: 'It was a zipadeedoodah kind of day...', color: '#ff4444' }]);
-        }
-      }
+      if (!ftuShown) { ftuTimer += dt; if (ftuTimer > 1000) { ftuShown = true; startDialog([{ speaker: 'Dosc', text: 'It was a zipadeedoodah kind of day...', color: '#ff4444' }]); } }
 
-      // === 3. CAMERA / WORLD ===
-      // Camera follows avatar, keeping it roughly centered
-      // but clamped so camera doesn't go below 0
-      const targetCameraX = avatarWorldX - CANVAS_W / 3; // avatar at 1/3 from left
+      const targetCameraX = avatarWorldX - CANVAS_W / 3;
       cameraX = Math.max(0, targetCameraX);
-
-      // Avatar screen position = world position - camera
       avatar.position.x = avatarWorldX - cameraX;
-      // Keep velocity at 0 since we move via worldX directly
-      avatar.velocity.x = 0;
 
-      // Scroll backgrounds based on camera position
       backgrounds.forEach((bg, i) => {
         bg.position.x = -(cameraX * speeds[i]);
-        // Tile wrapping for infinite scroll
-        const frameW = (bg.width / bg.framesMax) * bg.scale;
-        const repeatX = Math.ceil(CANVAS_W / frameW);
-        const totalW = frameW * repeatX;
-        if (totalW > 0) {
-          bg.position.x = ((bg.position.x % totalW) + totalW) % totalW - totalW;
-        }
+        const frameW = (bg.width / bg.framesMax) * bg.scale; const repeatX = Math.ceil(CANVAS_W / frameW); const totalW = frameW * repeatX;
+        if (totalW > 0) bg.position.x = ((bg.position.x % totalW) + totalW) % totalW - totalW;
       });
 
-      // NPC patrol (disabled for debugging)
-      if (NPC_PATROL) {
-        npc1WorldX += NPC_SPEED * npc1Dir;
-        if (npc1WorldX >= 720) npc1Dir = -1;
-        else if (npc1WorldX <= 480) npc1Dir = 1;
-
-        npc2WorldX += NPC_SPEED * npc2Dir;
-        if (npc2WorldX >= 1350) npc2Dir = -1;
-        else if (npc2WorldX <= 1050) npc2Dir = 1;
+      const dbg = npc1Ref.current;
+      if (!NPC_PATROL && dbg.sprite) { dbg.sprite.direction = dbg.dir > 0 ? 'right' : 'left'; }
+      else if (NPC_PATROL) {
+        dbg.worldX += 0.8 * dbg.dir;
+        if (dbg.worldX >= 720) dbg.dir = -1; else if (dbg.worldX <= 480) dbg.dir = 1;
+        dbg.sprite!.direction = dbg.dir > 0 ? 'right' : 'left';
       }
+      npc2WorldX += 0.8 * npc2Dir;
+      if (npc2WorldX >= 1350) npc2Dir = -1; else if (npc2WorldX <= 1050) npc2Dir = 1;
 
-      // World-to-screen
-      npc1.position.x = npc1WorldX - cameraX;
+      npc1.position.x = dbg.worldX - cameraX;
       npc2.position.x = npc2WorldX - cameraX;
-      if (NPC_PATROL) {
-        npc1.direction = npc1Dir > 0 ? 'right' : 'left';
-        npc2.direction = npc2Dir > 0 ? 'right' : 'left';
-      }
+      npc2.direction = npc2Dir > 0 ? 'right' : 'left';
 
-      // === 4. RENDER ===
-      ctx.fillStyle = 'rgba(0, 0, 0, 1)';
-      ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
-
+      ctx.fillStyle = 'rgba(0,0,0,1)'; ctx.fillRect(0,0,CANVAS_W,CANVAS_H);
       bgSkyline.update(); bgFar.update(); bgNear.update(); fgTexture.update();
-
-      ctx.fillStyle = 'rgba(255, 255, 255, .10)';
-      ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
-
-      // Draw NPCs
+      ctx.fillStyle = 'rgba(255,255,255,.1)'; ctx.fillRect(0,0,CANVAS_W,CANVAS_H);
       if (npc1.position.x > -100 && npc1.position.x < CANVAS_W + 100) npc1.update();
       if (npc2.position.x > -100 && npc2.position.x < CANVAS_W + 100) npc2.update();
-
-      // Draw avatar
       avatar.update();
 
-      // === 5. DIALOG RENDER ===
       if (ds.active) {
-        const line = ds.lines[ds.lineIndex];
-        const boxW = 600, boxH = 90;
-        const boxX = (CANVAS_W - boxW) / 2;
-        const boxY = 30;
-
-        ctx.save();
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.roundRect(boxX, boxY, boxW, boxH, 8);
-        ctx.fill(); ctx.stroke();
-
-        // Speaker name
-        ctx.font = 'bold 16px monospace';
-        ctx.fillStyle = line.color;
-        ctx.fillText(line.speaker, boxX + 16, boxY + 28);
-
-        // Text
-        ctx.font = '14px monospace';
-        ctx.fillStyle = '#ffffff';
+        const line = ds.lines[ds.lineIndex], boxW = 600, boxH = 90, boxX = (CANVAS_W-boxW)/2, boxY = 30;
+        ctx.save(); ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.roundRect(boxX,boxY,boxW,boxH,8); ctx.fill(); ctx.stroke();
+        ctx.font = 'bold 16px monospace'; ctx.fillStyle = line.color; ctx.fillText(line.speaker, boxX+16, boxY+28);
+        ctx.font = '14px monospace'; ctx.fillStyle = '#fff';
         const displayText = line.text.substring(0, ds.charIndex);
-        // Word wrap
-        const maxLineW = boxW - 32;
-        const words = displayText.split(' ');
-        let textLine = '';
-        let ty = boxY + 52;
-        for (const word of words) {
-          const test = textLine + (textLine ? ' ' : '') + word;
-          if (ctx.measureText(test).width > maxLineW) {
-            ctx.fillText(textLine, boxX + 16, ty);
-            textLine = word;
-            ty += 18;
-          } else {
-            textLine = test;
-          }
-        }
-        ctx.fillText(textLine, boxX + 16, ty);
-
-        // Advance indicator
-        if (ds.waitingForAdvance) {
-          ctx.fillStyle = 'rgba(255,255,255,0.6)';
-          ctx.font = '12px monospace';
-          ctx.fillText('▼ ENTER', boxX + boxW - 90, boxY + boxH - 12);
-        }
+        const words = displayText.split(' '), maxLineW = boxW - 32; let textLine = '', ty = boxY + 52;
+        for (const word of words) { const test = textLine + (textLine ? ' ' : '') + word; if (ctx.measureText(test).width > maxLineW) { ctx.fillText(textLine, boxX+16, ty); textLine = word; ty += 18; } else { textLine = test; } }
+        ctx.fillText(textLine, boxX+16, ty);
+        if (ds.waitingForAdvance) { ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.font = '12px monospace'; ctx.fillText('▼ ENTER', boxX+boxW-90, boxY+boxH-12); }
         ctx.restore();
       }
 
-      // === 6. CONTROLS HUD (hidden during grid debug) ===
-      if (!DEBUG_GRID) {
-        ctx.save();
-        ctx.fillStyle = 'rgba(0,0,0,0.5)';
-        ctx.fillRect(CANVAS_W - 170, CANVAS_H - 75, 160, 65);
-        ctx.font = '10px monospace';
-        ctx.fillStyle = '#888';
-        ctx.fillText('WASD / Arrows  Move', CANVAS_W - 162, CANVAS_H - 58);
-        ctx.fillText('SPACE          Jump', CANVAS_W - 162, CANVAS_H - 44);
-        ctx.fillText('ENTER          Check', CANVAS_W - 162, CANVAS_H - 30);
-        ctx.fillText('ESC            Exit', CANVAS_W - 162, CANVAS_H - 16);
-        ctx.restore();
-      }
-
-      // === 6b. DEBUG GRID — world-space ruler at bottom ===
       if (DEBUG_GRID) {
         ctx.save();
-        const rulerY = CANVAS_H - 30;
-        const gridSpacing = 100; // 100 world-px per gridline
-        // Figure out which world-space gridlines are visible
-        const startWorld = Math.floor(cameraX / gridSpacing) * gridSpacing;
-        const endWorld = cameraX + CANVAS_W + gridSpacing;
-
-        for (let wx = startWorld; wx <= endWorld; wx += gridSpacing) {
-          const sx = wx - cameraX; // screen x
-          // Major line every 500, minor every 100
-          const isMajor = wx % 500 === 0;
-          ctx.strokeStyle = isMajor ? 'rgba(255,255,0,0.7)' : 'rgba(255,255,255,0.3)';
-          ctx.lineWidth = isMajor ? 2 : 1;
-          ctx.beginPath();
-          ctx.moveTo(sx, isMajor ? 0 : rulerY - 20);
-          ctx.lineTo(sx, CANVAS_H);
-          ctx.stroke();
-          // Label
-          ctx.fillStyle = isMajor ? '#ff0' : '#aaa';
-          ctx.font = isMajor ? 'bold 12px monospace' : '10px monospace';
-          ctx.fillText(`${wx}`, sx + 3, rulerY + 14);
+        const startWorld = Math.floor(cameraX/100)*100, endWorld = cameraX+CANVAS_W+100;
+        for (let wx = startWorld; wx <= endWorld; wx += 100) {
+          const sx = wx - cameraX, isMajor = wx % 500 === 0;
+          ctx.strokeStyle = isMajor ? 'rgba(255,255,0,0.7)' : 'rgba(255,255,255,0.3)'; ctx.lineWidth = isMajor ? 2 : 1;
+          ctx.beginPath(); ctx.moveTo(sx, isMajor ? 0 : CANVAS_H - 50); ctx.lineTo(sx, CANVAS_H); ctx.stroke();
+          ctx.fillStyle = isMajor ? '#ff0' : '#aaa'; ctx.font = isMajor ? 'bold 12px monospace' : '10px monospace'; ctx.fillText(`${wx}`, sx+3, CANVAS_H - 16);
         }
-
-        // Mark NPC positions with red vertical lines + labels
-        const npc1sx = npc1WorldX - cameraX;
-        const npc2sx = npc2WorldX - cameraX;
-        ctx.strokeStyle = 'rgba(255,0,0,0.8)';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([4, 4]);
-        ctx.beginPath(); ctx.moveTo(npc1sx, 0); ctx.lineTo(npc1sx, CANVAS_H); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(npc2sx, 0); ctx.lineTo(npc2sx, CANVAS_H); ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.fillStyle = '#f00';
-        ctx.font = 'bold 11px monospace';
-        ctx.fillText(`NPC1 @${npc1WorldX}`, npc1sx + 4, 140);
-        ctx.fillText(`NPC2 @${npc2WorldX}`, npc2sx + 4, 140);
-
-        // Mark avatar world position with cyan line
-        const avsx = avatarWorldX - cameraX;
-        ctx.strokeStyle = 'rgba(0,255,255,0.8)';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([4, 4]);
-        ctx.beginPath(); ctx.moveTo(avsx, 0); ctx.lineTo(avsx, CANVAS_H); ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.fillStyle = '#0ff';
-        ctx.fillText(`YOU @${avatarWorldX.toFixed(0)}`, avsx + 4, 155);
-
+        const npc1sx = dbg.worldX - cameraX, npc2sx = npc2WorldX - cameraX, avsx = avatarWorldX - cameraX;
+        ctx.strokeStyle = '#f00'; ctx.lineWidth = 2; ctx.setLineDash([4,4]); ctx.beginPath(); ctx.moveTo(npc1sx,0); ctx.lineTo(npc1sx,CANVAS_H); ctx.stroke(); ctx.beginPath(); ctx.moveTo(npc2sx,0); ctx.lineTo(npc2sx,CANVAS_H); ctx.stroke();
+        ctx.strokeStyle = '#0ff'; ctx.beginPath(); ctx.moveTo(avsx,0); ctx.lineTo(avsx,CANVAS_H); ctx.stroke(); ctx.setLineDash([]);
+        ctx.fillStyle = '#f00'; ctx.font = 'bold 11px monospace'; ctx.fillText(`NPC1 @${dbg.worldX.toFixed(0)}`, npc1sx+4, 140); ctx.fillText(`NPC2 @${npc2WorldX.toFixed(0)}`, npc2sx+4, 140);
+        ctx.fillStyle = '#0ff'; ctx.fillText(`YOU @${avatarWorldX.toFixed(0)}`, avsx+4, 155);
         ctx.restore();
       }
-
-      // === 7. DEBUG HUD ===
-      if (DEBUG) {
-        ctx.save();
-        ctx.fillStyle = 'rgba(0,0,0,0.6)';
-        ctx.fillRect(0, 0, 320, 110);
-        ctx.font = '11px monospace';
-        ctx.fillStyle = '#0f0';
-        ctx.fillText(`avatar world: ${avatarWorldX.toFixed(0)}  screen: ${avatar.position.x.toFixed(0)}`, 8, 16);
-        ctx.fillText(`camera: ${cameraX.toFixed(1)}`, 8, 32);
-        ctx.fillStyle = '#ff0';
-        ctx.fillText(`npc1 W:${npc1WorldX.toFixed(0)} S:${npc1.position.x.toFixed(0)} dist:${Math.abs(avatarWorldX - npc1WorldX).toFixed(0)}`, 8, 52);
-        ctx.fillText(`npc2 W:${npc2WorldX.toFixed(0)} S:${npc2.position.x.toFixed(0)}`, 8, 68);
-        ctx.fillStyle = '#0ff';
-        ctx.fillText(`fg.x: ${fgTexture.position.x.toFixed(1)}  parallax: [${speeds.join(',')}]`, 8, 88);
-        ctx.fillText(`dialog: ${ds.active ? `line ${ds.lineIndex}/${ds.lines.length}` : 'off'}  inputLock: ${inputLockedRef.current}`, 8, 104);
+      if (DEBUG && !DEBUG_GRID) {
+        ctx.save(); ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(0,0,320,110); ctx.font = '11px monospace'; ctx.fillStyle = '#0f0';
+        ctx.fillText(`avatar world: ${avatarWorldX.toFixed(0)}  screen: ${avatar.position.x.toFixed(0)}`, 8,16); ctx.fillText(`camera: ${cameraX.toFixed(1)}`, 8,32);
+        ctx.fillStyle = '#ff0'; ctx.fillText(`npc1 W:${dbg.worldX.toFixed(0)} S:${npc1.position.x.toFixed(0)} dist:${Math.abs(avatarWorldX-dbg.worldX).toFixed(0)}`, 8,52);
+        ctx.fillText(`npc2 W:${npc2WorldX.toFixed(0)} S:${npc2.position.x.toFixed(0)}`, 8,68);
+        ctx.fillStyle = '#0ff'; ctx.fillText(`fg.x: ${fgTexture.position.x.toFixed(1)}  parallax: [${speeds.join(',')}]`, 8,88);
+        ctx.fillText(`dialog: ${ds.active ? `line ${ds.lineIndex}/${ds.lines.length}` : 'off'}  inputLock: ${inputLockedRef.current}`, 8,104);
         ctx.restore();
       }
-
-      // Clear justPressed
       for (const k in justPressed) justPressed[k] = false;
     };
-
     animFrameRef.current = requestAnimationFrame(animate);
-
-    return () => {
-      cancelAnimationFrame(animFrameRef.current);
-      bgMusic.pause(); bgMusic.currentTime = 0; walkSound.pause();
-    };
+    return () => { cancelAnimationFrame(animFrameRef.current); bgMusic.pause(); bgMusic.currentTime = 0; walkSound.pause(); };
   }, [started]);
 
-  // Keyboard — isolated
   useEffect(() => {
     if (!started) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') { onClose(); return; }
-      const gameKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd', ' ', 'Enter'];
-      if (gameKeys.includes(e.key)) {
-        e.preventDefault(); e.stopPropagation();
-        if (!keysRef.current[e.key]) {
-          keyJustPressedRef.current[e.key] = true;
-        }
-        keysRef.current[e.key] = true;
-      }
+      const gameKeys = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','a','s','d',' ','Enter'];
+      if (gameKeys.includes(e.key)) { e.preventDefault(); e.stopPropagation(); if (!keysRef.current[e.key]) keyJustPressedRef.current[e.key] = true; keysRef.current[e.key] = true; }
     };
     const handleKeyUp = (e: KeyboardEvent) => { keysRef.current[e.key] = false; };
     window.addEventListener('keydown', handleKeyDown, true);
     window.addEventListener('keyup', handleKeyUp, true);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown, true);
-      window.removeEventListener('keyup', handleKeyUp, true);
-    };
+    return () => { window.removeEventListener('keydown', handleKeyDown, true); window.removeEventListener('keyup', handleKeyUp, true); };
   }, [started, onClose]);
 
   return (
@@ -548,6 +322,7 @@ export default function LornScroll({ onClose }: LornScrollProps) {
         </div>
       )}
       <canvas ref={canvasRef} className={`${started ? 'block' : 'hidden'}`} style={{ width: '100%', maxWidth: `${CANVAS_W}px`, height: 'auto', maxHeight: '100vh', aspectRatio: `${CANVAS_W}/${CANVAS_H}`, imageRendering: 'pixelated' }} />
+      {started && DEBUG && <DebugControls npc1Ref={npc1Ref} setDebugLog={setDebugLog} debugLog={debugLog} />}
     </div>
   );
 }
