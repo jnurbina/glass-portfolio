@@ -160,7 +160,8 @@ export default function LornScroll({ onClose }: LornScrollProps) {
     let npc1WorldX = 600, npc2WorldX = 1200;
     let npc1Dir = 1, npc2Dir = -1;
     const NPC_SPEED = 0.8;
-    let cameraWorldX = 0;
+    let avatarWorldX = 100; // avatar's position in world-space
+    let cameraX = 0; // camera left edge in world-space
     let lastTime = performance.now();
 
     // FTU dialog
@@ -184,7 +185,7 @@ export default function LornScroll({ onClose }: LornScrollProps) {
     };
 
     // Helper: get avatar world X
-    const getAvatarWorldX = () => avatar.position.x + cameraWorldX;
+    const getAvatarWorldX = () => avatarWorldX;
 
     const animate = (now: number) => {
       animFrameRef.current = requestAnimationFrame(animate);
@@ -200,16 +201,18 @@ export default function LornScroll({ onClose }: LornScrollProps) {
       let isMoving = false;
 
       if (!inputLockedRef.current) {
-        // Movement
+        // Movement — moves avatar in world-space
         if (keys['ArrowLeft'] || keys['a']) {
           avatar.direction = 'left';
-          avatar.velocity.x = -AVATAR_SPEED;
+          avatarWorldX -= AVATAR_SPEED;
           isMoving = true;
         } else if (keys['ArrowRight'] || keys['d']) {
           avatar.direction = 'right';
-          avatar.velocity.x = AVATAR_SPEED;
+          avatarWorldX += AVATAR_SPEED;
           isMoving = true;
         }
+        // Clamp avatar to world bounds (don't go negative)
+        avatarWorldX = Math.max(0, avatarWorldX);
 
         // Jump
         if (keys[' '] || keys['ArrowUp'] || keys['w']) {
@@ -232,7 +235,7 @@ export default function LornScroll({ onClose }: LornScrollProps) {
         if (justPressed['Enter']) {
           justPressed['Enter'] = false;
           // Check proximity to NPC1
-          const avatarWX = getAvatarWorldX();
+          const avatarWX = avatarWorldX;
           if (Math.abs(avatarWX - npc1WorldX) < NPC_INTERACT_RANGE) {
             startDialog(NPC1_DIALOG);
           } else {
@@ -296,21 +299,28 @@ export default function LornScroll({ onClose }: LornScrollProps) {
         }
       }
 
-      // === 3. PHYSICS / WORLD ===
-      const atEdge = avatar.position.x <= 32 || avatar.position.x >= CANVAS_W - 160;
-      const scrollAmount = atEdge ? avatar.velocity.x : 0;
+      // === 3. CAMERA / WORLD ===
+      // Camera follows avatar, keeping it roughly centered
+      // but clamped so camera doesn't go below 0
+      const targetCameraX = avatarWorldX - CANVAS_W / 3; // avatar at 1/3 from left
+      cameraX = Math.max(0, targetCameraX);
 
+      // Avatar screen position = world position - camera
+      avatar.position.x = avatarWorldX - cameraX;
+      // Keep velocity at 0 since we move via worldX directly
+      avatar.velocity.x = 0;
+
+      // Scroll backgrounds based on camera position
       backgrounds.forEach((bg, i) => {
-        bg.position.x -= scrollAmount * speeds[i];
+        bg.position.x = -(cameraX * speeds[i]);
+        // Tile wrapping for infinite scroll
         const frameW = (bg.width / bg.framesMax) * bg.scale;
         const repeatX = Math.ceil(CANVAS_W / frameW);
         const totalW = frameW * repeatX;
-        if (bg.position.x < -totalW) bg.position.x += totalW;
+        if (totalW > 0) {
+          bg.position.x = ((bg.position.x % totalW) + totalW) % totalW - totalW;
+        }
       });
-
-      cameraWorldX += scrollAmount * speeds[3];
-
-      avatar.position.x = Math.max(32, Math.min(avatar.position.x, CANVAS_W - 160));
 
       // NPC patrol
       npc1WorldX += NPC_SPEED * npc1Dir;
@@ -322,11 +332,11 @@ export default function LornScroll({ onClose }: LornScrollProps) {
       else if (npc2WorldX <= 1050) npc2Dir = 1;
 
       // World-to-screen
-      npc1.position.x = npc1WorldX - cameraWorldX;
-      npc2.position.x = npc2WorldX - cameraWorldX;
-      // Don't flip NPCs — avoids teleport on asymmetric sprites
-      // npc1.direction = npc1Dir > 0 ? 'right' : 'left';
-      // npc2.direction = npc2Dir > 0 ? 'right' : 'left';
+      npc1.position.x = npc1WorldX - cameraX;
+      npc2.position.x = npc2WorldX - cameraX;
+      // Re-enable NPC direction flipping (sprite flip code is now fixed)
+      npc1.direction = npc1Dir > 0 ? 'right' : 'left';
+      npc2.direction = npc2Dir > 0 ? 'right' : 'left';
 
       // === 4. RENDER ===
       ctx.fillStyle = 'rgba(0, 0, 0, 1)';
@@ -408,19 +418,18 @@ export default function LornScroll({ onClose }: LornScrollProps) {
 
       // === 7. DEBUG HUD ===
       if (DEBUG) {
-        const avatarWX = getAvatarWorldX();
         ctx.save();
         ctx.fillStyle = 'rgba(0,0,0,0.6)';
-        ctx.fillRect(0, 0, 310, 110);
+        ctx.fillRect(0, 0, 320, 110);
         ctx.font = '11px monospace';
         ctx.fillStyle = '#0f0';
-        ctx.fillText(`avatar scr: (${avatar.position.x.toFixed(0)}, ${avatar.position.y.toFixed(0)})  world: ${avatarWX.toFixed(0)}  vel: ${avatar.velocity.x.toFixed(1)}`, 8, 16);
-        ctx.fillText(`camera: ${cameraWorldX.toFixed(1)}  scrolling: ${atEdge && avatar.velocity.x !== 0 ? 'YES' : 'no'}`, 8, 32);
+        ctx.fillText(`avatar world: ${avatarWorldX.toFixed(0)}  screen: ${avatar.position.x.toFixed(0)}`, 8, 16);
+        ctx.fillText(`camera: ${cameraX.toFixed(1)}`, 8, 32);
         ctx.fillStyle = '#ff0';
-        ctx.fillText(`npc1 W:${npc1WorldX.toFixed(0)} S:${npc1.position.x.toFixed(0)} dist:${Math.abs(avatarWX - npc1WorldX).toFixed(0)}`, 8, 52);
+        ctx.fillText(`npc1 W:${npc1WorldX.toFixed(0)} S:${npc1.position.x.toFixed(0)} dist:${Math.abs(avatarWorldX - npc1WorldX).toFixed(0)}`, 8, 52);
         ctx.fillText(`npc2 W:${npc2WorldX.toFixed(0)} S:${npc2.position.x.toFixed(0)}`, 8, 68);
         ctx.fillStyle = '#0ff';
-        ctx.fillText(`fg.x: ${fgTexture.position.x.toFixed(1)}  speeds: [${speeds.join(',')}]`, 8, 88);
+        ctx.fillText(`fg.x: ${fgTexture.position.x.toFixed(1)}  parallax: [${speeds.join(',')}]`, 8, 88);
         ctx.fillText(`dialog: ${ds.active ? `line ${ds.lineIndex}/${ds.lines.length}` : 'off'}  inputLock: ${inputLockedRef.current}`, 8, 104);
         ctx.restore();
       }

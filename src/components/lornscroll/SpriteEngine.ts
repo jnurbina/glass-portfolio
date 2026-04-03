@@ -92,19 +92,19 @@ export class Sprite {
 
     if (this.direction === 'left') {
       this.context.save();
-      // Flip around the sprite's center — no hardcoded offset
-      const flipX = this.position.x - this.offset.x + drawWidth / 2;
-      this.context.translate(flipX, 0);
+      // Flip: mirror the drawn frame in-place around its visual center
+      const dx = this.position.x - this.offset.x;
+      const dy = this.position.y - this.offset.y;
+      this.context.translate(dx + drawWidth, 0);
       this.context.scale(-1, 1);
-      this.context.translate(-flipX, 0);
       this.context.drawImage(
         this.image,
         this.framesCurrent * frameWidth,
         0,
         frameWidth,
         frameHeight,
-        this.position.x - this.offset.x,
-        this.position.y - this.offset.y,
+        0,
+        dy,
         drawWidth,
         drawHeight
       );
