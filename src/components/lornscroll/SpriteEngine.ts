@@ -48,7 +48,7 @@ export class Sprite {
     this.framesMax = framesMax;
     this.framesCurrent = 0;
     this.framesElapsed = 0;
-    this.framesHold = 8; // faster default animation
+    this.framesHold = 5; // fast animation for smooth sprite movement
     this.offset = offset;
     this.direction = direction;
     this.noRepeat = noRepeat;
@@ -92,15 +92,11 @@ export class Sprite {
 
     if (this.direction === 'left') {
       this.context.save();
-      this.context.translate(
-        this.position.x - 32 + drawWidth / 2,
-        0
-      );
+      // Flip around the sprite's center — no hardcoded offset
+      const flipX = this.position.x - this.offset.x + drawWidth / 2;
+      this.context.translate(flipX, 0);
       this.context.scale(-1, 1);
-      this.context.translate(
-        -(this.position.x - 32) - drawWidth / 2,
-        0
-      );
+      this.context.translate(-flipX, 0);
       this.context.drawImage(
         this.image,
         this.framesCurrent * frameWidth,
