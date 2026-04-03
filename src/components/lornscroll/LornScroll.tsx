@@ -29,6 +29,8 @@ const CANVAS_H = 600;
 const GROUND_Y = 520;
 const AVATAR_SPEED = 5;
 const DEBUG = true;
+const DEBUG_GRID = true; // ruler gridlines
+const NPC_PATROL = false; // disable patrol for position debugging
 const NPC_INTERACT_RANGE = 80;
 
 // Dialog scene data
@@ -160,7 +162,7 @@ export default function LornScroll({ onClose }: LornScrollProps) {
     let npc1WorldX = 600, npc2WorldX = 1200;
     let npc1Dir = 1, npc2Dir = -1;
     const NPC_SPEED = 0.8;
-    let avatarWorldX = 100; // avatar's position in world-space
+    let avatarWorldX = CANVAS_W / 2; // spawn at screen center for testing
     let cameraX = 0; // camera left edge in world-space
     let lastTime = performance.now();
 
@@ -322,21 +324,24 @@ export default function LornScroll({ onClose }: LornScrollProps) {
         }
       });
 
-      // NPC patrol
-      npc1WorldX += NPC_SPEED * npc1Dir;
-      if (npc1WorldX >= 720) npc1Dir = -1;
-      else if (npc1WorldX <= 480) npc1Dir = 1;
+      // NPC patrol (disabled for debugging)
+      if (NPC_PATROL) {
+        npc1WorldX += NPC_SPEED * npc1Dir;
+        if (npc1WorldX >= 720) npc1Dir = -1;
+        else if (npc1WorldX <= 480) npc1Dir = 1;
 
-      npc2WorldX += NPC_SPEED * npc2Dir;
-      if (npc2WorldX >= 1350) npc2Dir = -1;
-      else if (npc2WorldX <= 1050) npc2Dir = 1;
+        npc2WorldX += NPC_SPEED * npc2Dir;
+        if (npc2WorldX >= 1350) npc2Dir = -1;
+        else if (npc2WorldX <= 1050) npc2Dir = 1;
+      }
 
       // World-to-screen
       npc1.position.x = npc1WorldX - cameraX;
       npc2.position.x = npc2WorldX - cameraX;
-      // Re-enable NPC direction flipping (sprite flip code is now fixed)
-      npc1.direction = npc1Dir > 0 ? 'right' : 'left';
-      npc2.direction = npc2Dir > 0 ? 'right' : 'left';
+      if (NPC_PATROL) {
+        npc1.direction = npc1Dir > 0 ? 'right' : 'left';
+        npc2.direction = npc2Dir > 0 ? 'right' : 'left';
+      }
 
       // === 4. RENDER ===
       ctx.fillStyle = 'rgba(0, 0, 0, 1)';
@@ -404,17 +409,71 @@ export default function LornScroll({ onClose }: LornScrollProps) {
         ctx.restore();
       }
 
-      // === 6. CONTROLS HUD ===
-      ctx.save();
-      ctx.fillStyle = 'rgba(0,0,0,0.5)';
-      ctx.fillRect(CANVAS_W - 170, CANVAS_H - 75, 160, 65);
-      ctx.font = '10px monospace';
-      ctx.fillStyle = '#888';
-      ctx.fillText('WASD / Arrows  Move', CANVAS_W - 162, CANVAS_H - 58);
-      ctx.fillText('SPACE          Jump', CANVAS_W - 162, CANVAS_H - 44);
-      ctx.fillText('ENTER          Check', CANVAS_W - 162, CANVAS_H - 30);
-      ctx.fillText('ESC            Exit', CANVAS_W - 162, CANVAS_H - 16);
-      ctx.restore();
+      // === 6. CONTROLS HUD (hidden during grid debug) ===
+      if (!DEBUG_GRID) {
+        ctx.save();
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillRect(CANVAS_W - 170, CANVAS_H - 75, 160, 65);
+        ctx.font = '10px monospace';
+        ctx.fillStyle = '#888';
+        ctx.fillText('WASD / Arrows  Move', CANVAS_W - 162, CANVAS_H - 58);
+        ctx.fillText('SPACE          Jump', CANVAS_W - 162, CANVAS_H - 44);
+        ctx.fillText('ENTER          Check', CANVAS_W - 162, CANVAS_H - 30);
+        ctx.fillText('ESC            Exit', CANVAS_W - 162, CANVAS_H - 16);
+        ctx.restore();
+      }
+
+      // === 6b. DEBUG GRID — world-space ruler at bottom ===
+      if (DEBUG_GRID) {
+        ctx.save();
+        const rulerY = CANVAS_H - 30;
+        const gridSpacing = 100; // 100 world-px per gridline
+        // Figure out which world-space gridlines are visible
+        const startWorld = Math.floor(cameraX / gridSpacing) * gridSpacing;
+        const endWorld = cameraX + CANVAS_W + gridSpacing;
+
+        for (let wx = startWorld; wx <= endWorld; wx += gridSpacing) {
+          const sx = wx - cameraX; // screen x
+          // Major line every 500, minor every 100
+          const isMajor = wx % 500 === 0;
+          ctx.strokeStyle = isMajor ? 'rgba(255,255,0,0.7)' : 'rgba(255,255,255,0.3)';
+          ctx.lineWidth = isMajor ? 2 : 1;
+          ctx.beginPath();
+          ctx.moveTo(sx, isMajor ? 0 : rulerY - 20);
+          ctx.lineTo(sx, CANVAS_H);
+          ctx.stroke();
+          // Label
+          ctx.fillStyle = isMajor ? '#ff0' : '#aaa';
+          ctx.font = isMajor ? 'bold 12px monospace' : '10px monospace';
+          ctx.fillText(`${wx}`, sx + 3, rulerY + 14);
+        }
+
+        // Mark NPC positions with red vertical lines + labels
+        const npc1sx = npc1WorldX - cameraX;
+        const npc2sx = npc2WorldX - cameraX;
+        ctx.strokeStyle = 'rgba(255,0,0,0.8)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath(); ctx.moveTo(npc1sx, 0); ctx.lineTo(npc1sx, CANVAS_H); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(npc2sx, 0); ctx.lineTo(npc2sx, CANVAS_H); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#f00';
+        ctx.font = 'bold 11px monospace';
+        ctx.fillText(`NPC1 @${npc1WorldX}`, npc1sx + 4, 140);
+        ctx.fillText(`NPC2 @${npc2WorldX}`, npc2sx + 4, 140);
+
+        // Mark avatar world position with cyan line
+        const avsx = avatarWorldX - cameraX;
+        ctx.strokeStyle = 'rgba(0,255,255,0.8)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath(); ctx.moveTo(avsx, 0); ctx.lineTo(avsx, CANVAS_H); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#0ff';
+        ctx.fillText(`YOU @${avatarWorldX.toFixed(0)}`, avsx + 4, 155);
+
+        ctx.restore();
+      }
 
       // === 7. DEBUG HUD ===
       if (DEBUG) {
