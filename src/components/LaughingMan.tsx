@@ -69,28 +69,31 @@ const LaughingMan: React.FC<LaughingManProps> = ({ loading, onLoadComplete }) =>
     return () => window.removeEventListener('keydown', handleKey);
   }, [waitingForClick, dismissed]);
 
-  const containerStyle = {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    backgroundColor: 'rgb(5, 10, 25)',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 9999,
-    transition: 'opacity 0.5s ease-out',
-    opacity: (loading || (waitingForClick && !dismissed)) ? 1 : 0,
-    pointerEvents: (loading || (waitingForClick && !dismissed)) ? 'all' : 'none',
-    cursor: waitingForClick && !dismissed ? 'pointer' : 'default',
-  } as React.CSSProperties;
+  const isVisible = loading || (waitingForClick && !dismissed);
 
   return (
-    <div style={containerStyle} onClick={handleEnter}>
-      {/* SVG spinner — scales down on small screens */}
-      <div style={{ position: 'relative', width: 'min(1024px, 90vw)', height: 'min(1024px, 70vh)' }}>
-        <svg viewBox="0 0 1024 1024" width="1024" height="1024">
+    <div
+      onClick={handleEnter}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        backgroundColor: 'rgb(5, 10, 25)',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 9999,
+        transition: 'opacity 0.5s ease-out',
+        opacity: isVisible ? 1 : 0,
+        pointerEvents: isVisible ? 'all' : 'none',
+        cursor: waitingForClick && !dismissed ? 'pointer' : 'default',
+        padding: '24px',
+        gap: '24px',
+      }}
+    >
+      {/* SVG spinner — takes available space, scales via viewBox */}
+      <div style={{ flex: '1 1 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', minHeight: 0, overflow: 'hidden' }}>
+        <svg viewBox="0 0 1024 1024" style={{ width: '100%', height: '100%', maxWidth: '600px', maxHeight: '600px' }}>
           <defs>
             <path
               id="textCirclePath"
@@ -162,19 +165,16 @@ const LaughingMan: React.FC<LaughingManProps> = ({ loading, onLoadComplete }) =>
 
       </div>
 
-      {/* Progress bar and status — positioned relative to VIEWPORT, below spinner */}
+      {/* Progress bar and status — below spinner in flex flow */}
       <div
         style={{
-          position: 'fixed',
-          bottom: 'max(40px, 8vh)',
-          left: '50%',
-          transform: 'translateX(-50%)',
+          flex: '0 0 auto',
           width: 'min(80%, 400px)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           gap: '8px',
-          zIndex: 10000,
+          paddingBottom: '24px',
         }}
       >
           {/* Status text */}
