@@ -4,7 +4,7 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Sprite, Avatar } from './SpriteEngine';
 import { audioEngine } from '@/lib/audio/audio';
 
-// Sprites served from public/, audio from Vercel Blob (too large for git)
+// Sprites from public/, audio from Vercel Blob
 const ASSET_BASE = '/lornscroll';
 const BLOB_BASE = 'https://bizi8uwyyyejujyu.public.blob.vercel-storage.com/lornscroll';
 
@@ -15,6 +15,8 @@ const ASSET_SOURCES = {
   foregroundTexture: `${ASSET_BASE}/environment/bg3.png`,
   avatarIdle: `${ASSET_BASE}/merchant/idle.png`,
   avatarWalk: `${ASSET_BASE}/merchant/walk.png`,
+  npc1Idle: `${ASSET_BASE}/toasterbot/idle.png`,
+  npc1Run: `${ASSET_BASE}/toasterbot/run.png`,
   walkAudio: `${BLOB_BASE}/audio/walking.wav`,
   jumpAudio: `${BLOB_BASE}/audio/jump.wav`,
   bgMusic: `${BLOB_BASE}/audio/bgmusic.wav`,
@@ -25,6 +27,7 @@ type LoadedAssets = Record<AssetKey, HTMLImageElement | HTMLAudioElement>;
 
 const CANVAS_W = 800;
 const CANVAS_H = 600;
+const GROUND_Y = 520; // Y position where characters stand on the "street"
 
 interface LornScrollProps {
   onClose: () => void;
@@ -90,7 +93,6 @@ export default function LornScroll({ onClose }: LornScrollProps) {
       .then(() => {
         setLoadingText('Click to Begin');
         setLoading(false);
-        // Store assets on the container element for the game loop to access
         if (containerRef.current) {
           (containerRef.current as any).__assets = assets;
         }
@@ -137,6 +139,7 @@ export default function LornScroll({ onClose }: LornScrollProps) {
     canvas.width = CANVAS_W;
     canvas.height = CANVAS_H;
 
+    // Backgrounds
     const bgSkyline = new Sprite({
       context: ctx,
       image: assets.backgroundSkyline as HTMLImageElement,
@@ -166,22 +169,22 @@ export default function LornScroll({ onClose }: LornScrollProps) {
       noRepeat: false,
     });
 
+    // Audio — adjusted volumes
     const bgMusic = assets.bgMusic as HTMLAudioElement;
     const walkSound = assets.walkAudio as HTMLAudioElement;
     const jumpSound = assets.jumpAudio as HTMLAudioElement;
-    walkSound.volume = 0.7;
-    jumpSound.volume = 0.65;
-    bgMusic.volume = 0.25;
+    walkSound.volume = 0.3;
+    jumpSound.volume = 0.35;
+    bgMusic.volume = 0.08; // much quieter BGM
     bgMusic.loop = true;
     walkSound.loop = true;
-
-    // Attempt to play — may be blocked by autoplay policy
     bgMusic.play().catch(() => {});
 
+    // Player avatar — positioned on the street
     const avatar = new Avatar({
       context: ctx,
       image: assets.avatarIdle as HTMLImageElement,
-      position: { x: 0, y: 100 },
+      position: { x: 100, y: GROUND_Y - 64 * 3 + 80 }, // offset to stand on ground
       velocity: { x: 0, y: 0 },
       framesMax: 4,
       scale: 3,
@@ -191,6 +194,33 @@ export default function LornScroll({ onClose }: LornScrollProps) {
         walk: { img: assets.avatarWalk as HTMLImageElement, framesMax: 5 },
       },
     });
+
+    // NPC 1 — Toaster Bot (idle, patrolling right side)
+    const npc1 = new Sprite({
+      context: ctx,
+      image: assets.npc1Idle as HTMLImageElement,
+      position: { x: 500, y: GROUND_Y - 22 * 3 + 17 }, // scaled 3x, offset to ground
+      scale: 3,
+      framesMax: 5,
+      noRepeat: true,
+    });
+    npc1.framesHold = 14; // slightly slower animation
+
+    // NPC 2 — second Toaster Bot further out
+    const npc2 = new Sprite({
+      context: ctx,
+      image: assets.npc1Run as HTMLImageElement,
+      position: { x: 650, y: GROUND_Y - 22 * 3 + 17 },
+      scale: 3,
+      framesMax: 8,
+      noRepeat: true,
+    });
+    npc2.framesHold = 10;
+
+    // NPC patrol state
+    let npc1Dir = 1;
+    let npc2Dir = -1;
+    const NPC_SPEED = 0.5;
 
     const backgrounds = [bgSkyline, bgFar, bgNear, fgTexture];
     const speeds = [0.1, 0.25, 0.5, 0.75];
@@ -228,39 +258,52 @@ export default function LornScroll({ onClose }: LornScrollProps) {
       ctx.fillStyle = 'rgba(255, 255, 255, .10)';
       ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
-      // NOTE: hitbox debug squares removed
+      // Draw NPCs
+      npc1.update();
+      npc2.update();
 
+      // NPC patrol movement
+      npc1.position.x += NPC_SPEED * npc1Dir;
+      if (npc1.position.x > 600 || npc1.position.x < 400) npc1Dir *= -1;
+      npc1.direction = npc1Dir > 0 ? 'right' : 'left';
+
+      npc2.position.x += NPC_SPEED * npc2Dir;
+      if (npc2.position.x > 700 || npc2.position.x < 500) npc2Dir *= -1;
+      npc2.direction = npc2Dir > 0 ? 'right' : 'left';
+
+      // Draw avatar
       avatar.update();
       avatar.velocity.x = 0;
       avatar.switchSprite('idle');
 
-      if (keysRef.current[' ']) {
-        if (avatar.position.y + avatar.height + 16 < CANVAS_H) return;
-        avatar.switchSprite('idle');
-        avatar.velocity.y = -16;
-        if (!jumpSound.paused) {
-          jumpSound.pause();
-          jumpSound.currentTime = 0;
+      // Jump
+      if (keysRef.current[' '] || keysRef.current['ArrowUp'] || keysRef.current['w']) {
+        // Only jump if on the ground
+        const groundCheck = CANVAS_H - 80;
+        if (avatar.position.y + avatar.height >= groundCheck) {
+          avatar.velocity.y = -16;
+          if (!jumpSound.paused) {
+            jumpSound.pause();
+            jumpSound.currentTime = 0;
+          }
+          jumpSound.play().catch(() => {});
         }
-        jumpSound.play().catch(() => {});
       }
+      // Fast fall
       if (keysRef.current['ArrowDown'] || keysRef.current['s']) {
         if (avatar.position.y + avatar.height < CANVAS_H - avatar.height) {
           avatar.velocity.y += 1.4;
         }
       }
-      if (
-        keysRef.current['ArrowLeft'] ||
-        keysRef.current['a']
-      ) {
+      // Move left
+      if (keysRef.current['ArrowLeft'] || keysRef.current['a']) {
         avatar.direction = 'left';
         avatar.switchSprite('walk');
         avatar.velocity.x -= 3;
         walkSound.play().catch(() => {});
-      } else if (
-        keysRef.current['ArrowRight'] ||
-        keysRef.current['d']
-      ) {
+      }
+      // Move right
+      else if (keysRef.current['ArrowRight'] || keysRef.current['d']) {
         avatar.direction = 'right';
         avatar.switchSprite('walk');
         avatar.velocity.x += 3;
@@ -287,13 +330,11 @@ export default function LornScroll({ onClose }: LornScrollProps) {
     if (!started) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Escape closes the game
       if (e.key === 'Escape') {
         onClose();
         return;
       }
 
-      // Game keys — stop propagation to prevent portfolio from receiving them
       const gameKeys = [
         'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
         'w', 'a', 's', 'd', ' ',
@@ -309,7 +350,6 @@ export default function LornScroll({ onClose }: LornScrollProps) {
       keysRef.current[e.key] = false;
     };
 
-    // Use capture phase to intercept before other handlers
     window.addEventListener('keydown', handleKeyDown, true);
     window.addEventListener('keyup', handleKeyUp, true);
 
@@ -352,7 +392,7 @@ export default function LornScroll({ onClose }: LornScrollProps) {
         </div>
       )}
 
-      {/* Game canvas — scales to fit viewport */}
+      {/* Game canvas — scales to fit viewport while maintaining aspect ratio */}
       <canvas
         ref={canvasRef}
         className={`${started ? 'block' : 'hidden'}`}
@@ -366,9 +406,20 @@ export default function LornScroll({ onClose }: LornScrollProps) {
         }}
       />
 
-      {/* Dialog box */}
+      {/* Dialog box — positioned INSIDE the game canvas area, relative to canvas */}
       {started && showDialog && (
-        <div className="absolute top-4 left-[5%] w-[90%] bg-black/50 backdrop-blur-sm border-4 border-white/50 rounded-lg p-3 text-white z-40 pointer-events-none">
+        <div
+          className="absolute bg-black/50 backdrop-blur-sm border-4 border-white/50 rounded-lg p-3 text-white z-40 pointer-events-none"
+          style={{
+            /* Position relative to the canvas — sits above the avatar area */
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: 'min(90%, 720px)',
+            maxWidth: `${CANVAS_W}px`,
+            marginTop: '-220px', /* push up to be above the character on the street */
+          }}
+        >
           <h3 className="text-red-500 font-bold text-lg">Dosc</h3>
           <span className="font-light">{dialogText}</span>
         </div>

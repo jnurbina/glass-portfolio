@@ -185,13 +185,11 @@ export class Avatar extends Sprite {
     this.position.x += this.velocity.x;
     this.position.y += this.velocity.y;
 
-    // Gravity
-    if (
-      this.position.y + this.height + this.velocity.y >=
-      this.context.canvas.height - 17
-    ) {
+    // Gravity — ground at canvas height minus small margin for the street
+    const groundLevel = this.context.canvas.height - 17;
+    if (this.position.y + this.height + this.velocity.y >= groundLevel) {
       this.velocity.y = 0;
-      this.position.y = this.context.canvas.height - this.height + 63;
+      this.position.y = groundLevel - this.height;
     } else {
       this.velocity.y += GRAVITY;
     }
