@@ -91,9 +91,9 @@ const LaughingMan: React.FC<LaughingManProps> = ({ loading, onLoadComplete }) =>
         gap: '24px',
       }}
     >
-      {/* SVG spinner — takes available space, scales via viewBox */}
-      <div style={{ flex: '1 1 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', minHeight: 0, overflow: 'hidden' }}>
-        <svg viewBox="0 0 1024 1024" style={{ width: '100%', height: '100%', maxWidth: '600px', maxHeight: '600px' }}>
+      {/* SVG spinner — centered, capped so progress bar always shows */}
+      <div style={{ flex: '0 1 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', maxHeight: 'calc(100vh - 160px)', overflow: 'hidden' }}>
+        <svg viewBox="0 0 1024 1024" style={{ width: 'min(80vw, 500px)', height: 'min(80vw, 500px)' }}>
           <defs>
             <path
               id="textCirclePath"
