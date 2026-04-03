@@ -1,4 +1,5 @@
 import { Howl, Howler } from 'howler';
+import { loadingProgress } from '@/lib/loading-progress';
 
 type SoundMap = {
   [key: string]: any;
@@ -48,6 +49,7 @@ class AudioEngine {
   }
 
   public async load(): Promise<void> {
+    loadingProgress.begin('audio-bg', 'Loading background music');
     this.init();
 
     // Define sounds if not already defined (idempotent)
@@ -70,6 +72,9 @@ class AudioEngine {
         });
     }
 
+    loadingProgress.complete('audio-bg');
+    loadingProgress.begin('audio-sfx', 'Loading sound effects');
+
     // Wait for all sounds to load
     const loadPromises = Object.values(this.sounds).map(sound => {
         return new Promise<void>((resolve) => {
@@ -83,6 +88,7 @@ class AudioEngine {
     });
 
     await Promise.all(loadPromises);
+    loadingProgress.complete('audio-sfx');
   }
 
   public play(sound: string, fadein: boolean = false) {

@@ -25,6 +25,7 @@ import { useThreeCanvasState } from '@/hooks/use-three-canvas-state';
 import { useAchievementState } from '@/hooks/use-achievement-state';
 import { getWallConfig } from '@/lib/three/constants';
 import { ViewMode } from '@/lib/view-types';
+import { loadingProgress } from '@/lib/loading-progress';
 
 interface SceneContentProps {
     showLogo: boolean;
@@ -130,7 +131,18 @@ export default function ThreeCanvas({ onLoaded, showLogo, activeView, onCloseVie
 
     useEffect(() => {
         const loadAssets = async () => {
+             loadingProgress.begin('init', 'Initializing engine');
+             loadingProgress.complete('init');
+             loadingProgress.begin('renderer', 'Preparing 3D renderer');
+             loadingProgress.complete('renderer');
+             loadingProgress.begin('scene', 'Building scene geometry');
+             loadingProgress.complete('scene');
+             loadingProgress.begin('shaders', 'Compiling shaders');
+             loadingProgress.complete('shaders');
              await audioEngine.load();
+             loadingProgress.begin('finalize', 'Finalizing');
+             loadingProgress.complete('finalize');
+             loadingProgress.finish();
              onLoaded();
              audioEngine.play('background', true);
         };
