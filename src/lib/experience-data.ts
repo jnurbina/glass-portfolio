@@ -5,6 +5,10 @@ export interface ExperienceItem {
   company: string;
   period: string;
   images?: string[];
+  link?: string;
+  linkLabel?: string;
+  imageLinks?: string[];
+  imageLinkLabels?: string[];
   highlights: string[];
 }
 
@@ -25,6 +29,26 @@ export const experienceData: ExperienceItem[] = [
       'https://bizi8uwyyyejujyu.public.blob.vercel-storage.com/portfolio/tnsf/atombeamtech/Screenshot%202026-02-04%20171449.png',
       'https://bizi8uwyyyejujyu.public.blob.vercel-storage.com/portfolio/tnsf/arilaw/Screenshot%202026-02-04%20171535.png',
     ],
+    imageLinks: [
+      'https://techinsf.com',
+      'https://techinsf.com',
+      'https://techinsf.com',
+      'https://techinsf.com',
+      'https://www.tidewatercap.com/',
+      'https://www.tidewatercap.com/',
+      'https://www.atombeamtech.com/',
+      'https://www.arilaw.com/',
+    ],
+    imageLinkLabels: [
+      'Tech In SF',
+      'Tech In SF',
+      'Tech In SF',
+      'Tech In SF',
+      'Tidewater Capital',
+      'Tidewater Capital',
+      'Atombeam',
+      'AriLaw',
+    ],
     highlights: [
       "Built and led Tech In SF's first internal engineering team — designing, engineering, and QA.",
       "Integrated AI tools into dev workflows (prompt chaining, QA bots, internal copilots), cutting project time-to-delivery by 50%.",
@@ -44,6 +68,8 @@ export const experienceData: ExperienceItem[] = [
       'https://bizi8uwyyyejujyu.public.blob.vercel-storage.com/portfolio/samsung/Ambient-Mode-screen-brightness.webp',
       'https://bizi8uwyyyejujyu.public.blob.vercel-storage.com/portfolio/samsung/TV_samsung_health_0.avif',
     ],
+    link: 'https://news.samsung.com/global/is-your-television-smart',
+    linkLabel: 'Samsung TV',
     highlights: [
       "Delivered interactive prototypes using Vue and React, bridging system architecture with UX goals.",
       "Collaborated across engineering and design to maintain experience integrity under real-world constraints.",
@@ -60,6 +86,8 @@ export const experienceData: ExperienceItem[] = [
       'https://bizi8uwyyyejujyu.public.blob.vercel-storage.com/portfolio/williamssonoma/Screenshot%202026-02-04%20172412.png',
       'https://bizi8uwyyyejujyu.public.blob.vercel-storage.com/portfolio/williamssonoma/Screenshot%202026-02-04%20172442.png',
     ],
+    link: 'https://www.williams-sonoma.com/',
+    linkLabel: 'Williams Sonoma',
     highlights: [
       "Developed core components for Search UI using atomic principles and shared libraries.",
       "Helped set new standards for frontend and design collaboration."
@@ -76,6 +104,8 @@ export const experienceData: ExperienceItem[] = [
       'https://bizi8uwyyyejujyu.public.blob.vercel-storage.com/portfolio/apple/Screenshot%202026-02-04%20171317.png',
       'https://bizi8uwyyyejujyu.public.blob.vercel-storage.com/portfolio/apple/Screenshot%202026-02-04%20171400.png',
     ],
+    link: 'https://www.apple.com/store',
+    linkLabel: 'Apple Store',
     highlights: [
       "Apple Store content updates; wrote reusable SASS mixins; supported localization."
     ]
