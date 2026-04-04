@@ -7,13 +7,32 @@ interface StackedImageDeckProps {
   images: string[];
   interval?: number; // ms between shuffles
   className?: string;
+  link?: string;
+  imageLinks?: string[];
+  onImageChange?: (imageIndex: number) => void;
 }
 
 const StackedImageDeck: React.FC<StackedImageDeckProps> = ({
   images,
   interval = 3500,
-  className = ''
+  className = '',
+  link,
+  imageLinks,
+  onImageChange
 }) => {
+  const getImageLink = (imageIndex: number): string | undefined => {
+    if (imageLinks && imageLinks[imageIndex]) {
+      return imageLinks[imageIndex];
+    }
+    return link;
+  };
+
+  const handleImageClick = (imageIndex: number) => {
+    const url = getImageLink(imageIndex);
+    if (url) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  };
   // Track the order of images by their indices
   const [order, setOrder] = useState<number[]>(() =>
     images.map((_, i) => i)
@@ -39,6 +58,13 @@ const StackedImageDeck: React.FC<StackedImageDeckProps> = ({
     setOrder(images.map((_, i) => i));
   }, [images]);
 
+  // Notify parent of current image change
+  useEffect(() => {
+    if (onImageChange && order.length > 0) {
+      onImageChange(order[0]);
+    }
+  }, [order, onImageChange]);
+
   if (!images || images.length === 0) {
     return (
       <div className={`w-full h-full bg-gray-800 flex items-center justify-center text-gray-500 ${className}`}>
@@ -58,10 +84,13 @@ const StackedImageDeck: React.FC<StackedImageDeckProps> = ({
           // Cards further back have higher offset (peek from top-left)
           const offset = (maxVisibleCards - 1 - stackPosition) * stackOffset;
 
+          const currentLink = getImageLink(imageIndex);
+          const isClickable = isTop && !!currentLink;
+
           return (
             <motion.div
               key={imageIndex}
-              className="absolute inset-0 rounded-lg overflow-hidden shadow-2xl"
+              className={`absolute inset-0 rounded-lg overflow-hidden shadow-2xl ${isClickable ? 'cursor-pointer' : ''}`}
               style={{
                 zIndex: maxVisibleCards - stackPosition,
               }}
@@ -86,10 +115,11 @@ const StackedImageDeck: React.FC<StackedImageDeckProps> = ({
                 stiffness: 300,
                 damping: 25,
               }}
+              onClick={isClickable ? () => handleImageClick(imageIndex) : undefined}
             >
               {/* Floaty drift animation for top card */}
               <motion.div
-                className="w-full h-full"
+                className={`w-full h-full ${isClickable ? 'group' : ''}`}
                 animate={isTop ? {
                   x: [0, 3, -2, 1, 0],
                   y: [0, -4, 2, -1, 0],
@@ -100,6 +130,7 @@ const StackedImageDeck: React.FC<StackedImageDeckProps> = ({
                   ease: "easeInOut",
                   times: [0, 0.25, 0.5, 0.75, 1],
                 } : {}}
+                whileHover={isClickable ? { scale: 1.02 } : {}}
               >
                 <img
                   src={images[imageIndex]}
@@ -109,6 +140,15 @@ const StackedImageDeck: React.FC<StackedImageDeckProps> = ({
                 />
                 {/* Subtle vignette overlay */}
                 <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-black/20 pointer-events-none" />
+                {/* Link indicator for clickable top card */}
+                {isClickable && (
+                  <div className="absolute top-2 right-2 bg-black/60 text-cyan-400 px-2 py-1 rounded text-xs flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    Visit
+                  </div>
+                )}
               </motion.div>
             </motion.div>
           );
