@@ -77,7 +77,7 @@ export const categories: Category[] = [
     links: [
       {
         title: 'Resume (PDF)',
-        url: 'https://bizi8uwyyyejujyu.public.blob.vercel-storage.com/portfolio/urbinaResume2026.pdf',
+        url: 'https://bizi8uwyyyejujyu.public.blob.vercel-storage.com/portfolio/2026_resume_jason_urbina.pdf',
         icon: FaFilePdf,
       },
     ],

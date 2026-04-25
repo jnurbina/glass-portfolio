@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 
 interface StackedImageDeckProps {
   images: string[];
@@ -132,11 +133,14 @@ const StackedImageDeck: React.FC<StackedImageDeckProps> = ({
                 } : {}}
                 whileHover={isClickable ? { scale: 1.02 } : {}}
               >
-                <img
+                <Image
                   src={images[imageIndex]}
                   alt={`Work sample ${imageIndex + 1}`}
-                  className="w-full h-full object-cover"
-                  loading={stackPosition === 0 ? "eager" : "lazy"}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 400px"
+                  className="object-cover"
+                  priority={stackPosition === 0}
+                  quality={75}
                 />
                 {/* Subtle vignette overlay */}
                 <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-black/20 pointer-events-none" />
