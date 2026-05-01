@@ -1,83 +1,80 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
+import { OpenclawConfigError, openclawFetch } from "@/lib/openclaw";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-const GATEWAY_URL = process.env.OPENCLAW_GATEWAY_URL || 'http://127.0.0.1:55378';
-
-// GET: Fetch recent messages from the main session
+// GET: Fetch recent messages from the main session.
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const limit = searchParams.get('limit') || '20';
+  const limit = searchParams.get("limit") || "20";
 
   try {
-    const res = await fetch(
-      `${GATEWAY_URL}/api/sessions/main/messages?limit=${limit}`,
-      {
-        headers: { Accept: 'application/json' },
-        signal: AbortSignal.timeout(3000),
-      }
+    const res = await openclawFetch(
+      `/api/sessions/main/messages?limit=${encodeURIComponent(limit)}`,
+      { timeoutMs: 3000 },
     );
 
     if (!res.ok) {
       return NextResponse.json(
         { error: `Gateway returned ${res.status}` },
-        { status: res.status }
+        { status: res.status },
       );
     }
-
-    const data = await res.json();
-    return NextResponse.json(data);
-  } catch {
+    return NextResponse.json(await res.json());
+  } catch (error) {
+    if (error instanceof OpenclawConfigError) {
+      return NextResponse.json(
+        { error: "Gateway not configured", hint: error.message },
+        { status: 503 },
+      );
+    }
     return NextResponse.json(
-      {
-        error: 'Gateway unreachable',
-        hint: 'Chat requires local gateway access',
-      },
-      { status: 503 }
+      { error: "Gateway unreachable", hint: "Chat requires reachable OpenClaw gateway" },
+      { status: 503 },
     );
   }
 }
 
-// POST: Send a message to the main session
+// POST: Send a message to the main session.
 export async function POST(request: Request) {
+  let body: { message?: unknown };
   try {
-    const body = await request.json();
-    const { message } = body;
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
 
-    if (!message || typeof message !== 'string') {
-      return NextResponse.json(
-        { error: 'Message is required' },
-        { status: 400 }
-      );
-    }
+  const message = typeof body.message === "string" ? body.message : null;
+  if (!message) {
+    return NextResponse.json({ error: "Message is required" }, { status: 400 });
+  }
 
-    const res = await fetch(`${GATEWAY_URL}/api/sessions/main/messages`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
+  try {
+    const res = await openclawFetch("/api/sessions/main/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message }),
-      signal: AbortSignal.timeout(5000),
+      timeoutMs: 5000,
     });
 
     if (!res.ok) {
       const errText = await res.text();
       return NextResponse.json(
         { error: `Gateway returned ${res.status}: ${errText}` },
-        { status: res.status }
+        { status: res.status },
       );
     }
-
-    const data = await res.json();
-    return NextResponse.json(data);
-  } catch {
+    return NextResponse.json(await res.json());
+  } catch (error) {
+    if (error instanceof OpenclawConfigError) {
+      return NextResponse.json(
+        { error: "Gateway not configured", hint: error.message },
+        { status: 503 },
+      );
+    }
     return NextResponse.json(
-      {
-        error: 'Gateway unreachable',
-        hint: 'Chat requires local gateway access',
-      },
-      { status: 503 }
+      { error: "Gateway unreachable", hint: "Chat requires reachable OpenClaw gateway" },
+      { status: 503 },
     );
   }
 }
