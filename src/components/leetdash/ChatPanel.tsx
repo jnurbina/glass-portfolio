@@ -44,6 +44,7 @@ interface AgentActivity {
   taskSummary?: string;
   timestamp: number;
   parentAgentId?: string;
+  runId?: string;
   rawEventType: string;
   error?: string;
 }
@@ -90,22 +91,27 @@ interface SessionGroup {
 }
 
 /**
- * Group activities into tree branches keyed by agentId. Each branch is one
- * session run; events within it are ordered chronologically.
+ * Group activities by trace (runId = W3C traceId). All events from one
+ * gateway session share a runId, so each branch surfaces the full agent
+ * lifecycle for that session — harness, run, model.call, tool.execution,
+ * and queue/state plumbing — as a flat ordered child list.
+ *
+ * Future iteration: nest events by parentAgentId (= W3C parentSpanId) for
+ * a true tree. Today's renderer treats children as a flat transcript.
  *
  * Edge cases:
- *  - Activities with parentAgentId attach as children of that parent's group.
- *    (Pi-ai instrumentation populates parentAgentId for harness/sub-agent
- *    runs; current claude-cli/ollama paths never do.)
- *  - "unknown" agentId events (lane.* mostly) attach to the most-recent
- *    spawn that's still in flight, so they don't dangle as orphans.
+ *  - Events without a runId fall back to parentAgentId, then agentId.
+ *    Lifecycle events always carry runId; legacy events (message.queued,
+ *    queue.lane.*, session.*) get one via the normalizer's fallback chain.
+ *  - "unknown" agentId events attach to the most-recent in-flight group
+ *    so they don't dangle as orphans.
  */
 function buildTree(activities: AgentActivity[]): SessionGroup[] {
   const groups = new Map<string, SessionGroup>();
   const order: string[] = [];
 
   const ensureGroup = (a: AgentActivity): SessionGroup | null => {
-    const key = a.parentAgentId ?? a.agentId;
+    const key = a.runId ?? a.parentAgentId ?? a.agentId;
     if (!key || key === 'unknown') return null;
     let g = groups.get(key);
     if (!g) {
