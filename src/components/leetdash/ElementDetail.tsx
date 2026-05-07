@@ -41,7 +41,17 @@ export function ElementDetail({ meta, onClose }: ElementDetailProps) {
         animate={{ y: 0 }}
         exit={{ y: 8 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="relative z-10 mx-auto mt-16 mb-8 flex w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-border/60 bg-card/70 backdrop-blur-xl shadow-2xl"
+        // Same fade-out paradigm as the cards — mask the chrome (border
+        // + bg + scrollable body) so the panel dissolves into the page
+        // rather than terminating in a hard rounded rectangle. Shadow
+        // moves to drop-shadow so it follows the masked silhouette.
+        className="relative z-10 mx-auto mt-16 mb-8 flex w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-border/60 bg-card/70 backdrop-blur-xl drop-shadow-2xl"
+        style={{
+          maskImage:
+            'linear-gradient(to bottom, black 0%, black 85%, transparent 100%)',
+          WebkitMaskImage:
+            'linear-gradient(to bottom, black 0%, black 85%, transparent 100%)',
+        }}
       >
         {/* Hero accent gradient. */}
         <div
