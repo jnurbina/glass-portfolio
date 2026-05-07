@@ -4,7 +4,7 @@ import { useCallback, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AnimatePresence, LayoutGroup, motion } from 'framer-motion';
 import { ThemeToggle } from './ThemeToggle';
-import { ELEMENTS, getElement } from './elements';
+import { COL_SPAN, ELEMENTS, getElement } from './elements';
 import { ElementCard } from './ElementCard';
 import { ElementDetail } from './ElementDetail';
 
@@ -60,17 +60,20 @@ export function LeetDash() {
             scale: active ? 0.97 : 1,
           }}
           transition={{ duration: 0.45, ease: [0.32, 0.72, 0, 1] }}
-          className="relative z-10 mx-auto max-w-6xl px-6 pt-24 pb-16"
+          className="relative z-10 mx-auto max-w-[1600px] px-3 pt-24 pb-16 md:px-4"
         >
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+          {/* 6-col grid on md+: row 1 has 3 spans of 2, row 2 has agents
+              (2) + activity (4) so the tree gets the room it needs. */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-6">
             {ELEMENTS.map((el, i) => (
-              <ElementCard
-                key={el.slug}
-                meta={el}
-                index={i}
-                onActivate={() => open(el.slug)}
-                inactive={!!active}
-              />
+              <div key={el.slug} className={COL_SPAN[el.slug]}>
+                <ElementCard
+                  meta={el}
+                  index={i}
+                  onActivate={() => open(el.slug)}
+                  inactive={!!active}
+                />
+              </div>
             ))}
           </div>
         </motion.section>

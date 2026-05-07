@@ -40,31 +40,61 @@ export function ElementCard({
       }}
       whileTap={{ scale: 0.98 }}
       className={[
-        'group relative flex h-[260px] flex-col justify-between overflow-hidden rounded-xl text-left',
-        'border border-border/50 bg-card/40 p-4 backdrop-blur-sm',
+        'group relative flex h-[280px] w-full flex-col justify-start overflow-hidden rounded-2xl text-left',
+        'border border-border/50 bg-card/40 p-4 pb-6 backdrop-blur-sm',
         'transition-shadow duration-300 hover:bg-card/60',
         `hover:${palette.glow}`,
       ].join(' ')}
     >
-      {/* Subtle accent gradient — gives each element its own tone. */}
+      {/* Accent wash — diagonal tint giving each element its own tone. */}
       <div
         aria-hidden
-        className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${palette.gradient} opacity-60 group-hover:opacity-100 transition-opacity duration-300`}
+        className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${palette.gradient} opacity-60 transition-opacity duration-300 group-hover:opacity-100`}
       />
 
-      {/* Atomic-number style identifier. */}
+      {/* Glassy ripple reflection — horizontal scan-lines in the bottom
+          half, faded in/out via mask so it reads as a soft band of light
+          rather than a hard texture. The repeating gradient is rotated
+          1deg from horizontal so it looks faintly liquid. */}
       <div
         aria-hidden
-        className="absolute top-3 right-3 z-10 font-mono text-[10px] tracking-widest text-muted-foreground/60"
-      >
-        {String(index + 1).padStart(2, '0')}
-      </div>
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2"
+        style={{
+          backgroundImage: `repeating-linear-gradient(
+            -1deg,
+            transparent 0,
+            transparent 4px,
+            rgba(255,255,255,0.05) 4px,
+            rgba(255,255,255,0.05) 5px
+          )`,
+          maskImage:
+            'linear-gradient(to bottom, transparent 0%, black 30%, black 75%, transparent 100%)',
+          WebkitMaskImage:
+            'linear-gradient(to bottom, transparent 0%, black 30%, black 75%, transparent 100%)',
+        }}
+      />
+
+      {/* Bottom fade-out so the card melts into the page rather than
+          terminating in a hard rectangle. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-b from-transparent to-background/50"
+      />
 
       <ElementHead meta={meta} variant="grid" />
 
       {/* Each module's compact summary content. */}
       <div className="relative z-10 mt-3 min-h-0 flex-1 overflow-hidden">
         <SummaryFor slug={meta.slug} />
+      </div>
+
+      {/* Atomic-number identifier — bottom-right, sitting above the
+          reflection layer. Small, low-contrast, just a marker. */}
+      <div
+        aria-hidden
+        className="absolute bottom-2.5 right-3 z-10 font-mono text-[10px] tracking-[0.3em] text-muted-foreground/50"
+      >
+        {String(index + 1).padStart(2, '0')}
       </div>
     </motion.button>
   );
