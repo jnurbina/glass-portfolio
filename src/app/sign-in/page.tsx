@@ -29,7 +29,13 @@ export default function SignInPage() {
               setPending(true);
               setError(null);
               try {
-                await signIn("google", { redirectTo: "/leetdash" });
+                // Send an absolute URL so Convex Auth's redirect callback
+                // can validate it against our trusted-origin list. Lands
+                // back on whichever origin (prod, preview, localhost) the
+                // user signed in from instead of always SITE_URL.
+                await signIn("google", {
+                  redirectTo: `${window.location.origin}/leetdash`,
+                });
               } catch (err) {
                 setError(
                   err instanceof Error ? err.message : "Sign-in failed.",

@@ -6,6 +6,30 @@ import type { DataModel } from "./_generated/dataModel";
 
 const OWNER_EMAIL = "jnurbina@gmail.com";
 
+// Origins allowed to receive the post-sign-in redirect. Convex Auth's
+// default policy only allows redirects within SITE_URL, which forces a
+// single-origin deployment. We host the same Convex backend behind
+// multiple origins (production, branch-stable Vercel previews, local
+// dev) so we explicitly allow each one here.
+function isTrustedRedirectOrigin(url: URL): boolean {
+  if (url.protocol !== "https:" && url.hostname !== "localhost") {
+    return false;
+  }
+  if (url.hostname === "www.onejas.one" || url.hostname === "onejas.one") {
+    return true;
+  }
+  if (url.hostname === "localhost") {
+    return true;
+  }
+  // Vercel preview aliases scoped to this project + team
+  // (e.g. onejasone-git-feature-leetdash-1jas1.vercel.app, plus per-deploy
+  // aliases like onejasone-abc123-1jas1.vercel.app).
+  if (/^onejasone-[a-z0-9-]+-1jas1\.vercel\.app$/.test(url.hostname)) {
+    return true;
+  }
+  return false;
+}
+
 // Carries the OAuth tokens through Convex Auth's user-profile pipeline so
 // `createOrUpdateUser` can persist them. The `__tokens` field is stripped
 // before anything is written to the users row.
@@ -54,6 +78,28 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
     }),
   ],
   callbacks: {
+    // Allow the sign-in page to pass an absolute redirectTo that points
+    // at any of our trusted origins (prod, preview branch alias, local
+    // dev). Relative paths still resolve against SITE_URL.
+    async redirect({ redirectTo }) {
+      if (redirectTo.startsWith("/") || redirectTo.startsWith("?")) {
+        const base = (process.env.SITE_URL ?? "").replace(/\/$/, "");
+        return `${base}${redirectTo}`;
+      }
+      try {
+        const url = new URL(redirectTo);
+        if (isTrustedRedirectOrigin(url)) {
+          return redirectTo;
+        }
+      } catch {
+        // fallthrough → reject
+      }
+      throw new ConvexError({
+        code: "Forbidden",
+        reason: "untrusted_redirect",
+      });
+    },
+
     // Owner-only allowlist. Any email other than OWNER_EMAIL is rejected
     // before a user record is created — no leaked rows for unauthorized
     // sign-in attempts.
