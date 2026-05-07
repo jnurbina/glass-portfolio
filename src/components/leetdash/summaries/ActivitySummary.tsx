@@ -1,21 +1,18 @@
 'use client';
 
 import useSWR from 'swr';
+import {
+  AgentActivity,
+  BOT_NAME,
+  describeEvent,
+  shouldShowEvent,
+} from '../details/activityLabels';
 
 const fetcher = (url: string) =>
   fetch(url).then((res) => {
     if (!res.ok) throw new Error(`${res.status}`);
     return res.json();
   });
-
-interface AgentActivity {
-  id: string;
-  type: 'spawn' | 'progress' | 'complete' | 'error';
-  agentLabel?: string;
-  rawEventType: string;
-  timestamp: number;
-  runId?: string;
-}
 
 export function ActivitySummary() {
   const { data, error } = useSWR<{ activities: AgentActivity[] }>(
@@ -30,20 +27,22 @@ export function ActivitySummary() {
   const activities = data.activities ?? [];
   if (activities.length === 0) return <Hint>No activity.</Hint>;
 
-  // Distinct turn count = distinct runIds.
+  // Distinct turns = distinct runIds.
   const turns = new Set(activities.map((a) => a.runId).filter(Boolean));
-  const last = activities[activities.length - 1];
-  const lastLabel = last?.agentLabel ?? last?.rawEventType ?? 'event';
+
+  // Last "interesting" event — skip queue/state noise.
+  const last = [...activities].reverse().find(shouldShowEvent);
 
   return (
     <div className="space-y-1 text-[11px]">
       <div className="font-mono uppercase tracking-[0.18em] text-muted-foreground/60">
-        {turns.size} {turns.size === 1 ? 'turn' : 'turns'} ·{' '}
-        {activities.length} events
+        {turns.size} {turns.size === 1 ? 'turn' : 'turns'} · via {BOT_NAME}
       </div>
-      <div className="truncate text-foreground/90">
-        last: <span className="text-emerald-400">{lastLabel}</span>
-      </div>
+      {last && (
+        <div className="truncate text-foreground/90">
+          last: <span className="text-emerald-400">{describeEvent(last)}</span>
+        </div>
+      )}
     </div>
   );
 }

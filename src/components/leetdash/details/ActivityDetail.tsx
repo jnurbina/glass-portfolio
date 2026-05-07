@@ -15,6 +15,15 @@ import {
   Loader2,
   WifiOff,
 } from 'lucide-react';
+import {
+  AgentActivity,
+  ActivityType,
+  BOT_NAME,
+  deriveSessionLabel,
+  describeEvent,
+  shouldShowEvent,
+  visibleStepCount,
+} from './activityLabels';
 
 const fetcher = (url: string) =>
   fetch(url).then((res) => {
@@ -25,31 +34,15 @@ const fetcher = (url: string) =>
 const timeAgo = (ts: number) => {
   const diff = Date.now() - ts;
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'now';
-  if (mins < 60) return `${mins}m`;
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h`;
-  return `${Math.floor(hours / 24)}d`;
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
 };
-
-type ActivityType = 'spawn' | 'progress' | 'complete' | 'error';
-
-interface AgentActivity {
-  id: string;
-  type: ActivityType;
-  agentId: string;
-  agentLabel?: string;
-  taskSummary?: string;
-  timestamp: number;
-  parentAgentId?: string;
-  runId?: string;
-  rawEventType: string;
-  error?: string;
-}
 
 interface ActivityResponse {
   activities: AgentActivity[];
-  totalEventsSeen: number;
 }
 
 const TypeIcon = ({
@@ -73,7 +66,8 @@ const TypeIcon = ({
 
 interface SessionGroup {
   agentId: string;
-  rootLabel: string;
+  primaryLabel: string;
+  via: string;
   state: ActivityType;
   start: number;
   end: number;
@@ -81,53 +75,55 @@ interface SessionGroup {
   children: AgentActivity[];
 }
 
-function shortAgent(id: string): string {
-  if (!id || id === 'unknown') return id;
-  if (/^[0-9a-f]{8}/.test(id)) return id.slice(0, 8);
-  const parts = id.split(':');
-  if (parts.length > 1) return parts[parts.length - 1];
-  return id;
-}
-
 function buildTree(activities: AgentActivity[]): SessionGroup[] {
-  const groups = new Map<string, SessionGroup>();
+  // Bucket events by runId (= W3C traceId, one per turn). Falls back to
+  // parent/agent ids for legacy events without trace context.
+  const buckets = new Map<string, AgentActivity[]>();
   const order: string[] = [];
 
   for (const a of activities) {
     const key = a.runId ?? a.parentAgentId ?? a.agentId;
     if (!key || key === 'unknown') continue;
-    let g = groups.get(key);
-    if (!g) {
-      g = {
-        agentId: key,
-        rootLabel: a.agentLabel ?? shortAgent(key),
-        state: a.type,
-        start: a.timestamp,
-        end: a.timestamp,
-        children: [],
-      };
-      groups.set(key, g);
+    if (!buckets.has(key)) {
+      buckets.set(key, []);
       order.push(key);
     }
-    g.children.push(a);
-    g.end = Math.max(g.end, a.timestamp);
-    if (a.type === 'complete' || a.type === 'error') {
-      g.state = a.type;
-      g.durationMs = g.end - g.start;
-    } else if (a.type === 'spawn' && g.state !== 'complete' && g.state !== 'error') {
-      g.state = 'spawn';
-      g.rootLabel = a.agentLabel ?? g.rootLabel;
-    } else if (g.state !== 'complete' && g.state !== 'error') {
-      g.state = 'progress';
-    }
+    buckets.get(key)!.push(a);
   }
 
-  const result = order
-    .map((k) => groups.get(k)!)
-    .filter(Boolean)
-    .sort((a, b) => b.end - a.end);
-  for (const g of result) g.children.sort((a, b) => a.timestamp - b.timestamp);
-  return result;
+  const result: SessionGroup[] = [];
+  for (const key of order) {
+    const list = buckets.get(key)!;
+    list.sort((a, b) => a.timestamp - b.timestamp);
+    const start = list[0].timestamp;
+    const end = list[list.length - 1].timestamp;
+
+    // State = last terminal event's type, falling back to the most
+    // recent non-terminal type. Lets us color the row.
+    let state: ActivityType = 'progress';
+    for (let i = list.length - 1; i >= 0; i--) {
+      const t = list[i].type;
+      if (t === 'complete' || t === 'error') {
+        state = t;
+        break;
+      }
+      if (t === 'spawn') state = 'spawn';
+    }
+
+    const { primary, via } = deriveSessionLabel(list);
+
+    result.push({
+      agentId: key,
+      primaryLabel: primary,
+      via,
+      state,
+      start,
+      end,
+      durationMs: state === 'complete' || state === 'error' ? end - start : undefined,
+      children: list,
+    });
+  }
+  return result.sort((a, b) => b.end - a.end);
 }
 
 export function ActivityDetail() {
@@ -139,14 +135,14 @@ export function ActivityDetail() {
 
   const isOffline = error?.message === '503';
   const groups = useMemo(() => buildTree(data?.activities ?? []), [data]);
-  const inFlight = groups.filter(
+  const inProgress = groups.filter(
     (g) => g.state === 'spawn' || g.state === 'progress',
   ).length;
 
   return (
     <div className="space-y-6">
-      {/* Top stat row */}
-      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border/40 bg-muted/5 px-4 py-3 text-sm">
+      {/* Top row: bot identity + status + open-gateway link */}
+      <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border/40 bg-muted/5 px-4 py-3 text-sm">
         {isOffline ? (
           <>
             <WifiOff size={14} className="text-muted-foreground" />
@@ -161,9 +157,12 @@ export function ActivityDetail() {
           <>
             <Activity size={14} className="text-emerald-500" />
             <span className="text-foreground/90">
-              <span className="font-mono">{inFlight}</span> in flight ·{' '}
-              <span className="font-mono">{groups.length}</span> sessions ·{' '}
-              <span className="font-mono">{data.totalEventsSeen}</span> events
+              <span className="font-mono text-emerald-300">{BOT_NAME}</span>
+              <span className="mx-2 text-muted-foreground/60">·</span>
+              <span className="font-mono">{inProgress}</span>{' '}
+              {inProgress === 1 ? 'turn' : 'turns'} in progress
+              <span className="mx-2 text-muted-foreground/60">·</span>
+              <span className="font-mono">{groups.length}</span> total
             </span>
           </>
         )}
@@ -173,9 +172,21 @@ export function ActivityDetail() {
           rel="noopener noreferrer"
           className="ml-auto inline-flex items-center gap-1 rounded-md border border-emerald-400/30 bg-emerald-400/10 px-2 py-1 text-xs text-emerald-300 transition-colors hover:bg-emerald-400/20"
         >
-          Open Gateway
+          Open chat
           <ArrowUpRight size={12} />
         </a>
+      </div>
+
+      {/* Quick legend — kept inline so it doesn't need a separate page. */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-[11px] text-muted-foreground/60">
+        <Legend>
+          <strong className="text-muted-foreground/80">Turn</strong> — one
+          user→bot exchange
+        </Legend>
+        <Legend>
+          <strong className="text-muted-foreground/80">Step</strong> — an
+          internal event during a turn
+        </Legend>
       </div>
 
       {/* Sessions tree */}
@@ -192,6 +203,15 @@ export function ActivityDetail() {
   );
 }
 
+function Legend({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="inline-flex items-center gap-1">
+      <span className="h-1 w-1 rounded-full bg-muted-foreground/40" />
+      {children}
+    </span>
+  );
+}
+
 function SessionRow({
   group,
   index,
@@ -203,6 +223,8 @@ function SessionRow({
     group.state === 'spawn' || group.state === 'progress',
   );
   const Chevron = open ? ChevronDown : ChevronRight;
+  const { shown, total } = visibleStepCount(group.children);
+
   return (
     <motion.div
       initial={{ opacity: 0, x: -6 }}
@@ -218,38 +240,38 @@ function SessionRow({
         <Chevron size={12} className="shrink-0 text-muted-foreground" />
         <TypeIcon type={group.state} />
         <span className="font-mono text-sm text-foreground">
-          {group.rootLabel}
+          {group.primaryLabel}
         </span>
-        <span className="font-mono text-[11px] text-muted-foreground/60">
-          {group.children.length} events
+        <span className="font-mono text-[11px] text-muted-foreground/70">
+          via {group.via}
         </span>
-        {group.durationMs != null && (
-          <span className="font-mono text-[11px] text-muted-foreground/60">
-            {(group.durationMs / 1000).toFixed(1)}s
-          </span>
-        )}
-        <span className="ml-auto font-mono text-[11px] text-muted-foreground/60">
-          {timeAgo(group.end)}
+        <span
+          className="ml-auto flex items-center gap-3 font-mono text-[11px] text-muted-foreground/60"
+          title={`${total} raw events; ${shown} are shown when expanded`}
+        >
+          <span>{shown} steps</span>
+          {group.durationMs != null && (
+            <span>{(group.durationMs / 1000).toFixed(1)}s</span>
+          )}
+          <span>{timeAgo(group.end)}</span>
         </span>
       </button>
       {open && (
         <div className="space-y-0.5 border-t border-border/30 px-3 py-2 pl-9">
-          {group.children.map((c) => (
+          {group.children.filter(shouldShowEvent).map((c) => (
             <div
               key={c.id}
               className="flex items-center gap-2 py-0.5 text-[11px]"
             >
               <TypeIcon type={c.type} size={10} />
-              <span className="font-mono text-muted-foreground truncate">
-                {c.taskSummary || c.rawEventType}
-              </span>
-              {c.error && (
-                <span className="ml-auto truncate text-destructive">
-                  {c.error}
-                </span>
-              )}
+              <span className="text-foreground/80">{describeEvent(c)}</span>
             </div>
           ))}
+          {shown === 0 && (
+            <p className="text-[11px] italic text-muted-foreground/50">
+              No notable steps yet.
+            </p>
+          )}
         </div>
       )}
     </motion.div>
