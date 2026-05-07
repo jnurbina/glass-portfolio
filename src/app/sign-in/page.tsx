@@ -17,7 +17,9 @@ export default function SignInPage() {
     <main className="min-h-screen flex items-center justify-center bg-background px-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">leetdash</CardTitle>
+          <CardTitle className="font-mono text-xl tracking-tight">
+            leet<span className="text-foreground/40">;</span>
+          </CardTitle>
           <CardDescription>Sign in to continue.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
