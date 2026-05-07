@@ -40,59 +40,71 @@ export function ElementCard({
       }}
       whileTap={{ scale: 0.98 }}
       className={[
-        'group relative flex h-[280px] w-full flex-col justify-start overflow-hidden rounded-2xl text-left',
-        'border border-border/50 bg-card/40 p-4 pb-6 backdrop-blur-sm',
-        'transition-shadow duration-300 hover:bg-card/60',
-        `hover:${palette.glow}`,
+        'group relative h-[280px] w-full rounded-2xl text-left',
+        // Hover lift comes from the framer-motion props above; this is
+        // just the soft glow that follows the card silhouette.
+        'transition-[filter] duration-300',
+        `hover:${palette.dropGlow}`,
       ].join(' ')}
     >
-      {/* Accent wash — diagonal tint giving each element its own tone. */}
+      {/* Card chrome layer — border, fill, accent, specular highlight.
+          A vertical mask fades the entire chrome (border + bg) toward
+          transparent at the bottom so the card visually dissolves into
+          the page instead of terminating in a hard rectangle outline. */}
       <div
         aria-hidden
-        className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${palette.gradient} opacity-60 transition-opacity duration-300 group-hover:opacity-100`}
-      />
-
-      {/* Glassy ripple reflection — horizontal scan-lines in the bottom
-          half, faded in/out via mask so it reads as a soft band of light
-          rather than a hard texture. The repeating gradient is rotated
-          1deg from horizontal so it looks faintly liquid. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2"
+        className={[
+          'absolute inset-0 overflow-hidden rounded-2xl',
+          'border border-border/50 bg-card/40 backdrop-blur-sm',
+          'transition-colors duration-300 group-hover:bg-card/60',
+        ].join(' ')}
         style={{
-          backgroundImage: `repeating-linear-gradient(
-            -1deg,
-            transparent 0,
-            transparent 4px,
-            rgba(255,255,255,0.05) 4px,
-            rgba(255,255,255,0.05) 5px
-          )`,
           maskImage:
-            'linear-gradient(to bottom, transparent 0%, black 30%, black 75%, transparent 100%)',
+            'linear-gradient(to bottom, black 0%, black 62%, transparent 100%)',
           WebkitMaskImage:
-            'linear-gradient(to bottom, transparent 0%, black 30%, black 75%, transparent 100%)',
+            'linear-gradient(to bottom, black 0%, black 62%, transparent 100%)',
         }}
-      />
+      >
+        {/* Accent wash — diagonal tint, each element's signature tone. */}
+        <div
+          className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${palette.gradient} opacity-60 transition-opacity duration-300 group-hover:opacity-100`}
+        />
 
-      {/* Bottom fade-out so the card melts into the page rather than
-          terminating in a hard rectangle. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-b from-transparent to-background/50"
-      />
+        {/* Specular highlight — a single soft, off-center radial spot
+            that reads as light catching a curved glass surface. No
+            repeating pattern, no scan-lines. Sits low in the card so
+            the bright spot anchors the (already-fading) lower half. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-70 transition-opacity duration-300 group-hover:opacity-100"
+          style={{
+            background:
+              'radial-gradient(ellipse 65% 55% at 28% 78%, rgba(255,255,255,0.07), transparent 60%)',
+          }}
+        />
 
-      <ElementHead meta={meta} variant="grid" />
-
-      {/* Each module's compact summary content. */}
-      <div className="relative z-10 mt-3 min-h-0 flex-1 overflow-hidden">
-        <SummaryFor slug={meta.slug} />
+        {/* Inner top-edge highlight — a one-pixel light line that
+            traces the visible curve of the glass, gives the card a
+            subtle "looking down at it" feel. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent"
+        />
       </div>
 
-      {/* Atomic-number identifier — bottom-right, sitting above the
-          reflection layer. Small, low-contrast, just a marker. */}
+      {/* Content layer — sharp, NOT masked. */}
+      <div className="relative z-10 flex h-full flex-col p-4">
+        <ElementHead meta={meta} variant="grid" />
+        <div className="mt-3 min-h-0 flex-1 overflow-hidden">
+          <SummaryFor slug={meta.slug} />
+        </div>
+      </div>
+
+      {/* Atomic-number identifier — sits inside the masked (faded)
+          region as a watermark, ghosting through the bottom of the card. */}
       <div
         aria-hidden
-        className="absolute bottom-2.5 right-3 z-10 font-mono text-[10px] tracking-[0.3em] text-muted-foreground/50"
+        className="absolute bottom-2 right-3 z-10 font-mono text-[10px] tracking-[0.3em] text-muted-foreground/30"
       >
         {String(index + 1).padStart(2, '0')}
       </div>

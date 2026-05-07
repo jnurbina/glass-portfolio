@@ -37,11 +37,18 @@ export function getElement(slug: string): ElementMeta | null {
 
 // Tailwind utility classes per accent. Resolved at compile time so the
 // JIT picks them up — no `bg-${color}-500/20` dynamic strings.
+//
+// `dropGlow` uses `filter: drop-shadow(...)` instead of `box-shadow` so
+// the hover halo follows the *masked* (visible) silhouette of the card
+// — important now that the card chrome fades to transparent at the
+// bottom. A box-shadow would render the glow around the full bounding
+// rectangle and leak below the visible edge.
 export const ACCENT: Record<
   ElementMeta['accent'],
   {
     text: string;
     glow: string;
+    dropGlow: string;
     ring: string;
     gradient: string;
   }
@@ -49,30 +56,35 @@ export const ACCENT: Record<
   amber: {
     text: 'text-amber-400',
     glow: 'shadow-[0_0_40px_-10px_rgba(251,191,36,0.55)]',
+    dropGlow: 'drop-shadow-[0_0_24px_rgba(251,191,36,0.35)]',
     ring: 'ring-amber-400/40',
     gradient: 'from-amber-500/15 via-amber-500/5 to-transparent',
   },
   sky: {
     text: 'text-sky-400',
     glow: 'shadow-[0_0_40px_-10px_rgba(56,189,248,0.55)]',
+    dropGlow: 'drop-shadow-[0_0_24px_rgba(56,189,248,0.35)]',
     ring: 'ring-sky-400/40',
     gradient: 'from-sky-500/15 via-sky-500/5 to-transparent',
   },
   violet: {
     text: 'text-violet-400',
     glow: 'shadow-[0_0_40px_-10px_rgba(167,139,250,0.55)]',
+    dropGlow: 'drop-shadow-[0_0_24px_rgba(167,139,250,0.35)]',
     ring: 'ring-violet-400/40',
     gradient: 'from-violet-500/15 via-violet-500/5 to-transparent',
   },
   emerald: {
     text: 'text-emerald-400',
     glow: 'shadow-[0_0_40px_-10px_rgba(52,211,153,0.55)]',
+    dropGlow: 'drop-shadow-[0_0_24px_rgba(52,211,153,0.35)]',
     ring: 'ring-emerald-400/40',
     gradient: 'from-emerald-500/15 via-emerald-500/5 to-transparent',
   },
   rose: {
     text: 'text-rose-400',
     glow: 'shadow-[0_0_40px_-10px_rgba(251,113,133,0.55)]',
+    dropGlow: 'drop-shadow-[0_0_24px_rgba(251,113,133,0.35)]',
     ring: 'ring-rose-400/40',
     gradient: 'from-rose-500/15 via-rose-500/5 to-transparent',
   },
