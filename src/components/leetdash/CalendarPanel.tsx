@@ -1,14 +1,10 @@
 'use client';
 
-import useSWR from 'swr';
+import { useEffect, useState } from 'react';
+import { useAction } from 'convex/react';
 import PeriodicTableCard from './PeriodicTableCard';
 import { Clock, MapPin, Calendar, Loader2, AlertCircle } from 'lucide-react';
-
-const fetcher = (url: string) =>
-  fetch(url).then((res) => {
-    if (!res.ok) throw new Error(`${res.status}`);
-    return res.json();
-  });
+import { api } from '../../../convex/_generated/api';
 
 interface CalEvent {
   id: string;
@@ -81,12 +77,34 @@ const formatEventTime = (dateStr: string, allDay?: boolean) => {
 };
 
 export function CalendarPanel() {
-  const { data, error } = useSWR('/api/monitoring/calendar', fetcher, {
-    refreshInterval: 60000,
-    shouldRetryOnError: false,
-  });
+  const fetchEvents = useAction(api.calendar.events);
+  const [events, setEvents] = useState<CalEvent[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const events: CalEvent[] = data?.events || [];
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const result = await fetchEvents({});
+        if (!cancelled) {
+          setEvents(result.events);
+          setError(null);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Calendar error');
+        }
+      }
+    };
+    load();
+    const id = setInterval(load, 60_000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [fetchEvents]);
+
+  const list: CalEvent[] = events ?? [];
   const now = new Date();
   const monthStr = now
     .toLocaleString('en-US', { month: 'short' })
@@ -99,8 +117,8 @@ export function CalendarPanel() {
       metric={
         error
           ? '!'
-          : events.length > 0
-            ? `${events.length}`
+          : list.length > 0
+            ? `${list.length}`
             : monthStr
       }
     >
@@ -110,7 +128,7 @@ export function CalendarPanel() {
             <AlertCircle size={12} className="text-destructive" />
             <span className="text-destructive">Calendar unavailable</span>
           </div>
-        ) : !data ? (
+        ) : events === null ? (
           <div className="flex items-center space-x-1 text-xs">
             <Loader2
               size={12}
@@ -118,7 +136,7 @@ export function CalendarPanel() {
             />
             <span className="text-muted-foreground">Loading events...</span>
           </div>
-        ) : events.length === 0 ? (
+        ) : list.length === 0 ? (
           <div className="flex items-center space-x-1 text-xs">
             <Calendar size={12} className="text-muted-foreground" />
             <span className="text-muted-foreground">
@@ -127,7 +145,7 @@ export function CalendarPanel() {
           </div>
         ) : (
           <div className="space-y-2 max-h-[160px] overflow-y-auto">
-            {events.slice(0, 8).map((evt) => (
+            {list.slice(0, 8).map((evt) => (
               <div key={evt.id} className="space-y-0.5">
                 <div className="flex items-start space-x-2 text-xs">
                   <Clock

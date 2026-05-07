@@ -1,21 +1,33 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import {
+  convexAuthNextjsMiddleware,
+  createRouteMatcher,
+  nextjsMiddlewareRedirect,
+} from "@convex-dev/auth/nextjs/server";
 
-export function middleware(request: NextRequest) {
-  const pathname = request.nextUrl.pathname;
+// Routes that require an authenticated session. Anything else flows through
+// untouched so the public portfolio site keeps working without a login.
+const isProtectedRoute = createRouteMatcher([
+  "/leetdash(.*)",
+  "/api/monitoring(.*)",
+]);
+const isSignInPage = createRouteMatcher(["/sign-in"]);
 
-  // Block LeetDash and its API routes in production
-  // Vercel sets VERCEL_ENV = "production" | "preview" | "development"
-  const env = process.env.VERCEL_ENV || process.env.NODE_ENV;
-  const isProduction = env === 'production';
+export default convexAuthNextjsMiddleware(async (request, { convexAuth }) => {
+  const authed = await convexAuth.isAuthenticated();
 
-  if (isProduction && (pathname.startsWith('/leetdash') || pathname.startsWith('/api/monitoring'))) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  // Already signed in but visiting /sign-in → bounce to the dashboard.
+  if (isSignInPage(request) && authed) {
+    return nextjsMiddlewareRedirect(request, "/leetdash");
   }
 
-  return NextResponse.next();
-}
+  // Protected route + not signed in → bounce to /sign-in.
+  if (isProtectedRoute(request) && !authed) {
+    return nextjsMiddlewareRedirect(request, "/sign-in");
+  }
+});
 
 export const config = {
-  matcher: ['/', '/(api|trpc)(.*)', '/leetdash/:path*'],
+  // Match everything except Next internals and static assets. Convex Auth
+  // handles its own /api/auth/* routes within this matcher.
+  matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api|trpc)(.*)"],
 };

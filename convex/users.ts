@@ -1,30 +1,14 @@
-import { mutation, query } from "./_generated/server";
-import { v } from "convex/values";
+import { getAuthUserId } from "@convex-dev/auth/server";
+import { query } from "./_generated/server";
 
-export const getOrCreateUser = mutation({
-  args: { username: v.string() },
-  handler: async (ctx, args) => {
-    const existing = await ctx.db
-      .query("users")
-      .withIndex("by_username", (q) => q.eq("username", args.username))
-      .unique();
-
-    if (existing) {
-      await ctx.db.patch(existing._id, { lastLogin: Date.now() });
-      return existing._id;
-    }
-
-    return await ctx.db.insert("users", {
-      username: args.username,
-      points: 0,
-      lastLogin: Date.now(),
-    });
-  },
-});
-
-export const getUser = query({
-  args: { userId: v.id("users") },
-  handler: async (ctx, args) => {
-    return await ctx.db.get(args.userId);
+// Returns the signed-in user's profile, or null when unauthenticated.
+// Convex Auth populates the row in `createOrUpdateUser`; this is the
+// safe client-side read that surfaces it.
+export const current = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return null;
+    return await ctx.db.get(userId);
   },
 });

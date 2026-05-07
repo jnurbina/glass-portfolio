@@ -1,9 +1,12 @@
 "use client";
 
-import { ConvexProvider, ConvexReactClient } from "convex/react";
+import { ConvexAuthNextjsProvider } from "@convex-dev/auth/nextjs";
+import { ConvexReactClient } from "convex/react";
 import { ReactNode, useMemo } from "react";
 
-// Create client lazily to avoid build-time errors when env var is missing
+// Create client lazily so a missing NEXT_PUBLIC_CONVEX_URL doesn't crash
+// the build — the auth provider degrades gracefully and unauthenticated
+// hooks throw at call time instead.
 const getConvexClient = () => {
   const url = process.env.NEXT_PUBLIC_CONVEX_URL;
   if (!url) return null;
@@ -13,10 +16,13 @@ const getConvexClient = () => {
 export function ConvexClientProvider({ children }: { children: ReactNode }) {
   const convex = useMemo(() => getConvexClient(), []);
 
-  // If Convex URL is not configured, render children without Convex provider
   if (!convex) {
     return <>{children}</>;
   }
 
-  return <ConvexProvider client={convex}>{children}</ConvexProvider>;
+  return (
+    <ConvexAuthNextjsProvider client={convex}>
+      {children}
+    </ConvexAuthNextjsProvider>
+  );
 }

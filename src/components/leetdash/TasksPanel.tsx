@@ -1,147 +1,36 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
+import { useMutation, useQuery } from 'convex/react';
 import PeriodicTableCard from './PeriodicTableCard';
 import { CheckCircle2, Circle, Plus, Trash2 } from 'lucide-react';
+import { api } from '../../../convex/_generated/api';
+import type { Id } from '../../../convex/_generated/dataModel';
 
-interface Task {
-  _id: string;
-  title: string;
-  done: boolean;
-  createdAt: number;
-  completedAt?: number;
-}
-
-const STORAGE_KEY = 'leetdash-tasks';
-const API_BASE = '/api/monitoring/tasks';
-
-// Try API first, fall back to localStorage
-const useTaskStore = () => {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [useLocal, setUseLocal] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-
-  // Load tasks
-  const loadTasks = useCallback(async () => {
-    try {
-      const res = await fetch(API_BASE);
-      if (res.ok) {
-        const data = await res.json();
-        setTasks(data.tasks || []);
-        setUseLocal(false);
-        setLoaded(true);
-        return;
-      }
-    } catch {
-      // API unavailable
-    }
-    // Fallback to localStorage
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      setTasks(raw ? JSON.parse(raw) : []);
-    } catch {
-      setTasks([]);
-    }
-    setUseLocal(true);
-    setLoaded(true);
-  }, []);
-
-  useEffect(() => {
-    loadTasks();
-  }, [loadTasks]);
-
-  const saveLocal = (updated: Task[]) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    setTasks(updated);
-  };
-
-  const addTask = async (title: string) => {
-    if (useLocal) {
-      const newTask: Task = {
-        _id: crypto.randomUUID(),
-        title,
-        done: false,
-        createdAt: Date.now(),
-      };
-      saveLocal([newTask, ...tasks]);
-    } else {
-      try {
-        await fetch(API_BASE, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title }),
-        });
-        await loadTasks();
-      } catch {
-        // Fallback
-        const newTask: Task = {
-          _id: crypto.randomUUID(),
-          title,
-          done: false,
-          createdAt: Date.now(),
-        };
-        saveLocal([newTask, ...tasks]);
-        setUseLocal(true);
-      }
-    }
-  };
-
-  const toggleTask = async (id: string) => {
-    if (useLocal) {
-      const updated = tasks.map((t) =>
-        t._id === id
-          ? { ...t, done: !t.done, completedAt: !t.done ? Date.now() : undefined }
-          : t
-      );
-      saveLocal(updated);
-    } else {
-      try {
-        await fetch(`${API_BASE}/${id}`, { method: 'PATCH' });
-        await loadTasks();
-      } catch {
-        const updated = tasks.map((t) =>
-          t._id === id ? { ...t, done: !t.done } : t
-        );
-        saveLocal(updated);
-        setUseLocal(true);
-      }
-    }
-  };
-
-  const deleteTask = async (id: string) => {
-    if (useLocal) {
-      saveLocal(tasks.filter((t) => t._id !== id));
-    } else {
-      try {
-        await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
-        await loadTasks();
-      } catch {
-        saveLocal(tasks.filter((t) => t._id !== id));
-        setUseLocal(true);
-      }
-    }
-  };
-
-  return { tasks, loaded, useLocal, addTask, toggleTask, deleteTask };
-};
+type TaskId = Id<'tasks'>;
 
 export function TasksPanel() {
-  const { tasks, loaded, addTask, toggleTask, deleteTask } = useTaskStore();
+  const tasks = useQuery(api.tasks.list);
+  const create = useMutation(api.tasks.create);
+  const toggle = useMutation(api.tasks.toggle);
+  const remove = useMutation(api.tasks.remove);
   const [input, setInput] = useState('');
 
-  const pending = tasks.filter((t) => !t.done);
-  const completed = tasks.filter((t) => t.done);
+  const loaded = tasks !== undefined;
+  const list = tasks ?? [];
+  const pending = list.filter((t) => !t.done);
+  const completed = list.filter((t) => t.done);
 
-  const handleAdd = () => {
-    if (!input.trim()) return;
-    addTask(input.trim());
+  const handleAdd = async () => {
+    const title = input.trim();
+    if (!title) return;
     setInput('');
+    await create({ title });
   };
 
   return (
     <PeriodicTableCard symbol="Tk" name="Tasks" metric={`${pending.length}`}>
       <div className="space-y-2">
-        {/* Add task input */}
         <div className="flex items-center space-x-1">
           <input
             type="text"
@@ -159,60 +48,77 @@ export function TasksPanel() {
           </button>
         </div>
 
-        {/* Task list */}
         <div className="space-y-1 max-h-[140px] overflow-y-auto">
           {loaded && pending.length === 0 && completed.length === 0 && (
             <p className="text-xs text-muted-foreground">No tasks yet</p>
           )}
           {pending.map((t) => (
-            <div
+            <TaskRow
               key={t._id}
-              className="flex items-center space-x-2 text-xs group"
-            >
-              <button onClick={() => toggleTask(t._id)} className="shrink-0">
-                <Circle
-                  size={14}
-                  className="text-muted-foreground hover:text-primary transition-colors"
-                />
-              </button>
-              <span className="text-foreground truncate flex-1">
-                {t.title}
-              </span>
-              <button
-                onClick={() => deleteTask(t._id)}
-                className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-              >
-                <Trash2
-                  size={12}
-                  className="text-muted-foreground hover:text-destructive"
-                />
-              </button>
-            </div>
+              id={t._id}
+              title={t.title}
+              done={false}
+              onToggle={(id) => toggle({ id })}
+              onDelete={(id) => remove({ id })}
+            />
           ))}
           {completed.slice(0, 3).map((t) => (
-            <div
+            <TaskRow
               key={t._id}
-              className="flex items-center space-x-2 text-xs group opacity-50"
-            >
-              <button onClick={() => toggleTask(t._id)} className="shrink-0">
-                <CheckCircle2 size={14} className="text-green-500" />
-              </button>
-              <span className="text-foreground truncate flex-1 line-through">
-                {t.title}
-              </span>
-              <button
-                onClick={() => deleteTask(t._id)}
-                className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-              >
-                <Trash2
-                  size={12}
-                  className="text-muted-foreground hover:text-destructive"
-                />
-              </button>
-            </div>
+              id={t._id}
+              title={t.title}
+              done={true}
+              onToggle={(id) => toggle({ id })}
+              onDelete={(id) => remove({ id })}
+            />
           ))}
         </div>
       </div>
     </PeriodicTableCard>
+  );
+}
+
+function TaskRow({
+  id,
+  title,
+  done,
+  onToggle,
+  onDelete,
+}: {
+  id: TaskId;
+  title: string;
+  done: boolean;
+  onToggle: (id: TaskId) => void;
+  onDelete: (id: TaskId) => void;
+}) {
+  return (
+    <div
+      className={`flex items-center space-x-2 text-xs group ${done ? 'opacity-50' : ''}`}
+    >
+      <button onClick={() => onToggle(id)} className="shrink-0">
+        {done ? (
+          <CheckCircle2 size={14} className="text-green-500" />
+        ) : (
+          <Circle
+            size={14}
+            className="text-muted-foreground hover:text-primary transition-colors"
+          />
+        )}
+      </button>
+      <span
+        className={`text-foreground truncate flex-1 ${done ? 'line-through' : ''}`}
+      >
+        {title}
+      </span>
+      <button
+        onClick={() => onDelete(id)}
+        className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+      >
+        <Trash2
+          size={12}
+          className="text-muted-foreground hover:text-destructive"
+        />
+      </button>
+    </div>
   );
 }

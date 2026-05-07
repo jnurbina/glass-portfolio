@@ -13,6 +13,7 @@
     "upload:blob": "tsx scripts/upload-to-blob.ts"
   },
   "dependencies": {
+    "@auth/core": "^0.37.4",
     "@convex-dev/auth": "^0.0.91",
     "@fontsource/bebas-neue": "^5.2.7",
     "@fontsource/fira-code": "^5.2.7",
